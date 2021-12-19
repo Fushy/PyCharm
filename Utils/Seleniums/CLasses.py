@@ -216,10 +216,10 @@ class Browser:
         self.driver.quit()
         self.driver = None
 
-    def get_element(self, selector: str | list[str], find_element_fun: Callable[[WebDriver], str] = None, debug=False) \
+    def get_element(self, selectors: str | list[str], find_element_fun: Callable[[WebDriver], str] = None, debug=False) \
             -> None | WebElement | list[WebElement]:
         if debug is None:
-            self.print(("get_element", self, selector, False))
+            self.print(("get_element", self, selectors, False))
         if find_element_fun is None:
             find_element_fun = self.driver.find_element_by_xpath
         find_element_fun_name = find_element_fun.__name__
@@ -227,16 +227,14 @@ class Browser:
         if not is_elements:
             find_element_fun = check_find_fun(self.driver, find_element_fun_name)
         # try:
-        # if type(selector) is list[str]:
-        #     elements = []
-        #     for select in selector:
-        #         elements.append(find_element_fun(select))
-        # else:
-        elements: list[WebElement] = find_element_fun(selector)
-        if is_elements:
-            return elements
-        elif type(elements) == list and len(elements) > 0:
-            return elements[0]
+        if type(selectors) is str:
+            selectors = [selectors]
+        for selector in selectors:
+            elements: list[WebElement] = find_element_fun(selector)
+            if is_elements:
+                return elements
+            elif type(elements) == list and len(elements) > 0:
+                return elements[0]
         return None
         # except NoSuchWindowException or NoSuchElementException as err:
         #     say("\twin dont exist", str(err))
