@@ -12,7 +12,6 @@ from selenium.common.exceptions import SessionNotCreatedException, InvalidSessio
     MoveTargetOutOfBoundsException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.edge import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 from urllib3.exceptions import NewConnectionError, MaxRetryError
 
@@ -21,9 +20,10 @@ from Classes import Coord
 from Enum import FIRST
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text
 from Times import now, elapsed_seconds
-from Util import is_iter, current
+from Util import is_iter
 
-aaa = os.getcwd()
+
+last_browser_set = now()
 
 
 class Browser:
@@ -52,6 +52,7 @@ class Browser:
                 self))
 
     def set_browser(self):
+        global last_browser_set
         # Uniquement pour Edge
         """ Download drivers
             # https://pypi.org/project/selenium/
@@ -81,7 +82,10 @@ class Browser:
             # }
             print(
                 r"{}{}..{}Drivers{}msedgedriver.exe"
-                .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+                    .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+            while elapsed_seconds(last_browser_set) < 0.1:
+                sleep(0.1)
+            last_browser_set = now()
             driver = Edge(
                 options=options,
                 executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
@@ -217,7 +221,7 @@ class Browser:
         self.driver = None
 
     def get_element(self, selectors: str | list[str], find_element_fun: Callable[[WebDriver], str] = None, debug=False) \
-            -> None | WebElement | list[WebElement]:
+        -> None | WebElement | list[WebElement]:
         if debug is None:
             self.print(("get_element", self, selectors, False))
         if find_element_fun is None:
@@ -321,7 +325,7 @@ class Browser:
         return element if element is not None else True
 
     def get_text(self, selector: str, find_element_fun=None, refresh_time=None, leave=None, debug=False) \
-            -> Optional[str]:
+        -> Optional[str]:
         if debug is None:
             self.print(("get_text", selector, refresh_time, leave), False)
         if find_element_fun is None:
