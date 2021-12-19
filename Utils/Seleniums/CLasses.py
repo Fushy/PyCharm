@@ -348,7 +348,7 @@ class Browser:
             element = self.get_element(selector, find_element_fun)
             if element is None:
                 return None
-            return get_element_text(element)
+            return get_element_text(element, debug)
         except StaleElementReferenceException:
             return None
         # except NoSuchWindowException or NoSuchElementException as err:

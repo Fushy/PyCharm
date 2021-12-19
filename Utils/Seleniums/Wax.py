@@ -33,7 +33,7 @@ def check_wax_approve(browser):
     i = None
     try:
         browser.print("check_wax_approve")
-        for i in range(len(browser)):
+        for i in range(len(browser))[::-1]:
             browser.goto(i, False)
             approve_xpath = "/html/body/div/div/section/div[2]/div/div[5]/button"
             browser.print("Avant boucle", False)

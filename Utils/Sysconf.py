@@ -6,5 +6,5 @@ screens_pos = {
     "1.1_screen": Coord(1000, 0),
     "3_screen": Coord(0, 1445),
     "semi_hide": Coord(0, 1405),
-    "hide": Coord(0, 1500)
+    "hide": Coord(0, 10000)
 }
