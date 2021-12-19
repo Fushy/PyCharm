@@ -50,6 +50,12 @@ def check_wax_approve(browser):
                     browser.goto_work()
                     return False
                 elif elapsed_seconds(start_refresh) > 15:
+                    login_button_xpath = "/html/body/div/div/section/div[2]/div/div/button/div"
+                    login_button = browser.get_element(login_button_xpath)
+                    while login_button and browser.driver.get_window_size()["width"] < 1000:
+                        login_button = browser.get_element(login_button_xpath)
+                        say("check wax approve have to login")
+                        sleep(10)
                     browser.refresh()
                     start_refresh = now()
                 if not browser.goto(i, False):

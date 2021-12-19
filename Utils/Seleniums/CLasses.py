@@ -5,7 +5,6 @@ import traceback
 from time import sleep
 from typing import Union, Callable, Optional, Iterable
 
-from http_request_randomizer.requests.proxy.requestProxy import RequestProxy
 from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
 from selenium.common.exceptions import SessionNotCreatedException, InvalidSessionIdException, TimeoutException, \
