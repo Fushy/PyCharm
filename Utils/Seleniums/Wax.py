@@ -52,7 +52,8 @@ def check_wax_approve(browser):
                 elif elapsed_seconds(start_refresh) > 15:
                     login_button_xpath_1 = "/html/body/div/div/section/div[2]/div/div/button/div"
                     login_button_xpath_2 = "/html/body/div/div/div/div/div/div[3]/button/div"
-                    login_button = browser.get_element([login_button_xpath_1, login_button_xpath_2])
+                    login_button_xpath_3 = "/html/body/div/div/div/div/div[5]/div/div/div/div[4]/button"
+                    login_button = browser.get_element([login_button_xpath_1, login_button_xpath_2, login_button_xpath_3])
                     while login_button and browser.driver.get_window_size()["width"] < 1000:
                         login_button = browser.get_element([login_button_xpath_1, login_button_xpath_2])
                         say("wax approve have to login")
