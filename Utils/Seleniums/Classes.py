@@ -51,7 +51,7 @@ class Browser:
                 " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
                 self))
 
-    def set_browser(self):
+    def set_browser(self, profile=None):
         global last_browser_set
         # Uniquement pour Edge
         """ Download drivers
@@ -64,6 +64,9 @@ class Browser:
             self.working_window_num = 0
             self.driver = None
             self.windows_url: list[str] = [""]
+            if profile is not None:
+                self.profile = profile
+                self.name = profile_name(profile)
             options = EdgeOptions()
             options.use_chromium = True
             if self.headless:
@@ -215,7 +218,6 @@ class Browser:
         self.driver.close()
 
     def quit(self):
-        self.name = None
         self.windows_url = None
         self.driver.quit()
         self.driver = None
