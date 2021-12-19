@@ -69,6 +69,5 @@ def check_wax_approve(browser):
         browser.goto_work()
         if i is not None and len(browser.windows_url) > i:
             del browser.windows_url[i]
-        return True
     browser.goto_work()
     return True
