@@ -19,10 +19,9 @@ import Alert
 import Classes
 from Enum import FIRST
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text
-from Sysconf import SCREENS, screen_rect
+from Sysconf import screen_rect
 from Times import now, elapsed_seconds
 from Util import is_iter
-
 
 last_browser_set = now()
 
@@ -38,7 +37,7 @@ class Browser:
         self.driver: WebDriver = None
         self.name: Optional[str] = None
         self.windows_url: list[str] = [""]
-        self.set_browser()
+        self.set_browser(profile)
 
     def __str__(self):
         return "{} {} {} {}".format(self.name, self.windows_url, self.point, self.profile)
@@ -68,7 +67,9 @@ class Browser:
             self.windows_url: list[str] = [""]
             if profile is not None:
                 self.profile = profile
-                self.name = profile_name(profile) if profile is not None else None
+            elif profile is None and self.profile is not None:
+                self.profile = profile
+            self.name = None if profile is None else profile_name(profile)
             options = EdgeOptions()
             options.use_chromium = True
             if self.headless:
@@ -85,9 +86,9 @@ class Browser:
             #     "sslProxy": PROXY,
             #     "proxyType": "MANUAL",
             # }
-            print(
-                r"{}{}..{}Drivers{}msedgedriver.exe"
-                    .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+            # print(
+            #     r"{}{}..{}Drivers{}msedgedriver.exe"
+            #         .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
             while elapsed_seconds(last_browser_set) < 0.1:
                 sleep(0.1)
             last_browser_set = now()
@@ -95,13 +96,9 @@ class Browser:
                 options=options,
                 executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
                     .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
-            # driver.set_window_size(1920, 1080)
-            print("aaaaaaaaaa", self.point)
-            print("aaaaaaaaaa", self.point.x, self.point.y)
-            driver.set_window_position(self.point.x, self.point.y, windowHandle='0')
-            print(driver.get_window_size(),
-            driver.get_window_rect(),)
+            driver.set_window_position(self.point.x, self.point.y)
             self.driver = driver
+            self.print("set_browser", False)
         except SessionNotCreatedException:
             while True:
                 Alert.say("Have to download new browser driver version")
@@ -456,10 +453,10 @@ class Browser:
 
 
 if __name__ == '__main__':
-    # s = screen_rect(2000)
-    # p = Classes.Coord(s.x, s.y)
-    # browser = Browser(p)
-    browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y))
+    s = screen_rect(1000)
+    p = Classes.Coord(s.x, s.y)
+    browser = Browser(p)
+    # browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y))
     # browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y),
     # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
     browser.new_page('https://www.expressvpn.com/what-is-my-ip')
