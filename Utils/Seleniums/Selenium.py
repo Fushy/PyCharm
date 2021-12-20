@@ -18,7 +18,6 @@ from urllib3.exceptions import MaxRetryError, NewConnectionError
 
 from Alert import say, notify_win
 from Classes import Coord
-from Sysconf import screens_pos
 from Times import now, elapsed_seconds
 
 

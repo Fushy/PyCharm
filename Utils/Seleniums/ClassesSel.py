@@ -15,10 +15,11 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from urllib3.exceptions import NewConnectionError, MaxRetryError
 
-from Alert import say
-from Classes import Coord
+import Alert
+import Classes
 from Enum import FIRST
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text
+from Sysconf import SCREENS, screen_rect
 from Times import now, elapsed_seconds
 from Util import is_iter
 
@@ -28,18 +29,19 @@ last_browser_set = now()
 
 class Browser:
     # noinspection PyTypeChecker
-    def __init__(self, point, profile, headless=False):
-        self.point: Coord = point
+    def __init__(self, point, profile=None, headless=False):
+        # self.point: Coord = point
+        self.point = point
         self.profile: str = profile
         self.headless: bool = headless
         self.working_window_num: int = 0
         self.driver: WebDriver = None
-        self.name: str = profile_name(profile)
+        self.name: Optional[str] = None
         self.windows_url: list[str] = [""]
         self.set_browser()
 
     def __str__(self):
-        return "{} {} {}".format(self.name, self.windows_url, self.profile)
+        return "{} {} {} {}".format(self.name, self.windows_url, self.point, self.profile)
 
     def __len__(self):
         return len(self.driver.window_handles)
@@ -66,7 +68,7 @@ class Browser:
             self.windows_url: list[str] = [""]
             if profile is not None:
                 self.profile = profile
-                self.name = profile_name(profile)
+                self.name = profile_name(profile) if profile is not None else None
             options = EdgeOptions()
             options.use_chromium = True
             if self.headless:
@@ -93,12 +95,16 @@ class Browser:
                 options=options,
                 executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
                     .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
-            driver.set_window_size(1920, 1080)
-            driver.set_window_position(self.point.x, self.point.y)
+            # driver.set_window_size(1920, 1080)
+            print("aaaaaaaaaa", self.point)
+            print("aaaaaaaaaa", self.point.x, self.point.y)
+            driver.set_window_position(self.point.x, self.point.y, windowHandle='0')
+            print(driver.get_window_size(),
+            driver.get_window_rect(),)
             self.driver = driver
         except SessionNotCreatedException:
             while True:
-                say("Have to download new browser driver version")
+                Alert.say("Have to download new browser driver version")
                 sleep(3)
         except InvalidArgumentException:
             raise InvalidSessionIdException("profile is already open")
@@ -155,19 +161,19 @@ class Browser:
             self.update_windows_url()
         except InvalidSessionIdException as err:
             print("\terror new_page InvalidSessionIdException", str(err))
-            say("error new_page InvalidSessionIdException")
+            Alert.say("error new_page InvalidSessionIdException")
             print(traceback.format_exc(), file=sys.stderr)
             return self.new_page(url, window_num, tries + 1)
         except TimeoutException as err:
             print("\terror new_page TimeoutException", str(err))
-            say("error new_page TimeoutException")
+            Alert.say("error new_page TimeoutException")
             print(traceback.format_exc(), file=sys.stderr)
             return self.new_page(url, window_num, tries + 1)
         except WebDriverException or MaxRetryError or ConnectionRefusedError or NewConnectionError as err:
             print(
                 "\terror new_page WebDriverException MaxRetryError ConnectionRefusedError NewConnectionError",
                 str(err))
-            say("critical error new_page")
+            Alert.say("critical error new_page")
             print(traceback.format_exc(), file=sys.stderr)
             sleep(1)
             self.quit()
@@ -196,7 +202,7 @@ class Browser:
         try:
             if wanted_url not in self.current_url():
                 self.print(("url_is_not_good", wanted_url, self.current_url()))
-                say("url is not good")
+                Alert.say("url is not good")
                 self.new_page(wanted_url, self.get_current_window_num())
                 return False
             return True
@@ -243,13 +249,13 @@ class Browser:
                 return elements[0]
         return None
         # except NoSuchWindowException or NoSuchElementException as err:
-        #     say("\twin dont exist", str(err))
+        #     Alert.say("\twin dont exist", str(err))
         #     sleep(1)
         #     return self.get_element(url, selector, find_element_fun, debug)
         # except Exception or UnboundLocalError or AttributeError or NoSuchElementException or \
         #        StaleElementReferenceException or ElementClickInterceptedException:
         #     print(traceback.format_exc(), file=sys.stderr)
-        #     say("\tget_element None")
+        #     Alert.say("\tget_element None")
         #     sleep(1)
         #     return self.get_element(url, selector, find_element_fun, debug)
 
@@ -356,16 +362,16 @@ class Browser:
         # except NoSuchWindowException or NoSuchElementException as err:
         #     # ok
         #     self.print(("get_text_4 win dont exist", err))
-        #     # say("\tget_text 5 win dont exist", str(err))
+        #     # Alert.say("\tget_text 5 win dont exist", str(err))
         #     sleep(3)
-        #     say("check check check")
+        #     Alert.say("check check check")
         #     return ""
         # except Exception or UnboundLocalError or AttributeError or StaleElementReferenceException or \
         #        ElementClickInterceptedException as err:
         #     self.print(("error Exception get_text", err))
         #     print(traceback.format_exc(), file=sys.stderr)
         #     print("\tget_text_5 None -1")
-        #     say("get_text None -1")
+        #     Alert.say("get_text None -1")
         #     sleep(5)
         #     return None
 
@@ -450,6 +456,11 @@ class Browser:
 
 
 if __name__ == '__main__':
-    browser = Browser(Coord(0, 0), r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
-    # browser.new_page("https://translate.google.fr/", 5)
+    # s = screen_rect(2000)
+    # p = Classes.Coord(s.x, s.y)
+    # browser = Browser(p)
+    browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y))
+    # browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y),
+    # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
     browser.new_page('https://www.expressvpn.com/what-is-my-ip')
+    input()

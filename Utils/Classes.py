@@ -1,6 +1,20 @@
 import random
 
 
+class Condition:
+    def __init__(self, **kwargs):
+        self.update(kwargs=kwargs)
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def update(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+    def is_done(self):
+        return all(self.__dict__.values())
+
+
 class Coord:
     def __init__(self, x, y):
         self.x = x
@@ -11,18 +25,17 @@ class Coord:
 
 
 class OpenPack:
-    def __init__(self, pack_price: float, patterns: list[list[int, dict[str, float]]], alone: dict[str, float] = None,
-                 bend: dict[str, list[str, int]] = None):
+    def __init__(self, pack_price, patterns, alone=None, bend=None):
         """
         :type patterns
             Contient la liste des patterns d'ouverture des paquets
             Le premier element de la liste est le nombre de paquet ouvert
             Le deuxieme element de la liste est un dictionnaire contenant les odds par nom de rareté
         """
-        self.bend = bend
-        self.patterns = patterns
-        self.pack_price = pack_price
-        self.alone = alone
+        self.pack_price: float = pack_price
+        self.patterns: list[list[int, dict[str, float]]] = patterns
+        self.alone: dict[str, float] = alone
+        self.bend: dict[str, list[str, int]] = bend
         self.pack_open = 0
         self.total_price = 0
         self.nft_open = {}
@@ -142,7 +155,6 @@ class OpenPack:
 
 
 if __name__ == '__main__':
-    # say("go")
     godslegend = OpenPack(
         9.99,
         [

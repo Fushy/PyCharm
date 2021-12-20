@@ -9,6 +9,7 @@ from pathlib import Path
 # How to install ffmpeg to pydub
 # http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
 import Threads
+import Classes
 
 
 def speedup_mp3(file, speed: float = 2):
@@ -40,10 +41,13 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False)
         Threads.run(playback.play(sound))
 
 
-def loop_say(msg, seconds=60):
-    while True:
-        say(msg)
-        sleep(seconds)
+def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
+    def fun():
+        while not condition.is_done():
+            say(msg)
+            sleep(seconds)
+        print("loop_say end", condition)
+    fun() if blocking else Threads.run(fun)
 
 
 # def alert(msg, level):

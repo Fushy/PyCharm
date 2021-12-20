@@ -20,7 +20,8 @@ from Times import now
 # pip install selenium
 # pip install msedge-selenium-tools
 # pip install http-request-randomizer
-
+# pip install python-telegram-bot
+# pip install screeninfo
 
 # TODO verif type
 # if type(browser).__name__ != WebDriver.__name__ and type(browser).__name__ != WebElement.__name__:
