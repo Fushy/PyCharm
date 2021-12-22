@@ -19,7 +19,7 @@ import Alert
 import Classes
 from Enum import FIRST
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text
-from Sysconf import screen_rect
+from Sysconf import screen_rect, SCREENS
 from Times import now, elapsed_seconds
 from Util import is_iter
 
@@ -113,6 +113,14 @@ class Browser:
 
     def current_url(self):
         return self.update_windows_url()
+
+    def wait_new_window(self, old_count):
+        start = now()
+        while len(self) <= old_count:
+            sleep(0.1)
+            if elapsed_seconds(start) >= 5:
+                return False
+        return True
 
     def goto(self, window_num, update_working=True):
         print("len(self)", len(self), window_num)
@@ -289,7 +297,6 @@ class Browser:
         self.assert_url(url)
         if find_element_fun is None:
             find_element_fun = self.driver.find_element_by_xpath
-        print("a")
         find_element_fun_name = find_element_fun.__name__
         if "elements" in find_element_fun_name:
             self.print("wait_element_find_element_fun_is_not_a_good_type")
@@ -297,7 +304,6 @@ class Browser:
         start_refresh = now()
         start_leave = now()
         element = None
-        print("a")
         if appear:
             # On attend que l'element apparaisse
             element = self.get_element(selector, find_element_fun)
@@ -305,9 +311,7 @@ class Browser:
         else:
             # On attend que l'element disparaisse
             condition = self.get_element(selector, find_element_fun) is not None
-        print("b")
         while condition:
-            print("c")
             self.assert_url(url)
             if appear:
                 element = self.get_element(selector, find_element_fun)
@@ -424,6 +428,11 @@ class Browser:
         # except ElementNotInteractableException as err:
         #     print(err)
 
+    def click_n_wait_new_window(self, element: WebElement) -> bool:
+        old_count = len(self)
+        self.element_click(element)
+        return self.wait_new_window(old_count)
+
     def element_send(self, element: WebElement, *keys):
         self.print(("element_send", keys), False)
         if element is None:
@@ -459,9 +468,9 @@ class Browser:
 if __name__ == '__main__':
     s = screen_rect(1000)
     p = Classes.Coord(s.x, s.y)
-    browser = Browser(p)
+    # browser = Browser(p)
     # browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y))
-    # browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y),
+    browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y))
     # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
     browser.new_page('https://www.expressvpn.com/what-is-my-ip')
     input()
