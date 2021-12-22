@@ -289,6 +289,7 @@ class Browser:
         self.assert_url(url)
         if find_element_fun is None:
             find_element_fun = self.driver.find_element_by_xpath
+        print("a")
         find_element_fun_name = find_element_fun.__name__
         if "elements" in find_element_fun_name:
             self.print("wait_element_find_element_fun_is_not_a_good_type")
@@ -296,6 +297,7 @@ class Browser:
         start_refresh = now()
         start_leave = now()
         element = None
+        print("a")
         if appear:
             # On attend que l'element apparaisse
             element = self.get_element(selector, find_element_fun)
@@ -303,7 +305,9 @@ class Browser:
         else:
             # On attend que l'element disparaisse
             condition = self.get_element(selector, find_element_fun) is not None
+        print("b")
         while condition:
+            print("c")
             self.assert_url(url)
             if appear:
                 element = self.get_element(selector, find_element_fun)

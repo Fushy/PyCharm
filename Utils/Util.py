@@ -31,6 +31,7 @@ from Times import now
 
 
 def current():
+    a = inspect.stack()
     print("Current file:", inspect.currentframe().f_code.co_filename)
     # print("Current fun:", inspect.stack(1)[0].function)
     print("Current fun:", inspect.currentframe().f_code.co_name)

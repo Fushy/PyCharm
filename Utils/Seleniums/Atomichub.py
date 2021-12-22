@@ -2,6 +2,8 @@ from time import sleep
 
 from selenium.common.exceptions import StaleElementReferenceException
 
+from Alert import say
+from Times import now, elapsed_seconds
 from Wax import whitelist_wam_account
 
 
@@ -30,14 +32,18 @@ def atomichub_transfert_nft(browser, name_to: str, nft_ids: list[int]):
         confirm_button_xpath = "/html/body/div[3]/div/div/div[2]/div[2]/div/button"
         browser.wait_element(url_transfert, confirm_button_xpath)
         transaction_message_xpath = "/html/body/div[3]/div/div/div/div[2]/div[1]"
+        start = now()
         while True:
             transaction_message_text = browser.get_text(transaction_message_xpath)
             if transaction_message_text is not None and "Transaction" in transaction_message_text:
-                break
+                return True
             elif transaction_message_text == "Confirm":
                 confirm_button = browser.get_element(confirm_button_xpath)
                 browser.element_click(confirm_button)
             sleep(1)
+            if elapsed_seconds(start) >= 15:
+                say("wax approve have to validate transfert")
+                return atomichub_transfert_nft(browser, name_to, nft_ids)
     except StaleElementReferenceException:
         return atomichub_transfert_nft(browser, name_to, nft_ids)
 

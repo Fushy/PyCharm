@@ -3,9 +3,8 @@ from time import sleep
 from selenium.common.exceptions import NoSuchWindowException, WebDriverException
 
 from Alert import say
-from Seleniums.Selenium import wait_second_window_off
+from Seleniums.Selenium import wait_second_window_off, get_element_text
 from Times import now, elapsed_seconds
-from Wax import WAX_APPROVE_URL
 
 
 def wait_close_login_pop_up(browser, name):
@@ -36,7 +35,6 @@ def check_wax_approve(browser):
         for i in range(len(browser))[::-1]:
             browser.goto(i, False)
             approve_xpath = "/html/body/div/div/section/div[2]/div/div[5]/button"
-            browser.print("Avant boucle", False)
             start_while, start_refresh = now(), now()
             while browser.driver.get_window_size()["width"] < 1000:
                 approve_text = browser.get_text(approve_xpath)
@@ -55,7 +53,7 @@ def check_wax_approve(browser):
                     login_button_xpath_3 = "/html/body/div/div/div/div/div[5]/div/div/div/div[4]/button"
                     login_button = browser.get_element([login_button_xpath_1, login_button_xpath_2, login_button_xpath_3])
                     while login_button and browser.driver.get_window_size()["width"] < 1000:
-                        login_button = browser.get_element([login_button_xpath_1, login_button_xpath_2])
+                        login_button = browser.get_element([login_button_xpath_1, login_button_xpath_2] and "ogin" in get_element_text(login_button))
                         say("wax approve have to login")
                         sleep(10)
                     browser.refresh()
