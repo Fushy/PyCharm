@@ -55,7 +55,7 @@ def alert(msg, level):
     if level == 3:
         for _ in range(2):
             say(msg)
-            telegram_msg("Hello !")
+            telegram_msg(msg)
             sleep(3)
 
 
