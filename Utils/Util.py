@@ -93,12 +93,7 @@ def is_iter(element):
 
 
 def know_connected_wifi_password():
-    """netsh
-    wlan
-    show
-    profiles
-    "MAIS_MAROL"
-    key = clear"""
+    """netsh wlan show profiles "MAIS_MAROL" key = clear"""
 
 
 def infinite_sequence():

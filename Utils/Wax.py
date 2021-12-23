@@ -53,6 +53,10 @@ def whitelist_wam_account(name, memo=None):
         "xvzwu.wam",
         "jd1.2.c.wam",
         "n11k2.c.wam",
+
+        "g32ke.c.wam",
+        "oj3.e.c.wam",
+        "e33ke.c.wam",
     ]
     if memo is None:
         return name in whitelist
