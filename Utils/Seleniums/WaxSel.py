@@ -46,22 +46,30 @@ def check_wax_approve(browser):
                     if approve is not None:
                         browser.element_click(approve)
                         sleep(2)  # Attend que la transaction fasse effet
+                else:
+                    login_button_xpath_1 = "/html/body/div/div/section/div[2]/div/div/button"
+                    login_button_xpath_2 = "/html/body/div/div/div/div/div/div[3]/button"
+                    login_button_xpath_3 = "/html/body/div/div/div/div/div[5]/div/div/div/div[4]/button"
+                    login_buttons_xpath = [login_button_xpath_1, login_button_xpath_2, login_button_xpath_3]
+                    login_button = browser.get_element(login_buttons_xpath)
+                    while login_button and browser.driver.get_window_size()["width"] < 1000\
+                        or browser.current_url() == WAX_APPROVE_URL:
+                        login_button_text = get_element_text(login_button)
+                        print("login_button_text", login_button_text)
+                        if login_button_text == "Approve":
+                            approve = browser.get_element(approve_xpath)
+                            if approve is not None:
+                                browser.element_click(approve)
+                                sleep(2)
+                        else:
+                            login_button = browser.get_element(login_buttons_xpath)
+                            msg = browser.name + "wax approve have to login"
+                            say(msg)
+                            telegram_msg(msg)
+                            sleep(10)
                 if elapsed_seconds(start_while) > 60:
                     browser.goto_work()
                     return False
-                login_button_xpath_1 = "/html/body/div/div/section/div[2]/div/div/button"
-                login_button_xpath_2 = "/html/body/div/div/div/div/div/div[3]/button"
-                login_button_xpath_3 = "/html/body/div/div/div/div/div[5]/div/div/div/div[4]/button"
-                login_buttons_xpath = [login_button_xpath_1, login_button_xpath_2, login_button_xpath_3]
-                login_button = browser.get_element(login_buttons_xpath)
-                while login_button and browser.driver.get_window_size()["width"] < 1000 or browser.current_url() == WAX_APPROVE_URL:
-                    login_button_text = get_element_text(login_button)
-                    print("login_button_text", login_button_text)
-                    login_button = browser.get_element(login_buttons_xpath)
-                    msg = browser.name + "wax approve have to login"
-                    say(msg)
-                    telegram_msg(msg)
-                    sleep(10)
                 if not browser.goto(i, False):
                     del browser.windows_url[i]
                     browser.goto_work()
