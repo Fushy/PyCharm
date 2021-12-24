@@ -6,6 +6,7 @@ from Alert import say
 from Seleniums.Selenium import wait_second_window_off, get_element_text
 from Telegrams import telegram_msg
 from Times import now, elapsed_seconds
+from Wax import WAX_APPROVE_URL
 
 
 def wait_close_login_pop_up(browser, name):
@@ -53,7 +54,7 @@ def check_wax_approve(browser):
                 login_button_xpath_3 = "/html/body/div/div/div/div/div[5]/div/div/div/div[4]/button"
                 login_buttons_xpath = [login_button_xpath_1, login_button_xpath_2, login_button_xpath_3]
                 login_button = browser.get_element(login_buttons_xpath)
-                while login_button and browser.driver.get_window_size()["width"] < 1000:
+                while login_button and browser.driver.get_window_size()["width"] < 1000 or browser.current_url() == WAX_APPROVE_URL:
                     login_button_text = get_element_text(login_button)
                     print("login_button_text", login_button_text)
                     login_button = browser.get_element(login_buttons_xpath)

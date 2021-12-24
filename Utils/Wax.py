@@ -1,4 +1,4 @@
-WAX_APPROVE_URL = "https://all-access.wax.io/"
+WAX_APPROVE_URL = r"https://all-access.wax.io/"
 
 
 # def name_to_whitelist_wax_name(name: str):
