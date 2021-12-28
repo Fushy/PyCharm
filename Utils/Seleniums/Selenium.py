@@ -249,6 +249,8 @@ def wait_alerte_and_close_it(browser, leave=60):
 
 
 def get_element_text(element: WebElement, debug=False):
+    if element is None:
+        return None
     element_text = element.text
     if debug:
         print("\tget_element_text <|" + element_text[:10] + "|>")

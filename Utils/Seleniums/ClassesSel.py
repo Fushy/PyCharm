@@ -9,7 +9,7 @@ from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
 from selenium.common.exceptions import SessionNotCreatedException, InvalidSessionIdException, TimeoutException, \
     WebDriverException, InvalidArgumentException, NoSuchWindowException, StaleElementReferenceException, \
-    MoveTargetOutOfBoundsException
+    MoveTargetOutOfBoundsException, ElementNotInteractableException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
@@ -97,6 +97,7 @@ class Browser:
                 executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
                     .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
             driver.set_window_position(self.point.x, self.point.y)
+            driver.set_window_size(1920, 1080)
             self.driver = driver
             self.print("set_browser", False)
         except SessionNotCreatedException:
@@ -201,7 +202,10 @@ class Browser:
         self.goto_main()
 
     def refresh(self):
-        self.driver.refresh()
+        try:
+            self.driver.refresh()
+        except NoSuchWindowException:
+            "selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed"
 
     def assert_url(self, wanted_url):
         try:
@@ -215,7 +219,7 @@ class Browser:
             #     """NoSuchWindowException: Si la fenetre n'existe plus"""
             #     return None
             self.goto_work()
-            return self.assert_url(wanted_url)
+            return None
 
     def get_current_window_num(self):
         return self.driver.window_handles.index(self.driver.current_window_handle)
@@ -243,20 +247,21 @@ class Browser:
         is_elements = "elements" in find_element_fun_name
         if not is_elements:
             find_element_fun = check_find_fun(self.driver, find_element_fun_name)
-        # try:
-        if type(selectors) is str:
-            selectors = [selectors]
-        for selector in selectors:
-            elements: list[WebElement] = find_element_fun(selector)
-            if is_elements:
-                return elements
-            elif type(elements) == list and len(elements) > 0:
-                return elements[0]
-        return None
-        # except NoSuchWindowException or NoSuchElementException as err:
-        #     Alert.say("\twin dont exist", str(err))
-        #     sleep(1)
-        #     return self.get_element(url, selector, find_element_fun, debug)
+        try:
+            if type(selectors) is str:
+                selectors = [selectors]
+            for selector in selectors:
+                elements: list[WebElement] = find_element_fun(selector)
+                if is_elements:
+                    return elements
+                elif type(elements) == list and len(elements) > 0:
+                    return elements[0]
+            return None
+        except NoSuchWindowException as err:
+            # selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed
+            self.print("win dont exist")
+            sleep(1)
+            return None
         # except Exception or UnboundLocalError or AttributeError or NoSuchElementException or \
         #        StaleElementReferenceException or ElementClickInterceptedException:
         #     print(traceback.format_exc(), file=sys.stderr)
@@ -400,7 +405,7 @@ class Browser:
         self.print(("element_click", element), False)
         if element is None:
             self.print("element_click_element_is_None")
-            return
+            return False
         # try:
         try:
             is_enable = element.is_enabled()
@@ -411,6 +416,7 @@ class Browser:
                 sleep(0.1)
             self.print(("clickA", element.is_enabled()))
             ActionChains(self.driver).click(element).perform()
+            return True
         except AttributeError:
             self.print("error_element_click")
             is_enable = element.is_enabled()
@@ -421,12 +427,16 @@ class Browser:
                 sleep(0.1)
             element.click()
             self.print(("clickB", element.text))
+            return True
         except StaleElementReferenceException:
             """N'existe plus"""
+            return False
         except MoveTargetOutOfBoundsException:
             """N'est plus dans le champs cliquable"""
-        # except ElementNotInteractableException as err:
-        #     print(err)
+            return False
+        except ElementNotInteractableException:
+            """N'est plus dans le champs cliquable"""
+            return False
 
     def click_n_wait_new_window(self, element: WebElement) -> bool:
         old_count = len(self)

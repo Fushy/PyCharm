@@ -39,6 +39,12 @@ def check_wax_approve(browser):
             approve_xpath = "/html/body/div/div/section/div[2]/div/div[5]/button"
             start_while = now()
             while browser.driver.get_window_size()["width"] < 1000:
+                error_xpath = "/html/body/div/div/section/div[2]/div/div[4]"
+                is_error = browser.get_text(error_xpath)
+                if is_error is not None and "Error" in is_error:
+                    browser.close()
+                    browser.goto_work()
+                    return False
                 approve_text = browser.get_text(approve_xpath)
                 browser.print("approve_text", approve_text)
                 if approve_text == "Approve":
