@@ -73,6 +73,7 @@ def check_wax_approve(browser):
                             say(msg)
                             telegram_msg(msg)
                             sleep(10)
+                    browser.goto(i, False)
                 if elapsed_seconds(start_while) > 60:
                     browser.goto_work()
                     return False
@@ -80,6 +81,7 @@ def check_wax_approve(browser):
                     del browser.windows_url[i]
                     browser.goto_work()
                     return True
+            browser.goto(i, False)
     except NoSuchWindowException or WebDriverException:
         browser.print("Err boucle", False)
         browser.goto_work()

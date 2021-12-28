@@ -62,13 +62,14 @@ class Browser:
             # https://github.com/operasoftware/operachromiumdriver/releases
         """
         try:
+            self.print(("set_browser", profile), False)
             self.working_window_num = 0
             self.driver = None
             self.windows_url: list[str] = [""]
             if profile is not None:
                 self.profile = profile
             elif profile is None and self.profile is not None:
-                self.profile = profile
+                pass
             self.name = None if profile is None else profile_name(profile)
             options = EdgeOptions()
             options.use_chromium = True
