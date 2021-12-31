@@ -77,10 +77,13 @@ def check_wax_approve(browser):
                     browser.goto_work()
                     return False
                 if not browser.goto(i, False):
-                    del browser.windows_url[i]
+                    if len(browser) > i:
+                        del browser.windows_url[i]
+                        browser.goto_work()
+                        return True
                     browser.goto_work()
                     return True
-    except NoSuchWindowException or WebDriverException:
+    except NoSuchWindowException or WebDriverException or AttributeError:
         browser.print("Err boucle", False)
         browser.goto_work()
         if i is not None and len(browser.windows_url) > i:

@@ -68,8 +68,8 @@ class Browser:
             if profile is not None:
                 self.profile = profile
             elif profile is None and self.profile is not None:
-                self.profile = profile
-            self.name = None if profile is None else profile_name(profile)
+                pass
+            self.name = None if self.profile is None else profile_name(self.profile)
             options = EdgeOptions()
             options.use_chromium = True
             if self.headless:
