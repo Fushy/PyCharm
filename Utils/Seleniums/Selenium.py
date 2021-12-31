@@ -251,7 +251,11 @@ def wait_alerte_and_close_it(browser, leave=60):
 def get_element_text(element: WebElement, debug=False):
     if element is None:
         return None
-    element_text = element.text
+    try:
+        element_text = element.text
+    except StaleElementReferenceException:
+        # selenium.common.exceptions.StaleElementReferenceException: Message: stale element reference: element is not attached to the page document
+        return None
     if debug:
         print("\tget_element_text <|" + element_text[:10] + "|>")
     return element_text

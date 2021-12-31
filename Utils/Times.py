@@ -11,6 +11,10 @@ def elapsed_seconds(date_time: datetime):
     return (datetime.datetime.now() - date_time).total_seconds()
 
 
+def elapsed_minutes(date_time: datetime):
+    return (datetime.datetime.now() - date_time).total_seconds() / 60
+
+
 def times(fun: Callable, *args):
     repeat = 10
     n = 3

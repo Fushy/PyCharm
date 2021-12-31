@@ -1,4 +1,5 @@
 import inspect
+import itertools
 import os.path
 from collections.abc import Iterable
 from datetime import timedelta
@@ -95,6 +96,14 @@ def is_iter(element):
 
 def know_connected_wifi_password():
     """netsh wlan show profiles "MAIS_MAROL" key = clear"""
+
+
+def permutations(elements):
+    return list(itertools.permutations(elements))
+
+
+def all_permutations(elements):
+    return [set(itertools.permutations(elements, i)) for i in range(len(elements))]
 
 
 def infinite_sequence():

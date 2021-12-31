@@ -17,6 +17,7 @@ from urllib3.exceptions import NewConnectionError, MaxRetryError
 
 import Alert
 import Classes
+from Colors import printc
 from Enum import FIRST
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text
 from Sysconf import screen_rect, SCREENS
@@ -43,7 +44,15 @@ class Browser:
         return "{} {} {} {}".format(self.name, self.windows_url, self.point, self.profile)
 
     def __len__(self):
-        return len(self.driver.window_handles)
+        try:
+            return len(self.driver.window_handles)
+        except WebDriverException:
+            # selenium.common.exceptions.WebDriverException: Message: chrome not reachable
+            sleep(1)
+            try:
+                return len(self.driver.window_handles)
+            except WebDriverException:
+                return 0
 
     def print(self, texts: str | Iterable, tab=True):
         print(
@@ -51,6 +60,17 @@ class Browser:
                 "\t" if tab else "", self.name,
                 " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
                 self))
+
+    def printc(self, texts: str | Iterable, color="green", background_color=None, attributes: Optional[list]=None, tab=True):
+        printc(
+            "{}{} {}\t\t\t{}".format(
+                "\t" if tab else "",
+                self.name,
+                " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+                self),
+            color=color,
+            background_color=background_color,
+            attributes=attributes)
 
     def set_browser(self, profile=None):
         global last_browser_set
@@ -115,7 +135,9 @@ class Browser:
     def current_url(self):
         return self.update_windows_url()
 
-    def wait_new_window(self, old_count):
+    def wait_new_created_window(self, old_count=None):
+        if old_count is None:
+            old_count = len(self)
         start = now()
         while len(self) <= old_count:
             sleep(0.1)
@@ -144,13 +166,13 @@ class Browser:
         return self.goto(self.working_window_num)
 
     def goto_last(self):
-        return self.goto(len(self.driver.window_handles) - 1)
+        return self.goto(len(self) - 1)
 
     def set_windows_url(self, url, window_num):
         for i in range(window_num):
-            if i > len(self.driver.window_handles) - 1:
+            if i >= len(self):
                 self.new_tab()
-            if i > len(self.windows_url) - 1:
+            if i >= len(self.windows_url):
                 self.windows_url.append("")
         self.windows_url[window_num - 1] = url
 
@@ -237,8 +259,9 @@ class Browser:
         self.driver.quit()
         self.driver = None
 
-    def get_element(self, selectors: str | list[str], find_element_fun: Callable[[WebDriver], str] = None, debug=False) \
-        -> None | WebElement | list[WebElement]:
+    def get_element(self, selectors: str | list[str], find_element_fun: Callable[[WebDriver], str] = None,
+                    debug=False) \
+            -> None | WebElement | list[WebElement]:
         if debug is None:
             self.print(("get_element", self, selectors, False))
         if find_element_fun is None:
@@ -342,8 +365,8 @@ class Browser:
             self.print("True")
         return element if element is not None else True
 
-    def get_text(self, selector: str, find_element_fun=None, refresh_time=None, leave=None, debug=False) \
-        -> Optional[str]:
+    def get_text(self, url, selector: str, find_element_fun=None, refresh_time=None, leave=None, debug=False) \
+            -> Optional[str]:
         if debug is None:
             self.print(("get_text", selector, refresh_time, leave), False)
         if find_element_fun is None:
@@ -357,12 +380,12 @@ class Browser:
             raise ValueError("get_text selector is not a good type")
         try:
             if leave is not None:
-                if self.wait_element(selector, find_element_fun, leave=leave, debug=debug) is False:
+                if self.wait_element(url, selector, find_element_fun, leave=leave, debug=debug) is False:
                     if debug:
                         self.print("get_text_2 None")
                     return None
             elif refresh_time is not None:
-                self.wait_element(selector, find_element_fun, refresh=refresh_time, debug=debug)
+                self.wait_element(url, selector, find_element_fun, refresh=refresh_time, debug=debug)
             element = self.get_element(selector, find_element_fun)
             if element is None:
                 return None
@@ -392,11 +415,11 @@ class Browser:
         while elapsed_seconds(start) < leave:
             if elapsed_seconds(start) >= refresh:
                 if url is not None:
-                    self.new_page(browser, url)
+                    self.new_page(url)
                 else:
                     browser.refresh()
                 start = now()
-            text = self.get_text(xpath, leave=1, debug=debug, find_element_fun=find_element_fun)
+            text = self.get_text(url, xpath, leave=1, debug=debug, find_element_fun=find_element_fun)
             if text is not None and len(text) >= min_txt_len:
                 return text
         return False
@@ -438,10 +461,10 @@ class Browser:
             """N'est plus dans le champs cliquable"""
             return False
 
-    def click_n_wait_new_window(self, element: WebElement) -> bool:
-        old_count = len(self)
+    def click_n_wait_new_created_window(self, element: WebElement) -> bool:
+        old_count_window = len(self)
         self.element_click(element)
-        return self.wait_new_window(old_count)
+        return self.wait_new_created_window(old_count_window)
 
     def element_send(self, element: WebElement, *keys):
         self.print(("element_send", keys), False)
