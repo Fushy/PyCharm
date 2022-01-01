@@ -146,7 +146,6 @@ class Browser:
         return True
 
     def goto(self, window_num, update_working=True):
-        print("len(self)", len(self), window_num)
         if len(self) <= window_num:
             return False
         try:
@@ -182,7 +181,7 @@ class Browser:
                 return False
             if window_num is None:
                 window_num = self.get_current_window_num()
-            self.print(("new_page", self, url, window_num, tries), False)
+            self.print(("new_page", url, window_num, tries, self), False)
             self.goto(window_num)
             self.driver.get(url)
             print("\t", "loaded new_page", self)
@@ -228,6 +227,11 @@ class Browser:
             self.driver.refresh()
         except NoSuchWindowException:
             "selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed"
+
+    def relaunch(self):
+        self.quit()
+        self.printc("relaunch|" + str(self.profile) + "|", color="red")
+        self.set_browser()
 
     def assert_url(self, wanted_url):
         try:
@@ -321,7 +325,7 @@ class Browser:
 
     def wait_element(self, url, selector: str, find_element_fun: Callable[[WebDriver], str] = None,
                      appear=True, refresh: int = None, leave: int = None, debug=False) -> Union[bool, WebElement]:
-        self.print(("wait_element", self, url, selector, appear, refresh, leave), False)
+        self.print(("wait_element", url, selector, appear, refresh, leave, self), False)
         self.assert_url(url)
         if find_element_fun is None:
             find_element_fun = self.driver.find_element_by_xpath
@@ -408,17 +412,17 @@ class Browser:
         #     sleep(5)
         #     return None
 
-    def wait_text(self, url, xpath=None, leave=60, refresh=30, min_txt_len=1, debug=True, find_element_fun=None):
+    def wait_text(self, url, xpath=None, leave=60, refresh=22, min_txt_len=1, debug=True, find_element_fun=None):
         self.print(("wait_text", leave, refresh, min_txt_len))
         self.assert_url(url)
-        start = now()
+        start, start_refresh = now(), now()
         while elapsed_seconds(start) < leave:
-            if elapsed_seconds(start) >= refresh:
+            if elapsed_seconds(start_refresh) >= refresh:
                 if url is not None:
                     self.new_page(url)
                 else:
                     browser.refresh()
-                start = now()
+                start_refresh = now()
             text = self.get_text(url, xpath, leave=1, debug=debug, find_element_fun=find_element_fun)
             if text is not None and len(text) >= min_txt_len:
                 return text
