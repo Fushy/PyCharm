@@ -1,6 +1,7 @@
 import math
+from datetime import timedelta
 from decimal import Decimal
-from random import random
+from random import random, randint
 import statistics
 
 
@@ -18,12 +19,17 @@ def convert(text, x):
         return x / 24
 
 
+def rng_int_between(minimal, maximal):
+    return randint(minimal, maximal)
+
+
 def rng_float_between(a, b):
     return (b - a) * random() + a
 
 
-def rng_nearly(n, percent):
-    return rng_float_between(n * (1 - percent), n * (1 + percent))
+def rng_nearly(n, percent, floor=False) -> float:
+    return rng_float_between(n * (1 - percent) if not floor else 0,
+                             n * (1 + percent) if not floor else n * percent)
 
 
 def generate_sleep_time(run_time, hit_time):
@@ -35,9 +41,13 @@ def generate_sleep_time(run_time, hit_time):
     rng = random()
     for sleep_time, odds in pattern[1][::-1]:
         if rng <= odds:
-            return rng_nearly(sleep_time * sleep_per_hit / pattern[0], 0.5)
+            return rng_nearly(sleep_time * sleep_per_hit / pattern[0], 0.25)
         rng -= odds
     return 0
+
+
+def rng_nearly_timedelta(n, percent, floor=False):
+    return timedelta(seconds=rng_nearly(n, percent, floor))
 
 
 # if __name__ == '__main__':

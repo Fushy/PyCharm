@@ -10,7 +10,7 @@ from pathlib import Path
 # http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
 import Threads
 import Classes
-from Telegrams import telegram_msg
+from Telegrams import message
 
 
 def speedup_mp3(file, speed: float = 2):
@@ -55,7 +55,7 @@ def alert(msg, level):
     if level == 3:
         for _ in range(1):
             say(msg)
-            telegram_msg(msg)
+            message(msg)
             sleep(3)
 
 

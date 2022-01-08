@@ -26,7 +26,7 @@ def echo(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_user.id, text=update.message.text)
 
 
-def telegram_msg(msg: str, to: str = None):
+def message(msg: str, to: str = None):
     if to is None:
         id_to = user_ids["ale"]
     else:
@@ -53,4 +53,4 @@ def telegram_msg(msg: str, to: str = None):
 
 
 if __name__ == '__main__':
-    telegram_msg("Bonjour")
+    message("Bonjour")

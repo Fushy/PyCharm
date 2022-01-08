@@ -9,7 +9,7 @@ from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
 from selenium.common.exceptions import SessionNotCreatedException, InvalidSessionIdException, TimeoutException, \
     WebDriverException, InvalidArgumentException, NoSuchWindowException, StaleElementReferenceException, \
-    MoveTargetOutOfBoundsException, ElementNotInteractableException
+    MoveTargetOutOfBoundsException, ElementNotInteractableException, ElementClickInterceptedException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
@@ -19,8 +19,9 @@ import Alert
 import Classes
 from Colors import printc
 from Enum import FIRST
-from Seleniums.Selenium import profile_name, check_find_fun, get_element_text
+from Seleniums.Selenium import profile_name, check_find_fun, get_element_text, get_element_class
 from Sysconf import screen_rect, SCREENS
+from Threads import run
 from Times import now, elapsed_seconds
 from Util import is_iter
 
@@ -55,13 +56,20 @@ class Browser:
                 return 0
 
     def print(self, texts: str | Iterable, tab=True):
-        print(
-            "{}{} {}\t\t\t{}".format(
-                "\t" if tab else "", self.name,
-                " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
-                self))
+        """ Prend cerrtaines ms, a eviter si on veut optimiser la vitesse"""
 
-    def printc(self, texts: str | Iterable, color="green", background_color=None, attributes: Optional[list]=None, tab=True):
+        def aux():
+            print(
+                "{}{} {}\t\t\t{}".format(
+                    "\t" if tab else "", self.name,
+                    " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+                    self))
+
+        # run(aux)
+        aux()
+
+    def printc(self, texts: str | Iterable, color="green", background_color=None, attributes: Optional[list] = None,
+               tab=True):
         printc(
             "{}{} {}\t\t\t{}".format(
                 "\t" if tab else "",
@@ -181,7 +189,7 @@ class Browser:
                 return False
             if window_num is None:
                 window_num = self.get_current_window_num()
-            self.print(("new_page", url, window_num, tries, self), False)
+            self.print(("new_page", url, window_num, tries), False)
             self.goto(window_num)
             self.driver.get(url)
             print("\t", "loaded new_page", self)
@@ -263,11 +271,17 @@ class Browser:
         self.driver.quit()
         self.driver = None
 
+    def get_width(self) -> Optional[float]:
+        try:
+            return self.driver.get_window_size()["width"]
+        except WebDriverException:
+            return None
+
     def get_element(self, selectors: str | list[str], find_element_fun: Callable[[WebDriver], str] = None,
                     debug=False) \
             -> None | WebElement | list[WebElement]:
         if debug is None:
-            self.print(("get_element", self, selectors, False))
+            self.print(("get_element", selectors), False)
         if find_element_fun is None:
             find_element_fun = self.driver.find_element_by_xpath
         find_element_fun_name = find_element_fun.__name__
@@ -286,8 +300,8 @@ class Browser:
             return None
         except NoSuchWindowException as err:
             # selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed
-            self.print("win dont exist")
-            sleep(1)
+            # self.print("win dont exist")
+            # sleep(1)
             return None
         # except Exception or UnboundLocalError or AttributeError or NoSuchElementException or \
         #        StaleElementReferenceException or ElementClickInterceptedException:
@@ -296,9 +310,17 @@ class Browser:
         #     sleep(1)
         #     return self.get_element(url, selector, find_element_fun, debug)
 
-    def get_all_tag_that_contains(self, web_element, conditions: list[Callable],
+    def get_class(self, selector: str, find_element_fun: Callable[[WebDriver], str] = None, debug: bool = False) \
+            -> Optional[WebElement]:
+        if debug is None:
+            self.print(("get_class", selector), False)
+        return get_element_class(self.get_element(selector, find_element_fun=find_element_fun))
+
+    def get_all_tag_that_contains(self, web_element, predicats_on_text: list[Callable],
                                   tag="div", doublon=False, alone=False) -> dict[str, WebElement] | None:
         print("get_all_tag_that_contains")
+        if web_element is None:
+            return None
         elements = self.get_element(tag, web_element.find_elements_by_tag_name)
         if elements is None:
             return None
@@ -308,8 +330,8 @@ class Browser:
             if element_text is None:
                 return None
             print("\tget_all_tag_that_contains_element_text<|" + str(element_text) + "|>")
-            for condition in conditions:
-                if condition(element_text):
+            for predicat in predicats_on_text:
+                if predicat(element_text):
                     if alone:
                         element_dict[element_text] = element
                         return element_dict
@@ -323,35 +345,40 @@ class Browser:
         print(len(element_dict), element_dict)
         return element_dict
 
-    def wait_element(self, url, selector: str, find_element_fun: Callable[[WebDriver], str] = None,
-                     appear=True, refresh: int = None, leave: int = None, debug=False) -> Union[bool, WebElement]:
-        self.print(("wait_element", url, selector, appear, refresh, leave, self), False)
+    def wait_element(self,
+                     url,
+                     selectors: str | list[str],
+                     find_element_fun: Callable[[WebDriver], str] = None,
+                     appear=True,
+                     refresh: int = None,
+                     leave: int = 60,
+                     debug=False) -> WebElement | bool:
+        """ Attend qu'un ou plusieurs element apparaissent ou disparaissent"""
+        self.print(("wait_element", url, selectors, appear, refresh, leave), False)
         self.assert_url(url)
-        if find_element_fun is None:
-            find_element_fun = self.driver.find_element_by_xpath
-        find_element_fun_name = find_element_fun.__name__
-        if "elements" in find_element_fun_name:
-            self.print("wait_element_find_element_fun_is_not_a_good_type")
-            raise ValueError("wait_element_find_element_fun_is_not_a_good_type")
         start_refresh = now()
         start_leave = now()
-        element = None
-        if appear:
-            # On attend que l'element apparaisse
-            element = self.get_element(selector, find_element_fun)
-            condition = element is None
-        else:
-            # On attend que l'element disparaisse
-            condition = self.get_element(selector, find_element_fun) is not None
-        while condition:
+        # if appear:
+        #     # On attend que l'element apparaisse
+        #     element = self.get_element(selector, find_element_fun)
+        #     condition_satisfy = element is not None
+        # else:
+        #     # On attend que l'element disparaisse
+        #     condition_satisfy = self.get_element(selector, find_element_fun) is None
+        condition_satisfy = False
+        while not condition_satisfy:
             self.assert_url(url)
             if appear:
-                element = self.get_element(selector, find_element_fun)
-                condition = element is None
-            else:
-                condition = self.get_element(selector, find_element_fun) is not None
+                element = self.get_element(selectors, find_element_fun)
+                condition_satisfy = element is not None
+                if condition_satisfy:
+                    return element
+            elif not appear:
+                condition_satisfy = self.get_element(selectors, find_element_fun) is None
+                if condition_satisfy:
+                    return True
             if debug:
-                self.print((selector, find_element_fun, "url =", url))
+                self.print((selectors, find_element_fun, "url =", url))
             if refresh is not None and (now() - start_refresh).total_seconds() >= refresh:
                 if url is not None:
                     self.new_page(url)
@@ -364,96 +391,172 @@ class Browser:
                     ("r", refresh, (now() - start_refresh).total_seconds(),
                      "l", leave, (now() - start_leave).total_seconds(), "url =", url))
             if leave is not None and (now() - start_leave).total_seconds() >= leave:
-                return element if element is not None else False
-        if debug:
-            self.print("True")
-        return element if element is not None else True
+                return False
 
-    def get_text(self, url, selector: str, find_element_fun=None, refresh_time=None, leave=None, debug=False) \
-            -> Optional[str]:
-        if debug is None:
-            self.print(("get_text", selector, refresh_time, leave), False)
+    def big_wait_element(self,
+                         url: str,
+                         selector: str,
+                         find_element_fun: Callable[[WebDriver], str] = None,
+                         text: str = None,
+                         class_text: str = None,
+                         refresh: int = None,
+                         leave: int = 60,
+                         debug=False) -> WebElement | bool:
+        """ Attend qu'un element apparaisse avec plusieurs critere restrictif"""
+        self.print(("big_wait_element", url, selector, text, class_text, refresh, leave), False)
+        self.assert_url(url)
         if find_element_fun is None:
             find_element_fun = self.driver.find_element_by_xpath
-        find_element_fun_name = find_element_fun.__name__
-        if "elements" in find_element_fun_name:
-            self.print("get_text find_element_fun is not a good type")
-            raise ValueError("get_text find_element_fun is not a good type")
-        if type(selector) is not str:
-            self.print("get_text selector is not a good type")
-            raise ValueError("get_text selector is not a good type")
+        if "elements" in find_element_fun.__name__:
+            self.print("wait_element_find_element_fun_is_not_a_good_type")
+            raise ValueError("wait_element_find_element_fun_is_not_a_good_type")
+        start_refresh = now()
+        start_leave = now()
+        while leave is None or elapsed_seconds(start_leave) < leave:
+            if refresh is not None and elapsed_seconds(start_refresh) < refresh:
+                self.refresh()
+                start_refresh = now()
+            element = self.get_element(selector, find_element_fun)
+            if element is not None:
+                satisfy_text, satisfy_class = True, True
+                if text is not None:
+                    element_text = get_element_text(element, debug)
+                    if element_text is None or text not in element_text:
+                        satisfy_text = False
+                if class_text is not None:
+                    element_class = get_element_class(element, debug)
+                    if element_class is None or class_text not in element_class:
+                        satisfy_class = False
+                if satisfy_text and satisfy_class:
+                    return element
+        return False
+
+    def clicking_big_wait_element(self,
+                                  url: str,
+                                  selector: str,
+                                  find_element_fun: Callable[[WebDriver], str] = None,
+                                  text: str = None,
+                                  class_text: str = None,
+                                  element_to_click: WebElement = None,
+                                  refresh: int = None,
+                                  leave: int = 60,
+                                  sleep_click: int = 1,
+                                  debug=False) -> WebElement | bool:
+        """ Attend qu'un element apparaisse avec plusieurs critere restrictif"""
+        self.print(("clicking_big_wait_element", url, selector, text, class_text, sleep_click, refresh, leave), False)
+        self.assert_url(url)
+        if find_element_fun is None:
+            find_element_fun = self.driver.find_element_by_xpath
+        if "elements" in find_element_fun.__name__:
+            self.print("wait_element_find_element_fun_is_not_a_good_type")
+            raise ValueError("wait_element_find_element_fun_is_not_a_good_type")
+        start_refresh = now()
+        start_leave = now()
+        last_click = now()
+        while leave is None or elapsed_seconds(start_leave) < leave:
+            if refresh is not None and elapsed_seconds(start_refresh) < refresh:
+                self.refresh()
+                start_refresh = now()
+            element = self.get_element(selector, find_element_fun)
+            if element is not None:
+                if elapsed_seconds(last_click) >= sleep_click:
+                    if element_to_click is None:
+                        self.element_click(element)
+                    else:
+                        self.element_click(element_to_click)
+                    last_click = now()
+                satisfy_text, satisfy_class = True, True
+                if text is not None:
+                    element_text = get_element_text(element, debug)
+                    if element_text is None or text not in element_text:
+                        satisfy_text = False
+                if class_text is not None:
+                    element_class = get_element_class(element, debug)
+                    if element_class is None or class_text not in element_class:
+                        satisfy_class = False
+                if satisfy_text and satisfy_class:
+                    return element
+        return False
+
+    def get_text(self, url, selector: str, find_element_fun=None, refresh=None, leave=None, debug=False) \
+            -> Optional[str]:
+        """ Retourne le texte d'un element """
+        if debug is None:
+            self.print(("get_text", selector, refresh, leave), False)
+        self.assert_url(url)
+        if find_element_fun is None:
+            find_element_fun = self.driver.find_element_by_xpath
+        if "elements" in find_element_fun.__name__:
+            self.print("wait_element_find_element_fun_is_not_a_good_type")
+            raise ValueError("wait_element_find_element_fun_is_not_a_good_type")
+        if "elements" in find_element_fun.__name__:
+            self.print("wait_element_find_element_fun_is_not_a_good_type")
+            raise ValueError("wait_element_find_element_fun_is_not_a_good_type")
         try:
             if leave is not None:
                 if self.wait_element(url, selector, find_element_fun, leave=leave, debug=debug) is False:
                     if debug:
                         self.print("get_text_2 None")
                     return None
-            elif refresh_time is not None:
-                self.wait_element(url, selector, find_element_fun, refresh=refresh_time, debug=debug)
+            elif refresh is not None:
+                self.wait_element(url, selector, find_element_fun, refresh=refresh, debug=debug)
             element = self.get_element(selector, find_element_fun)
             if element is None:
                 return None
             return get_element_text(element, debug)
         except StaleElementReferenceException:
             return None
-        # except NoSuchWindowException or NoSuchElementException as err:
-        #     # ok
-        #     self.print(("get_text_4 win dont exist", err))
-        #     # Alert.say("\tget_text 5 win dont exist", str(err))
-        #     sleep(3)
-        #     Alert.say("check check check")
-        #     return ""
-        # except Exception or UnboundLocalError or AttributeError or StaleElementReferenceException or \
-        #        ElementClickInterceptedException as err:
-        #     self.print(("error Exception get_text", err))
-        #     print(traceback.format_exc(), file=sys.stderr)
-        #     print("\tget_text_5 None -1")
-        #     Alert.say("get_text None -1")
-        #     sleep(5)
-        #     return None
 
-    def wait_text(self, url, xpath=None, leave=60, refresh=22, min_txt_len=1, debug=True, find_element_fun=None):
+    def wait_text(self, url: str, selectors: Optional[str] | Optional[list[str]] = None,
+                  leave=60, refresh=22, min_txt_len=1, debug=True, find_element_fun=None) -> Optional[str]:
+        """ Retourne le texte d'un premier element trouvé"""
         self.print(("wait_text", leave, refresh, min_txt_len))
         self.assert_url(url)
         start, start_refresh = now(), now()
         while elapsed_seconds(start) < leave:
-            if elapsed_seconds(start_refresh) >= refresh:
+            if refresh is not None and elapsed_seconds(start_refresh) >= refresh:
                 if url is not None:
                     self.new_page(url)
                 else:
                     browser.refresh()
                 start_refresh = now()
-            text = self.get_text(url, xpath, leave=1, debug=debug, find_element_fun=find_element_fun)
-            if text is not None and len(text) >= min_txt_len:
-                return text
-        return False
+            if is_iter(selectors):
+                for selector in selectors:
+                    text = self.get_text(url, selector, leave=1, debug=debug, find_element_fun=find_element_fun)
+                    if text is not None and len(text) >= min_txt_len:
+                        return text
+            else:
+                text = self.get_text(url, selectors, leave=1, debug=debug, find_element_fun=find_element_fun)
+                if text is not None and len(text) >= min_txt_len:
+                    return text
+        return None
 
-    def element_click(self, element: WebElement):
+    def element_click(self, element: WebElement, debug=False) -> bool:
         self.print(("element_click", element), False)
         if element is None:
-            self.print("element_click_element_is_None")
+            if debug:
+                self.print("element_click_element_is_None")
             return False
-        # try:
         try:
-            is_enable = element.is_enabled()
-            self.print(("click_check_if_is_enable", element.is_enabled()))
-            while not is_enable:
-                self.print(("click_check_if_is_enable", element.is_enabled()))
-                is_enable = element.is_enabled()
-                sleep(0.1)
-            self.print(("clickA", element.is_enabled()))
-            ActionChains(self.driver).click(element).perform()
+            if debug:
+                self.print(("click_check_if_is_enable0", element.is_enabled()))
+            while not element.is_enabled():
+                if debug:
+                    self.print(("click_check_if_is_enable1", element.is_enabled()))
+            if debug:
+                self.print(("clickA", element.is_enabled()))
+            element.click()  # 5x plus rapide que ActionChains(self.driver).click(element).perform()
             return True
         except AttributeError:
-            self.print("error_element_click")
-            is_enable = element.is_enabled()
-            self.print(("click_check_if_is_enable", element.is_enabled()))
-            while not is_enable:
-                self.print(("click_check_if_is_enable", element.is_enabled()))
-                is_enable = element.is_enabled()
-                sleep(0.1)
-            element.click()
-            self.print(("clickB", element.text))
+            if debug:
+                self.print("error_element_click")
+                self.print(("click_check_if_is_enable2", element.is_enabled()))
+            while not element.is_enabled():
+                if debug:
+                    self.print(("click_check_if_is_enable3", element.is_enabled()))
+            ActionChains(self.driver).click(element).perform()
+            if debug:
+                self.print(("clickB", element.text))
             return True
         except StaleElementReferenceException:
             """N'existe plus"""
@@ -464,6 +567,21 @@ class Browser:
         except ElementNotInteractableException:
             """N'est plus dans le champs cliquable"""
             return False
+        except ElementClickInterceptedException:
+            """selenium.common.exceptions.ElementClickInterceptedException: Message: element click intercepted: 
+            Element <img src="https://mypinata.cloud/ipfs/QmVy4xphMjDCYGmzQR6FhU8E6gHEaMpKbzf39wKFyqNBVV" alt="1" 
+            class="carousel__img--item"> is not clickable at point (653, 377). Other element would receive the click"""
+            return False
+
+    def get_element_n_click(self, selector, find_element_fun=None) -> bool:
+        element = self.get_element(selector, find_element_fun)
+        return self.element_click(element)
+
+    def wait_element_n_click(self, url, selector, find_element_fun=None, refresh=None) -> bool:
+        element = self.wait_element(url, selector, find_element_fun, refresh=refresh)
+        if element is None:
+            return False
+        return self.element_click(element)
 
     def click_n_wait_new_created_window(self, element: WebElement) -> bool:
         old_count_window = len(self)
@@ -486,13 +604,13 @@ class Browser:
                 ActionChains(element).send_keys_to_element(keys)
             except AttributeError:
                 try:
-                    sleep(0.1)
+                    # sleep(0.1)
                     for key in keys:
                         element.send_keys(key)
                     # element.send_keys(keys)
                 except AttributeError as err:
                     print("\terror element_send", err)
-                    sleep(0.5)
+                    # sleep(0.5)
                     self.element_send(element, keys)
             except StaleElementReferenceException:
                 """N'existe plus"""
@@ -500,6 +618,14 @@ class Browser:
     def clear_send(self, element):
         for _ in range(10):
             self.element_send(element, Keys.BACK_SPACE)
+
+    def wait_url(self, url, leave=5, strict=False):
+        start = now()
+        while not ((strict and url == self.current_url()) or (not strict and url in self.current_url())):
+            sleep(0.01)
+            if elapsed_seconds(start) >= leave:
+                return False
+        return True
 
 
 if __name__ == '__main__':

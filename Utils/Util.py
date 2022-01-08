@@ -2,7 +2,7 @@ import inspect
 import itertools
 import os.path
 from collections.abc import Iterable
-from datetime import timedelta
+from datetime import timedelta, datetime
 from inspect import FrameInfo
 from time import sleep
 from typing import Callable
@@ -25,6 +25,7 @@ from Times import now
 # pip install http-request-randomizer
 # pip install python-telegram-bot
 # pip install screeninfo
+# pip install requests-html
 
 # TODO verif type
 # if type(browser).__name__ != WebDriver.__name__ and type(browser).__name__ != WebElement.__name__:
@@ -32,6 +33,12 @@ from Times import now
 #     if debug: print(error_text)
 #     raise ValueError(error_text)
 
+
+TIMEDELTA_ZERO = timedelta(seconds=0)
+
+
+def datetime_to_timedelta(x):
+    return x - datetime.strptime("0:0:0", "%H:%M:%S")
 
 def current():
     print("Current file:", inspect.currentframe().f_code.co_filename)
@@ -59,10 +66,11 @@ def frameinfo(backtimes=0, debug=False):
         print(os.path.sep, pathname.rfind(sep))
         print(os.path.sep, pathname.rfind("."))
     filename = pathname[pathname.rindex(sep) + 1:pathname.rindex(".")]
+    pathname = pathname[:pathname.rindex(sep) + 1]
     if debug:
         print("Current file:", filename)
     # return {"filename": filename, "pathname": pathname, "fun_name": fun_name, "lineno": line, "fun_args": fun_args}
-    return {"filename": filename, "fun_args": fun_args}
+    return {"filename": filename, "pathname": pathname, "fun_args": fun_args}
 
 
 def frameinfo_stack(stack=0, debug=False):
@@ -89,7 +97,8 @@ def current_file():
 
 
 def is_iter(element):
-    if isinstance(element, Iterable):
+    """ Si le type de l'objet peut être parcouru et n'est pas de type str"""
+    if isinstance(element, Iterable) and not isinstance(element, str):
         return True
     return False
 

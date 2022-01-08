@@ -21,8 +21,6 @@ from Classes import Coord
 from Times import now, elapsed_seconds
 
 
-
-
 def create_opera_browser(x, y=None, profile=None, headless=False):
     if type(x) is Coord:
         y = x.y
@@ -37,8 +35,9 @@ def create_opera_browser(x, y=None, profile=None, headless=False):
     #     options.add_argument(profile)
     # print(r"{}{}Selenium{}Drivers{}operadriver.exe"
     #                       .format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep))
-    browser = OperaDriver(options=options, executable_path=r"{}{}Selenium{}Drivers{}operadriver.exe"
-                          .format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep))
+    browser = OperaDriver(
+        options=options, executable_path=r"{}{}Selenium{}Drivers{}operadriver.exe"
+            .format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep))
     browser.set_window_size(1920, 1080)
     browser.set_window_position(x, y)
     return browser
@@ -54,8 +53,9 @@ def create_chrome_browser(x, y=None, profile=None, headless=False):
         options.add_argument("headless")
     if profile is not None:
         options.add_argument(profile)
-    browser = Chrome(options=options, executable_path=r"{}{}Selenium{}Drivers{}chromedriver.exe"
-                     .format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep))
+    browser = Chrome(
+        options=options, executable_path=r"{}{}Selenium{}Drivers{}chromedriver.exe"
+            .format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep))
     browser.set_window_size(1920, 1080)
     browser.set_window_position(x, y)
     return browser
@@ -65,10 +65,6 @@ def profile_name(profile: str):
     start = profile.rindex("Profiles" + os.path.sep)
     name = profile[start + len("Profiles" + os.path.sep):]
     return name
-
-
-
-
 
 
 def new_active_tab(browser: WebDriver):
@@ -95,8 +91,6 @@ def close_current_and_create_new(browser: WebDriver, url: str, profile):
     new_tab(browser)
     close_current_and_go_home(browser)
     new_page(browser, url, profile)
-
-
 
 
 def metamask_accept(browser):
@@ -149,7 +143,8 @@ def metamask_confirm(browser):
 def metamask_get_fee_gas(browser):
     print("metamask_get_fee_gas")
     gas_fee_bnb_xpath1 = "/html/body/div[2]/div/div/section/div/div/div[2]/div[2]/div[1]/div[6]/div[2]/div/span[1]"
-    gas_fee_bnb_xpath2 = "/html/body/div[1]/div/div[3]/div/div[3]/div[2]/div/div/div/div[2]/div[2]/div[1]/h6[3]/div/span[1]"
+    gas_fee_bnb_xpath2 = "/html/body/div[1]/div/div[3]/div/div[3]/div[2]/div/div/div/div[2]/div[2]/div[1]/h6[" \
+                         "3]/div/span[1]"
     gas_fee_bnb = None
     while gas_fee_bnb is None:
         gas_fee_bnb = get_element(browser, gas_fee_bnb_xpath1)
@@ -248,21 +243,57 @@ def wait_alerte_and_close_it(browser, leave=60):
     return alert_text
 
 
-def get_element_text(element: WebElement, debug=False):
+def get_element_text(element: WebElement, debug=False) -> Optional[str]:
     if element is None:
         return None
     try:
         element_text = element.text
     except StaleElementReferenceException:
-        # selenium.common.exceptions.StaleElementReferenceException: Message: stale element reference: element is not attached to the page document
+        # selenium.common.exceptions.StaleElementReferenceException: Message: stale element reference: element is not
+        # attached to the page document
         return None
     if debug:
-        print("\tget_element_text <|" + element_text[:10] + "|>")
+        print("\tget_element_text <|" + element_text[:30] + "|>")
     return element_text
+
+
+def get_element_class(element: WebElement, debug=False):
+    if element is None:
+        return None
+    element_class = element.get_attribute("class")
+    if debug:
+        print("\tget_element_class <|" + element_class[:30] + "|>")
+    return element_class
 
 
 def get_element_href(element: WebElement):
     return element.get_attribute("href")
+
+
+def get_element_xpath(element: WebElement):
+    """
+    private String generateXPATH(WebElement childElement, String current) {
+        String childTag = childElement.getTagName();
+        if(childTag.equals("html")) {
+            return "/html[1]"+current;
+        }
+        WebElement parentElement = childElement.findElement(By.xpath(".."));
+        List<WebElement> childrenElements = parentElement.findElements(By.xpath("*"));
+        int count = 0;
+        for(int i=0;i<childrenElements.size(); i++) {
+            WebElement childrenElement = childrenElements.get(i);
+            String childrenElementTag = childrenElement.getTagName();
+            if(childTag.equals(childrenElementTag)) {
+                count++;
+            }
+            if(childElement.equals(childrenElement)) {
+                return generateXPATH(parentElement, "/" + childTag + "[" + count + "]"+current);
+            }
+        }
+        return null;
+    }
+    """
+    return element.get_attribute("xpath")
 
 
 def check_find_fun(driver: WebDriver, find_element_fun_name: str) -> Callable[[WebDriver], str]:
@@ -290,27 +321,6 @@ def get_element_check_all_windows(browser, selector, find_element_fun=None):
         except IndexError:
             pass
     return element
-
-
-
-
-def wait_second_window_off(browser, timer=30):
-    start = now()
-    while len(browser.window_handles) >= 2:
-        print("\twindows", len(browser.window_handles), (now() - start).total_seconds(), timer)
-        sleep(0.5)
-        if (now() - start).total_seconds() >= timer:
-            return False
-    sleep(0.5)
-    if len(browser.window_handles) >= 2:
-        return wait_second_window_off(browser, timer=30)
-    return True
-
-
-
-
-
-
 
 
 
