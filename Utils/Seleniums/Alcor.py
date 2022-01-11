@@ -123,42 +123,46 @@ def transaction(browser: Browser,
     browser.print(("transaction_sent", to, amount, token_send, memo))
     msgbox_header_xpath = "/html/body/div[3]/div/div[1]/div"
     transaction_text = browser.wait_text(ALCOR_TRANSFERT_URL, msgbox_header_xpath)
-    if not transaction_text or (transaction_text and "Transaction complete!" not in transaction_text):
-        while True:
-            # relaunch apres avoir vérifié que tout est correct
-            say(name + " have to validate Alcor transaction")
-            say(name + " have to validate Alcor transaction")
-            message(name + " have to validate Alcor transaction")
-            sleep(30)
     if send_msg:
         browser.print(("transaction", to, amount, token_send, memo), False)
         message("{} {} Alcor transaction sent to {} {}".format(amount, token_send, to, memo))
+    if not transaction_text or (transaction_text and "Transaction complete!" not in transaction_text):
+        # relaunch apres avoir vérifié que tout est correct
+        say(name + " check validate Alcor transaction")
+        say(name + " check validate Alcor transaction")
+        message(name + " check validate Alcor transaction")
+        sleep(30)
     return True
 
 
 def buy(browser: Browser, asset: str, roof_tokens_to_have: float) -> tuple[bool, bool]:
     asset = asset.upper()
-    browser.print(("Alcor.sell", asset, roof_tokens_to_have), False)
+    browser.print(("Alcor.buy", asset, roof_tokens_to_have), False)
     if not connect(browser):
         return False, False
     connect_to_trading(browser, asset)
     higher_bid_amount_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[1]/div[1]/div/div[4]/div[1]"
-    # devise_amount = search_n_get_float(browser.get_text(alcor_trade_url, devise_xpath))
+    devise_amount = search_n_get_float(browser.get_text(alcor_trade_url, devise_xpath))
     token_amount = search_n_get_float(browser.get_text(alcor_trade_url, token_xpath))
     higher_bid_amount = search_n_get_float(browser.get_text(alcor_trade_url, higher_bid_amount_xpath))
     price_input_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[2]/div[1]/div/div[2]/div[" \
                         "2]/div[1]/div/div/div[1]/form/div[1]/div/div/input"
     price_input = browser.get_element(price_input_xpath)
     if token_amount >= roof_tokens_to_have * 0.95:
+        browser.print(("Alcor.buy token_amount >= roof_tokens_to_have * 0.95",
+                       token_amount, roof_tokens_to_have * 0.95), False)
         return True, True
-    tokens_to_buy = (roof_tokens_to_have - token_amount) * higher_bid_amount
+    devise_to_send = (roof_tokens_to_have - token_amount) * higher_bid_amount
+    if devise_amount <= devise_to_send:
+        browser.print(("Alcor.buy devise_amount > devise_to_send", devise_amount, devise_to_send), False)
+        return True, True
     browser.element_send(price_input, higher_bid_amount + 0.0000001)
-    browser.print(("tokens_to_buy", tokens_to_buy, "use", tokens_to_buy * higher_bid_amount))
+    browser.print(("devise_to_send", devise_to_send, "use", devise_to_send * higher_bid_amount))
     total_input_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[2]/div[1]/div/div[2]/div[" \
                         "2]/div[1]/div/div/div[1]/form/div[4]/div/div/input"
     total_input = browser.get_element(total_input_xpath)
     browser.clear_send(total_input)
-    browser.element_send(total_input, tokens_to_buy)
+    browser.element_send(total_input, devise_to_send)
     buy_button_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[2]/div[1]/div/div[2]/div[" \
                        "2]/div[1]/div/div/div[1]/form/div[5]/div/button"
     browser.get_element_n_click(buy_button_xpath)
@@ -200,12 +204,12 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                 ask_text = get_element_text(ask)
                 if ask_text is None or ask_text == "":
                     return False, False
-                ask_price_devise, ask_token, total_ask_devise = map(
+                ask_price_devise, token_amount, total_ask_devise = map(
                     lambda x: float(x.replace(",", "")), ask_text.split())
-                if sum_tokens_befor_me > ask_token * ratio_tokens_befor_me_to_cancel:
+                if sum_tokens_befor_me > token_amount * ratio_tokens_befor_me_to_cancel:
                     sell_price = ask_price_devise
                     break
-                sum_tokens_befor_me += ask_token
+                sum_tokens_befor_me += token_amount
             if sell_price > 0:
                 break
         elif trades_len > 1:
@@ -225,33 +229,46 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                                           "1]/div/div/div[1]/div/div/div[2]/button"
                 browser.get_element_n_click(cancel_all_orders_xpath)
                 break
-            asks = get_all_asks(browser)
-            sum_tokens_befor_me = 0
-            for ask in asks:
-                ask_text = get_element_text(ask)
-                start_loop = now()
-                while ask_text is None or ask_text == "":
+            while True:
+                asks = get_all_asks(browser)
+                sum_tokens_befor_me = 0
+                ask_text = None
+                out = False
+                for ask in asks:
                     ask_text = get_element_text(ask)
-                    if elapsed_seconds(start_loop) >= 30:
-                        return False, False
-                ask_price_devise, ask_token, total_ask_devise = map(
-                    lambda x: float(x.replace(",", "")), ask_text.split())
-                is_my_ask = float(my_ask) == ask_price_devise
-                if not is_my_ask:
-                    sum_tokens_befor_me += ask_token
-                # N'actualise pas le trade lorsque la somme des tokens jusqu'a l'ordre est < à l'ordre
-                elif sum_tokens_befor_me <= ask_token * ratio_tokens_befor_me_to_cancel:
-                    browser.print(
-                        ("order_exist_and_is_fine",
-                         sum_tokens_befor_me, "<=", ask_token * ratio_tokens_befor_me_to_cancel))
-                else:
-                    browser.print(
-                        ("order_exist_and_is_not_fine_cancel_order",
-                         sum_tokens_befor_me, ">", ask_token * ratio_tokens_befor_me_to_cancel))
-                    cancel_all_orders_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[" \
-                                              "1]/div/div/div[1]/div/div/div[2]/button"
-                    browser.get_element_n_click(cancel_all_orders_xpath)
+                    start_loop = now()
+                    while ask_text is None or ask_text == "":
+                        ask_text = get_element_text(ask)
+                        if elapsed_seconds(start_loop) >= 5:
+                            break
+                            # return False, False
+                    if ask_text is None or ask_text == "":
+                        break
+                    ask_price_devise, token_amount, total_ask_devise = map(
+                        lambda x: float(x.replace(",", "")), ask_text.split())
+                    is_my_ask = float(my_price) == ask_price_devise
+                    if not is_my_ask:
+                        sum_tokens_befor_me += token_amount
+                    # N'actualise pas le trade lorsque la somme des tokens jusqu'a l'ordre est < à l'ordre
+                    elif sum_tokens_befor_me <= token_amount * ratio_tokens_befor_me_to_cancel:
+                        browser.print(
+                            ("order_exist_and_is_fine",
+                             sum_tokens_befor_me, "<=", token_amount * ratio_tokens_befor_me_to_cancel))
+                        out = True
+                    else:
+                        browser.print(
+                            ("order_exist_and_is_not_fine_cancel_order",
+                             sum_tokens_befor_me, ">", token_amount * ratio_tokens_befor_me_to_cancel))
+                        cancel_all_orders_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[" \
+                                                  "1]/div/div/div[1]/div/div/div[2]/button"
+                        browser.get_element_n_click(cancel_all_orders_xpath)
+                        out = True
+                        break
+                if out:
                     break
+                if ask_text is None or ask_text == "":
+                    continue
+                break
     # lower_ask_amount_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[1]/div[1]/div/div[2]/div[1]"
     # higher_bid_amount_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[1]/div[1]/div/div[
     # 4]/div[1]"
@@ -265,7 +282,7 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
     if token_amount <= floor_tokens_to_keep * 0.95:
         return True, True
     browser.element_send(price_input, sell_price - 0.0000001)
-    if floor_tokens_to_keep == -1:  # all
+    if floor_tokens_to_keep < 0:  # all
         browser.print(("tokens_to_sell", token_amount, "to have devise", token_amount * sell_price))
         browser.get_element_n_click(token_xpath)
     else:

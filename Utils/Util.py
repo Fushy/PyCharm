@@ -34,11 +34,9 @@ from Times import now
 #     raise ValueError(error_text)
 
 
-TIMEDELTA_ZERO = timedelta(seconds=0)
-
-
 def datetime_to_timedelta(x):
     return x - datetime.strptime("0:0:0", "%H:%M:%S")
+
 
 def current():
     print("Current file:", inspect.currentframe().f_code.co_filename)
@@ -160,7 +158,11 @@ def util_action_on_one_clipboard_change(fun: Callable):
         sleep(1)
 
 
-def sorted_dict(dictionary: dict, key=lambda x: x, reverse=False) -> str:
+def sorted_dict(dictionary: dict, key=lambda x: x, reverse=False) -> dict:
+    return dict(sorted(dictionary.items(), key=key, reverse=reverse))
+
+
+def sorted_dict_str(dictionary: dict, key=lambda x: x, reverse=False) -> str:
     result = "{"
     v_is_dict = False
     for k, v in sorted(dictionary.items(), key=key, reverse=reverse):

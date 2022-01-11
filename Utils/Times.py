@@ -2,9 +2,12 @@ import datetime
 import inspect
 from typing import Callable
 
+TIMEDELTA_ZERO = datetime.timedelta(seconds=0)
 
-def now(utc=False) -> datetime:
-    return datetime.datetime.utcnow() if utc else datetime.datetime.now()
+
+def now(utc=False, offset_h=0, offset_m=0, offset_s=0) -> datetime:
+    offset = datetime.timedelta(hours=offset_h, minutes=offset_m, seconds=offset_s)
+    return offset + (datetime.datetime.utcnow() if utc else datetime.datetime.now())
 
 
 def elapsed_timedelta(date_time: datetime):
@@ -38,15 +41,17 @@ def time_it(fun: Callable, *args):
         for i in range(repeat_call_min):
             fun() if len(args) == 0 else fun(*args)
         times_estimate.append(elapsed_seconds(start) / repeat_call_min)
-    print(fun.__name__, round(sum(times_estimate) / len(times_estimate) * 1000, 3), "ms", len(times_estimate) * total_repeat, "times")
+    print(
+        fun.__name__, round(sum(times_estimate) / len(times_estimate) * 1000, 3), "ms",
+        len(times_estimate) * total_repeat, "times")
     return round(sum(times_estimate) / len(times_estimate) * 1000, 3)
+
 
 def times_n(fun: Callable, n=100, *args):
     start = now()
     for i in range(n):
         fun(*args)
     print(inspect.currentframe().f_code.co_name, fun.__name__, round(elapsed_seconds(start) / n * 1000, 3), "ms")
-
 
 # def test(browser, xpath):
 #     # test 78.5 ms 25 times

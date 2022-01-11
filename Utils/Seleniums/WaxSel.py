@@ -9,7 +9,8 @@ from Times import now, elapsed_seconds
 from Wax import WAX_APPROVE_URL
 
 
-def check_wax_approve(browser, click=True):
+def check_wax_approve(browser, click=True, pre_sleep: int=1):
+    sleep(pre_sleep)
     i = None
     try:
         browser.print(("check_wax_approve", len(browser)))

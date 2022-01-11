@@ -158,10 +158,10 @@ class Browser:
             return False
         try:
             self.driver.switch_to.window(self.driver.window_handles[window_num])
+            self.update_windows_url()
         except WebDriverException:
             # selenium.common.exceptions.WebDriverException: Message: unknown error: cannot activate web view
             return False
-        self.update_windows_url()
         if update_working:
             self.working_window_num = window_num
         return True
@@ -210,11 +210,7 @@ class Browser:
                 str(err))
             Alert.say("critical error new_page")
             print(traceback.format_exc(), file=sys.stderr)
-            sleep(1)
-            self.quit()
-            sleep(1)
-            # noinspection PyMethodFirstArgAssignment
-            self = Browser(self.point, self.profile, self.headless)
+            self.relaunch()
             return self.new_page(url, window_num, tries + 1)
 
     def new_tab(self):

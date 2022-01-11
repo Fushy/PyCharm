@@ -3,6 +3,7 @@ from time import sleep
 from selenium.common.exceptions import StaleElementReferenceException, NoSuchWindowException
 
 from Alert import say
+from Colors import printc
 from Times import now, elapsed_seconds
 from Wax import whitelist_wam_account
 
@@ -20,8 +21,11 @@ def atomichub_transfert_nft(browser, name_to: str, nft_ids: list[int]):
             browser.element_click(accept_cooki_btn)
         login_xpath = "/html/body/div/div[2]/div/div/div/div[2]/button"
         login_txt = browser.get_text(url_transfert, login_xpath)
-        while login_txt is not None:
-            say(browser.name + " have to login")
+        start = now()
+        while login_txt is not None and login_txt == "Login":
+            if elapsed_seconds(start) >= 5:
+                printc(login_txt, background_color="red")
+                say(browser.name + " have to login")
             sleep(1)
             login_txt = browser.get_text(url_transfert, login_xpath)
         input_to_xpath = "/html/body/div/div[2]/div/div[2]/div[2]/div[3]/table/tbody/tr[1]/td[2]/div/div/div/input"
@@ -31,9 +35,12 @@ def atomichub_transfert_nft(browser, name_to: str, nft_ids: list[int]):
         browser.element_send(input_to, name_to)
         send_transfer_button_xpath = "/html/body/div/div[2]/div/div[2]/div[2]/div[3]/div/div[2]/button"
         send_transfer_button = browser.wait_element(url_transfert, send_transfer_button_xpath, refresh=10)
-        if not send_transfer_button.is_enabled():
-            browser.print("\tvalidate_button_is_not_enabled")
-            return False
+        start = now()
+        while not send_transfer_button.is_enabled():
+            if elapsed_seconds(start) >= 15:
+                browser.print("\tvalidate_button_is_not_enabled")
+                sleep(1)
+                return False
         browser.element_click(send_transfer_button)
         confirm_button_xpath = "/html/body/div[3]/div/div/div[2]/div[2]/div/button"
         browser.wait_element(url_transfert, confirm_button_xpath)
@@ -51,6 +58,6 @@ def atomichub_transfert_nft(browser, name_to: str, nft_ids: list[int]):
                 say("wax approve have to validate transfert")
                 sleep(1)
     except StaleElementReferenceException or NoSuchWindowException:
-        browser.relaunch()
+        browser.relaunch_n_connect()
         return atomichub_transfert_nft(browser, name_to, nft_ids)
 

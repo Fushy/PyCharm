@@ -32,11 +32,11 @@ def rng_nearly(n, percent, floor=False) -> float:
                              n * (1 + percent) if not floor else n * percent)
 
 
-def generate_sleep_time(run_time, hit_time):
+def generate_sleep_time(run_seconds, hit_per_run):
     """ En secondes """
     pattern = [24, [(0, 0.6689), (5, 0.2), (60, 0.1), (5 * 60, 0.0265), (30 * 60, 0.005)]]
-    aim_pause = run_time * 0.1
-    hit_per_run = run_time / hit_time
+    aim_pause = run_seconds * 0.1
+    hit_per_run = run_seconds / hit_per_run
     sleep_per_hit = aim_pause / hit_per_run
     rng = random()
     for sleep_time, odds in pattern[1][::-1]:

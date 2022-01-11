@@ -1,5 +1,6 @@
 import re
 from datetime import timedelta
+from typing import Optional
 
 int_regex = r"([-+]?[0-9]+([eE][-+]?[0-9]+)?)"
 float_regex = r"([-+]?[0-9,]*\.?[0-9,]+([eE][-+]?[0-9,]+)?)"
@@ -16,7 +17,9 @@ re_alphanum = re.compile(alphanum_regex)
 re_alpha = re.compile(alpha_regex)
 
 
-def search_n_get_float(text: str):
+def search_n_get_float(text: str) -> Optional[float]:
+    if text is None:
+        return None
     float_find = re_float.search(text)
     if float_find is not None:
         return float(re_float.search(text).group(1).replace(",", ""))
