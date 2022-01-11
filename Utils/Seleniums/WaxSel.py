@@ -9,9 +9,10 @@ from Times import now, elapsed_seconds
 from Wax import WAX_APPROVE_URL
 
 
-def check_wax_approve(browser, click=True, pre_sleep: int=1):
+def check_wax_approve(browser, click=True, pre_sleep: int=1) -> bool | str:
     sleep(pre_sleep)
     i = None
+    clicked = True
     try:
         browser.print(("check_wax_approve", len(browser)))
         for i in range(len(browser))[::-1]:
@@ -21,7 +22,7 @@ def check_wax_approve(browser, click=True, pre_sleep: int=1):
             width = browser.get_width()
             if width is None:
                 end_wax_approve(browser, i)
-                return True
+                return clicked
             while width < 1000:
                 error_xpath = "/html/body/div/div/section/div[2]/div/div[4]"
                 is_error = browser.get_text(WAX_APPROVE_URL, error_xpath)
@@ -36,6 +37,7 @@ def check_wax_approve(browser, click=True, pre_sleep: int=1):
                     if approve is not None and click:
                         browser.element_click(approve)
                         sleep(2)  # Attend que la transaction fasse effet
+                        clicked = True
                 else:
                     login_button_xpath_1 = "/html/body/div/div/section/div[2]/div/div/button"
                     login_button_xpath_2 = "/html/body/div/div/div/div/div/div[3]/button"
@@ -46,7 +48,7 @@ def check_wax_approve(browser, click=True, pre_sleep: int=1):
                     width = browser.get_width()
                     if width is None:
                         end_wax_approve(browser, i)
-                        return True
+                        return clicked
                     while login_button and width < 1000 \
                             or browser.current_url() == WAX_APPROVE_URL:
                         login_button_text = get_element_text(login_button)
@@ -56,6 +58,7 @@ def check_wax_approve(browser, click=True, pre_sleep: int=1):
                             if approve is not None and click:
                                 browser.element_click(approve)
                                 sleep(2)
+                                clicked = "clicked"
                         if elapsed_seconds(start) > 15:
                             msg = browser.name + " wax approve have to login"
                             say(msg)
@@ -69,16 +72,16 @@ def check_wax_approve(browser, click=True, pre_sleep: int=1):
                     if len(browser) > i:
                         del browser.windows_url[i]
                         browser.goto_work()
-                        return True
+                        return clicked
                     browser.goto_work()
-                    return True
+                    return clicked
     except NoSuchWindowException or WebDriverException or AttributeError:
         # browser.print("Err boucle", False)
         browser.goto_work()
         if i is not None and len(browser.windows_url) > i:
             del browser.windows_url[i]
     browser.goto_work()
-    return True
+    return clicked
 
 
 def end_wax_approve(browser, i):
