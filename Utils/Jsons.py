@@ -1,4 +1,5 @@
 import json as json_api
+from time import sleep
 from typing import TypeVar, Callable
 
 from requests_html import HTMLSession
@@ -22,8 +23,14 @@ def text_to_json(json_text: str) -> dict[T, E]:
 
 def url_to_json(url: str) -> dict[T, E]:
     html_session = HTMLSession()
-    html = html_session.get(url).text
-    return text_to_json(html)
+    while True:
+        html_result_text = html_session.get(url).text
+        if "503 Service Unavailable" in html_result_text:
+            print("url_to_json error: 503 Service Unavailable in html_result_text")
+            sleep(5)
+        else:
+            break
+    return text_to_json(html_result_text)
 
 
 def url_to_json_ok(url: str,

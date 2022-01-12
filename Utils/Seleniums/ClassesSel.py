@@ -294,7 +294,7 @@ class Browser:
                 elif type(elements) == list and len(elements) > 0:
                     return elements[0]
             return None
-        except NoSuchWindowException as err:
+        except NoSuchWindowException or WebDriverException as err:
             # selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed
             # self.print("win dont exist")
             # sleep(1)
@@ -490,7 +490,7 @@ class Browser:
             raise ValueError("wait_element_find_element_fun_is_not_a_good_type")
         try:
             if leave is not None:
-                if self.wait_element(url, selector, find_element_fun, leave=leave, debug=debug) is False:
+                if not self.wait_element(url, selector, find_element_fun, leave=leave, debug=debug):
                     if debug:
                         self.print("get_text_2 None")
                     return None

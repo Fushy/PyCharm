@@ -5,6 +5,9 @@ def count_lines(file_name):
     return sum([1 for _ in open(file_name)])
 
 
+def file_exist(path):
+    return os.path.exists(path)
+
 def get_current_files():
     cwd = os.getcwd()  # Get the current working directory (cwd)
     files = os.listdir(cwd)  # Get all the files in that directory

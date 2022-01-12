@@ -54,7 +54,7 @@ def atomichub_transfert_nft(browser, name_to: str, nft_ids: list[int]):
                 confirm_button = browser.get_element(confirm_button_xpath)
                 browser.element_click(confirm_button)
             sleep(1)
-            if elapsed_seconds(start) >= 15:
+            if elapsed_seconds(start) >= 60:
                 say("wax approve have to validate transfert")
                 sleep(1)
     except StaleElementReferenceException or NoSuchWindowException:

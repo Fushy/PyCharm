@@ -235,6 +235,10 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                 ask_text = None
                 out = False
                 for ask in asks:
+                    check_trades = existing_trades.find_elements_by_class_name(trades_class)
+                    if len(check_trades) == 0:
+                        ask_text = None
+                        break
                     ask_text = get_element_text(ask)
                     start_loop = now()
                     while ask_text is None or ask_text == "":
@@ -243,7 +247,7 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                             break
                             # return False, False
                     if ask_text is None or ask_text == "":
-                        break
+                        out = True
                     ask_price_devise, token_amount, total_ask_devise = map(
                         lambda x: float(x.replace(",", "")), ask_text.split())
                     is_my_ask = float(my_price) == ask_price_devise
@@ -279,7 +283,7 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
     price_input_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[2]/div[1]/div/div[2]/div[" \
                         "2]/div[1]/div/div/div[2]/form/div[1]/div/div/input"
     price_input = browser.get_element(price_input_xpath)
-    if token_amount <= floor_tokens_to_keep * 0.95:
+    if token_amount * 0.95 <= floor_tokens_to_keep:
         return True, True
     browser.element_send(price_input, sell_price - 0.0000001)
     if floor_tokens_to_keep < 0:  # all
