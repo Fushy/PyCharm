@@ -154,7 +154,7 @@ def buy(browser: Browser, asset: str, roof_tokens_to_have: float) -> tuple[bool,
         return True, True
     devise_to_send = (roof_tokens_to_have - token_amount) * higher_bid_amount
     if devise_amount <= devise_to_send:
-        browser.print(("Alcor.buy devise_amount > devise_to_send", devise_amount, devise_to_send), False)
+        browser.print(("Alcor.buy devise > devise_to_send", devise_amount, devise_to_send), False)
         return True, True
     browser.element_send(price_input, higher_bid_amount + 0.0000001)
     browser.print(("devise_to_send", devise_to_send, "use", devise_to_send * higher_bid_amount))
@@ -235,9 +235,9 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                 ask_text = None
                 out = False
                 for ask in asks:
-                    check_trades = existing_trades.find_elements_by_class_name(trades_class)
-                    if len(check_trades) == 0:
-                        ask_text = None
+                    check_existing_trades = existing_trades.find_elements_by_class_name(trades_class)
+                    if len(check_existing_trades) == 0:
+                        out = None
                         break
                     ask_text = get_element_text(ask)
                     start_loop = now()
@@ -283,9 +283,9 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
     price_input_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[2]/div[1]/div/div[2]/div[" \
                         "2]/div[1]/div/div/div[2]/form/div[1]/div/div/input"
     price_input = browser.get_element(price_input_xpath)
-    if token_amount * 0.95 <= floor_tokens_to_keep:
-        return True, True
     browser.element_send(price_input, sell_price - 0.0000001)
+    if token_amount == 0 or token_amount * 0.95 <= floor_tokens_to_keep:
+        return True, True
     if floor_tokens_to_keep < 0:  # all
         browser.print(("tokens_to_sell", token_amount, "to have devise", token_amount * sell_price))
         browser.get_element_n_click(token_xpath)
