@@ -49,7 +49,7 @@ def add_column(connection, table_name, column_name, data_type, debug=False):
 
 def insert_or_update(connection, table_name, values, columns,
                      primary_keys: list = None, primary_key_values: list = None,
-                     pre_update_date=False, is_update=False, debug=False):
+                     pre_update_date=False, is_update=False, debug=False, commit=False):
     try:
         if len(columns) == 0 or len(values) == 0:
             raise ValueError("len is 0")
@@ -78,3 +78,5 @@ def insert_or_update(connection, table_name, values, columns,
         if debug:
             print("""\tUPDATE {}\nSET {}\n{}""".format(table_name, set_pattern, keys_constraint))
         connection.execute("""UPDATE {}\nSET {}\n{}""".format(table_name, set_pattern, keys_constraint))
+    if commit:
+        connection.commit()

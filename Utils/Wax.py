@@ -1,8 +1,9 @@
 import sqlite3
+from typing import Optional
 
 from Alert import say
 from Database import insert_or_update, get_column_names
-from Jsons import url_to_json_ok, url_to_json, json_to_json_ok
+from Jsons import url_to_json_ok, url_to_json, json_to_json_ok, call_request_api
 from Prices import db_get_prices, get_n_update_prices
 from Regex import re_float
 from Telegrams import message
@@ -24,7 +25,10 @@ WAX_API = "https://github.com/cc32d9/eosio_light_api", \
 # WAX_ENDPOINT_URL = r"hhttps://wax.cryptolions.io/v2/state"
 
 WAX_API_URL_ORDERS = [
-    r"https://lightapi.eosamsterdam.net/api",
+    "https://lightapi.eosamsterdam.net/api",
+]
+WAX_NFT_API_URL_ORDERS = [
+    "https://wax.api.atomicassets.io/atomicassets/v1/assets",
 ]
 
 
@@ -102,7 +106,7 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
     all_asset_amount = {}
     account_assets_amount = {}
     for account_name in account_names:
-        asset_amount = call_request_api("account", "WAX", account_name)
+        asset_amount = call_request_api(WAX_API_URL_ORDERS, "account", "WAX", account_name)
         # wax_amount = float(re_float.search(asset_amount["account"]["core_liquid_balance"]).group(1))
         asset_amount = json_to_json_ok(asset_amount, ["currency"], ["balances"])
         asset_amount = {asset: float(infos["amount"]) for (asset, infos) in asset_amount.items()
@@ -129,8 +133,8 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
             columns = get_column_names(connection, "WALLETS")
             values = [dol, asset, amount, account_name, "WAXBLOCKS", instant]
             insert_or_update(
-                connection, "WALLETS", values, columns,
-                ["asset", "account_name", "gateway"], [asset, account_name, "WAXBLOCKS"])
+                    connection, "WALLETS", values, columns,
+                    ["asset", "account_name", "gateway"], [asset, account_name, "WAXBLOCKS"])
     connection.commit()
     connection.close()
     result = {}
@@ -146,19 +150,34 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
     return result
 
 
-def call_request_api(*start_with, parameters_n_values=None):
-    args = ""
-    if parameters_n_values is not None:
-        args = "&".join((arg + "=" + value for (arg, value) in list(parameters_n_values.items())))
-    api_call_url = ""
-    for api_call_url in WAX_API_URL_ORDERS:
-        # try:
-        api_call_url += "/" + "/".join(start_with)
-        if parameters_n_values is not None:
-            api_call_url += "?{}".format(args)
-        # except:
-        #     continue
-        break
-    print(api_call_url)
-    all_asset_price = url_to_json(api_call_url)
-    return all_asset_price
+def get_nfts(account: str,
+             collection_name: Optional[str] = None,
+             template_id: Optional[str] = None,
+             schema_name: Optional[str] = None,
+             limit: int = 1000):
+    json = call_request_api(
+            WAX_NFT_API_URL_ORDERS, parameters_n_values={"collection_name": collection_name,
+                                                         "template_id": template_id,
+                                                         "schema_name": schema_name,
+                                                         "owner": account,
+                                                         "limit": str(limit),
+                                                         })
+    return json_to_json_ok(json, ["name"], ["data"])
+    # url = "{}?collection_name=farmersworld&template_id=260676&owner=b4nvi.wam&limit=1000&order=desc&sort=asset_id" \
+    # .format(WAX_NFT_API_URL_ORDERS, )
+
+
+def get_nft_price(collection_name: Optional[str] = None,
+                  template_id: Optional[str] = None,
+                  schema_name: Optional[str] = None) -> float:
+    sales_url = "https://wax.api.atomicassets.io/atomicmarket/v1/prices/sales"
+    json = call_request_api(
+            [sales_url], parameters_n_values={
+                "collection_name": collection_name,
+                "schema_name": schema_name,
+                "template_id": template_id,
+                "symbol": "WAX",
+            })
+    infos = json["data"][0]
+    decimal_pos = len(infos["price"]) - int(infos["token_precision"])
+    return float(infos["price"][:decimal_pos] + "." + infos["price"][decimal_pos:])

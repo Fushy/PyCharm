@@ -2,12 +2,11 @@ import math
 from datetime import timedelta
 from decimal import Decimal
 from random import random, randint
-import statistics
 
 
 def roundup(n):
     decimal = n - int(n)
-    return int(n) if decimal < 0.5 else int(n) + 1
+    return int(n) if decimal == 0 else int(n) + 1
 
 
 def convert(text, x):

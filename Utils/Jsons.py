@@ -2,13 +2,31 @@ import json as json_api
 from time import sleep
 from typing import TypeVar, Callable
 
+from requests.exceptions import ChunkedEncodingError
 from requests_html import HTMLSession
 
-from Regex import re_float
-from Util import is_iter
+from Colors import printc
 
 T = TypeVar("T")
 E = TypeVar("E")
+
+
+def call_request_api(base_urls: list[str], *start_with, parameters_n_values=None):
+    args = ""
+    if parameters_n_values is not None:
+        args = "&".join((arg + "=" + value for (arg, value) in list(parameters_n_values.items()) if value is not None))
+    api_call_url = ""
+    for api_call_url in base_urls:
+        # try:
+        api_call_url += "/" + "/".join(start_with)
+        if parameters_n_values is not None:
+            api_call_url += "?{}".format(args)
+        # except:
+        #     continue
+        break
+    print(api_call_url)
+    all_asset_price = url_to_json(api_call_url)
+    return all_asset_price
 
 
 def to_correct_json(string) -> str:
@@ -24,7 +42,12 @@ def text_to_json(json_text: str) -> dict[T, E]:
 def url_to_json(url: str) -> dict[T, E]:
     html_session = HTMLSession()
     while True:
-        html_result_text = html_session.get(url).text
+        try:
+            html_result_text = html_session.get(url).text
+        except ChunkedEncodingError:
+            printc("url_to_json ChunkedEncodingError", background_color="red")
+            sleep(2)
+            return url_to_json(url)
         if "503 Service Unavailable" in html_result_text:
             print("url_to_json error: 503 Service Unavailable in html_result_text")
             sleep(5)
@@ -34,7 +57,7 @@ def url_to_json(url: str) -> dict[T, E]:
 
 
 def url_to_json_ok(url: str,
-                   keys: list[T] | T,
+                   keys: list[T],
                    keys_start: list[T] = None,
                    condition: Callable[[dict[T, E]], bool] = None,
                    doublons=True) -> dict[T, E]:
@@ -85,10 +108,11 @@ def text_to_json_ok(json_text: str,
 
 if __name__ == '__main__':
     # search value html
-    asset = "waxp"
-    nb_filter = "0.49"
-    url = "https://coinmarketcap.com/fr/currencies/"
-    print(url)
-    html_session = HTMLSession()
-    html = html_session.get('https://www.gate.io/fr/trade/{}_USDT'.format(asset)).text
-    res = list(map(lambda x: x[0], filter(lambda n: nb_filter in n[0], re_float.findall(html))))
+    # asset = "waxp"
+    # nb_filter = "0.49"
+    # url = "https://coinmarketcap.com/fr/currencies/"
+    # print(url)
+    # html_session = HTMLSession()
+    # html = html_session.get('https://www.gate.io/fr/trade/{}_USDT'.format(asset)).text
+    # res = list(map(lambda x: x[0], filter(lambda n: nb_filter in n[0], re_float.findall(html))))
+    pass

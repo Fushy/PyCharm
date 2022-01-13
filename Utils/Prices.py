@@ -1,8 +1,11 @@
 import sqlite3
+from time import sleep
 from typing import Iterable
 
+from requests.exceptions import ChunkedEncodingError
 from requests_html import HTMLSession
 
+from Colors import printc
 from Database import get_column_names, insert_or_update
 from Jsons import url_to_json_ok
 from Regex import re_float
@@ -47,7 +50,12 @@ def from_gateio(assets: str | Iterable[str]):
     html_session = HTMLSession()
     for asset in assets:
         print('https://www.gate.io/fr/trade/{}_USDT'.format(asset))
-        html = html_session.get('https://www.gate.io/fr/trade/{}_USDT'.format(asset)).text
+        try:
+            html = html_session.get('https://www.gate.io/fr/trade/{}_USDT'.format(asset)).text
+        except ChunkedEncodingError:
+            printc("from_gateio ChunkedEncodingError", background_color="red")
+            sleep(2)
+            return from_gateio(assets)
         if asset.casefold() != "btc" and "BTC Bitcoin" in html[:500]:
             continue
         start = """title="Prix en temps réel">"""

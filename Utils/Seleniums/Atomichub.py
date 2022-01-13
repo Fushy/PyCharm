@@ -8,7 +8,7 @@ from Times import now, elapsed_seconds
 from Wax import whitelist_wam_account
 
 
-def atomichub_transfert_nft(browser, name_to: str, nft_ids: list[int]):
+def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
     try:
         browser.print(("atomichub_transfert_nft", name_to, nft_ids, False))
         if not whitelist_wam_account(name_to):
@@ -59,5 +59,5 @@ def atomichub_transfert_nft(browser, name_to: str, nft_ids: list[int]):
                 sleep(1)
     except StaleElementReferenceException or NoSuchWindowException:
         browser.relaunch_n_connect()
-        return atomichub_transfert_nft(browser, name_to, nft_ids)
+        return transfert_nft(browser, name_to, nft_ids)
 

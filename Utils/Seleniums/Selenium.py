@@ -270,6 +270,10 @@ def get_element_href(element: WebElement):
     return element.get_attribute("href")
 
 
+def get_element_src(element: WebElement):
+    return element.get_attribute("src")
+
+
 def get_element_xpath(element: WebElement):
     """
     private String generateXPATH(WebElement childElement, String current) {
