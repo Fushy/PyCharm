@@ -245,6 +245,7 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                             # return False, False
                     if ask_text is None or ask_text == "":
                         out = True
+                        break
                     ask_price_devise, token_amount, total_ask_devise = map(
                             lambda x: float(x.replace(",", "")), ask_text.split())
                     is_my_ask = float(my_price) == ask_price_devise
