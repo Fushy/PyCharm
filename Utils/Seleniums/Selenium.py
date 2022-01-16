@@ -260,18 +260,29 @@ def get_element_text(element: WebElement, debug=False) -> Optional[str]:
 def get_element_class(element: WebElement, debug=False):
     if element is None:
         return None
-    element_class = element.get_attribute("class")
+    try:
+        element_class = element.get_attribute("class")
+    except StaleElementReferenceException:
+        element_class = None
     if debug:
         print("\tget_element_class <|" + element_class[:30] + "|>")
     return element_class
 
 
 def get_element_href(element: WebElement):
-    return element.get_attribute("href")
+    try:
+        data = element.get_attribute("href")
+    except StaleElementReferenceException:
+        data = None
+    return data
 
 
 def get_element_src(element: WebElement):
-    return element.get_attribute("src")
+    try:
+        data = element.get_attribute("src")
+    except StaleElementReferenceException:
+        data = None
+    return data
 
 
 def get_element_xpath(element: WebElement):

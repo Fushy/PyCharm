@@ -60,10 +60,10 @@ class Browser:
 
         def aux():
             print(
-                "{}{} {}\t\t\t{}".format(
-                    "\t" if tab else "", self.name,
-                    " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
-                    self))
+                    "{}{} {}\t\t\t{}".format(
+                            "\t" if tab else "", self.name,
+                            " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+                            self))
 
         # run(aux)
         aux()
@@ -71,14 +71,14 @@ class Browser:
     def printc(self, texts: str | Iterable, color="green", background_color=None, attributes: Optional[list] = None,
                tab=True):
         printc(
-            "{}{} {}\t\t\t{}".format(
-                "\t" if tab else "",
-                self.name,
-                " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
-                self),
-            color=color,
-            background_color=background_color,
-            attributes=attributes)
+                "{}{} {}\t\t\t{}".format(
+                        "\t" if tab else "",
+                        self.name,
+                        " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+                        self),
+                color=color,
+                background_color=background_color,
+                attributes=attributes)
 
     def set_browser(self, profile=None):
         global last_browser_set
@@ -121,9 +121,9 @@ class Browser:
                 sleep(0.1)
             last_browser_set = now()
             driver = Edge(
-                options=options,
-                executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
-                    .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+                    options=options,
+                    executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
+                        .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
             driver.set_window_position(self.point.x, self.point.y)
             driver.set_window_size(1920, 1080)
             self.driver = driver
@@ -136,7 +136,10 @@ class Browser:
             raise InvalidSessionIdException("profile is already open")
 
     def update_windows_url(self):
-        url = self.driver.current_url
+        try:
+            url = self.driver.current_url
+        except MaxRetryError:
+            url = ""
         self.set_windows_url(url, self.get_current_window_num() + 1)
         return url
 
@@ -206,8 +209,8 @@ class Browser:
             return self.new_page(url, window_num, tries + 1)
         except WebDriverException or MaxRetryError or ConnectionRefusedError or NewConnectionError as err:
             print(
-                "\terror new_page WebDriverException MaxRetryError ConnectionRefusedError NewConnectionError",
-                str(err))
+                    "\terror new_page WebDriverException MaxRetryError ConnectionRefusedError NewConnectionError",
+                    str(err))
             Alert.say("critical error new_page")
             print(traceback.format_exc(), file=sys.stderr)
             self.relaunch()
@@ -384,8 +387,8 @@ class Browser:
                 start_refresh = now()
             if debug:
                 self.print(
-                    ("r", refresh, (now() - start_refresh).total_seconds(),
-                     "l", leave, (now() - start_leave).total_seconds(), "url =", url))
+                        ("r", refresh, (now() - start_refresh).total_seconds(),
+                         "l", leave, (now() - start_leave).total_seconds(), "url =", url))
             if leave is not None and (now() - start_leave).total_seconds() >= leave:
                 return False
 
@@ -527,7 +530,7 @@ class Browser:
                     return text
         return None
 
-    def element_click(self, element: WebElement, debug=False) -> bool:
+    def element_click(self, element: WebElement, actionchain=False, debug=False) -> bool:
         self.print(("element_click", element), False)
         if element is None:
             if debug:
@@ -541,7 +544,10 @@ class Browser:
                     self.print(("click_check_if_is_enable1", element.is_enabled()))
             if debug:
                 self.print(("clickA", element.is_enabled()))
-            element.click()  # 5x plus rapide que ActionChains(self.driver).click(element).perform()
+            if actionchain:
+                ActionChains(self.driver).click(element).perform()
+            else:
+                element.click()  # 5x plus rapide que ActionChains(self.driver).click(element).perform()
             return True
         except AttributeError:
             if debug:
@@ -550,7 +556,10 @@ class Browser:
             while not element.is_enabled():
                 if debug:
                     self.print(("click_check_if_is_enable3", element.is_enabled()))
-            ActionChains(self.driver).click(element).perform()
+            if actionchain:
+                element.click()
+            else:
+                ActionChains(self.driver).click(element).perform()
             if debug:
                 self.print(("clickB", element.text))
             return True

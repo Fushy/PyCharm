@@ -1,3 +1,5 @@
+from telegram.error import NetworkError
+
 import Threads
 import telegram
 
@@ -40,7 +42,11 @@ def message(msg: str, to: str = None):
     dispatcher.add_handler(echo_msg_handler)
     start_cmd_handler: CommandHandler = CommandHandler('start', start)
     dispatcher.add_handler(start_cmd_handler)
-    bot.send_message(chat_id=id_to, text=msg)
+    try:
+        bot.send_message(chat_id=id_to, text=msg)
+    except NetworkError:
+        sleep(5)
+        return message(msg, to)
     updater.start_polling()
 
     def aux():
