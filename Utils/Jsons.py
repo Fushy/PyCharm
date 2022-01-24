@@ -1,7 +1,6 @@
 import json as json_api
-from json.decoder import JSONDecodeError
 from time import sleep
-from typing import TypeVar, Callable, Optional
+from typing import TypeVar, Callable
 
 from requests.exceptions import ChunkedEncodingError
 from requests_html import HTMLSession
@@ -36,7 +35,7 @@ def to_correct_json(string) -> str:
     # "\\\\")
 
 
-def text_to_json(json_text: str) -> Optional[dict[T, E]]:
+def text_to_json(json_text: str) -> dict[T, E]:
     return json_api.loads(to_correct_json(json_text))
 
 
