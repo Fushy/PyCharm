@@ -25,7 +25,7 @@ WAX_API = "https://github.com/cc32d9/eosio_light_api", \
 # WAX_ENDPOINT_URL = r"hhttps://wax.cryptolions.io/v2/state"
 
 WAX_API_URL_ORDERS = [
-    "https://lightapi.eosamsterdam.net/api",
+    "https://wax.light-api.net/api",
 ]
 WAX_NFT_API_URL_ORDERS = [
     "https://wax.api.atomicassets.io/atomicassets/v1/assets",
@@ -106,7 +106,9 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
     all_asset_amount = {}
     account_assets_amount = {}
     for account_name in account_names:
-        asset_amount = call_request_api(WAX_API_URL_ORDERS, "account", "WAX", account_name)
+        asset_amount = call_request_api(WAX_API_URL_ORDERS, "account", "wax", account_name)
+        # if asset_amount is None:
+        #     return
         # wax_amount = float(re_float.search(asset_amount["account"]["core_liquid_balance"]).group(1))
         asset_amount = json_to_json_ok(asset_amount, ["currency"], ["balances"])
         asset_amount = {asset: float(infos["amount"]) for (asset, infos) in asset_amount.items()

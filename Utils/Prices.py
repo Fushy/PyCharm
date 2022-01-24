@@ -73,7 +73,11 @@ def get_n_update_prices(assets: str | Iterable[str]):
     if not is_iter(assets):
         assets = [assets]
     wax_result = from_alcor(assets)
-    wax_price = from_gateio("WAXP")["WAXP"]
+    wax_price = from_gateio("WAXP")
+    while "WAXP" not in wax_price:
+        sleep(5)
+        wax_price = from_gateio("WAXP")
+    wax_price = wax_price["WAXP"]
     result = {asset: round(asset_value * wax_price, 8) for (asset, asset_value) in wax_result.items()}
     db_update_price(result, "USDT", "ALCORxGATEIO")
     db_update_price({"WAXP": wax_price}, "USDT", "GATEIO")

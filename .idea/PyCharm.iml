@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
-    <content url="file://$MODULE_DIR$" />
-    <orderEntry type="inheritedJdk" />
+    <content url="file://$MODULE_DIR$/../Bots">
+      <sourceFolder url="file://$MODULE_DIR$/../Bots" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../Bots/AlienWorlds" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../Bots/FarmersWorld" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/../Bots/AlienWorlds/Profiles" />
+      <excludeFolder url="file://$MODULE_DIR$/../Bots/FarmersWorld/Profiles" />
+    </content>
+    <content url="file://$MODULE_DIR$/Utils" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (venv_projects)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

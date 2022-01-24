@@ -12,6 +12,8 @@ from Times import elapsed_seconds, now
 from Wax import whitelist_wam_account
 
 ALCOR_TRANSFERT_URL = "https://wax.alcor.exchange/wallet"
+ALCOR_MARKETS_URL = "https://wax.alcor.exchange/markets"
+ALCOR_URL = "https://wax.alcor.exchange/"
 
 alcor_trade_url = "https://wax.alcor.exchange/trade/"
 devise_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[2]/div[1]/div/div[2]/div[2]/div[" \
@@ -63,6 +65,11 @@ def transaction(browser: Browser,
     tokens_container = browser.wait_element(ALCOR_TRANSFERT_URL, [tokens_container_xpath_1, tokens_container_xpath_2])
     if not tokens_container:
         return False
+    # search_input_xpath = "/html/body/div/div/div/div[4]/div/div/div[7]/div/div[1]/div/input"
+    # search_input = browser.get_element(search_input_xpath)
+    # if search_input is None:
+    #     return False
+    # browser.element_send(search_input, token_send)
     tokens_tag = "tr"
     old_tokens_len = len(tokens_container.find_elements_by_tag_name(tokens_tag))
     while True:
@@ -71,20 +78,71 @@ def transaction(browser: Browser,
         if len(tokens) == old_tokens_len:
             break
         old_tokens_len = len(tokens)
-    i = 1 - 4
+    # i = 1 - 4
     token_text = ""
     token = None
     for token in tokens:
         token_text = get_element_text(token)
         if token_send in token_text:
             break
-        i += 4
+        # i += 4
     if token_send not in token_text:
         browser.print(("not_found_token", to, amount, token_send, memo))
+        market_button_xpath1 = "/html/body/div/div/div/div[4]/nav/div[1]/ul/li[2]"
+        market_button_xpath2 = "/html/body/div[1]/div/div/div[3]/nav/div[1]/ul/li[2]"
+        browser.get_element_n_click([market_button_xpath1, market_button_xpath2])
+        search_token_xpath1 = "/html/body/div/div/div/div[4]/div/div/div[1]/div[2]/div/input"
+        search_token_xpath2 = "/html/body/div[1]/div/div/div[3]/div/div/div[1]/div[2]/div/input"
+        browser.wait_element(ALCOR_URL, [search_token_xpath1, search_token_xpath2])
+        tokens_container_xpath1 = "/html/body/div/div/div/div[4]/div/div/div[2]/div/div[3]/table/tbody"
+        tokens_container_xpath2 = "/html/body/div[1]/div/div/div[3]/div/div/div[2]/div/div[3]/table/tbody"
+        tokens_container = browser.wait_element(ALCOR_MARKETS_URL, [tokens_container_xpath1, tokens_container_xpath2])
+        if not tokens_container:
+            return False
+        tokens_tag = "tr"
+        old_tokens_len = len(tokens_container.find_elements_by_tag_name(tokens_tag))
+        while True:
+            sleep(1)
+            tokens = tokens_container.find_elements_by_tag_name(tokens_tag)
+            if len(tokens) == old_tokens_len:
+                break
+            old_tokens_len = len(tokens)
+        token_text = ""
+        token = None
+        for token in tokens:
+            token_text = get_element_text(token)
+            if token_send in token_text:
+                break
+        if token_send not in token_text:
+            return False
+        browser.element_click(token)
+        sleep(1)
+        wallet_header_title_xpath1 = "/html/body/div/div/div/div[4]/nav/div[1]/ul/li[5]"
+        wallet_header_title_xpath2 = "/html/body/div[1]/div/div/div[3]/nav/div[1]/ul/li[5]"
+        browser.get_element_n_click([wallet_header_title_xpath1, wallet_header_title_xpath2])
+        sleep(1)
+    tokens_container_xpath_1 = "/html/body/div[1]/div/div/div[3]/div/div/div[7]/div/div[2]/div/div[3]/table/tbody"
+    tokens_container_xpath_2 = "/html/body/div/div/div/div[4]/div/div/div[7]/div/div[2]/div/div[3]/table/tbody"
+    tokens_container = browser.wait_element(ALCOR_URL, [tokens_container_xpath_1, tokens_container_xpath_2])
+    if not tokens_container:
+        return False
+    tokens_tag = "tr"
+    old_tokens_len = len(tokens_container.find_elements_by_tag_name(tokens_tag))
+    while True:
+        sleep(1)
+        tokens = tokens_container.find_elements_by_tag_name(tokens_tag)
+        if len(tokens) == old_tokens_len:
+            break
+        old_tokens_len = len(tokens)
+    token_text = ""
+    token = None
+    for token in tokens:
+        token_text = get_element_text(token)
+        if token_send in token_text:
+            break
+    if token_send not in token_text:
         return False
     transfert_class = "el-button"
-    if token is None:
-        return False
     action_buttons = token.find_elements_by_class_name(transfert_class)
     if action_buttons is None:
         return False
@@ -231,10 +289,11 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                 sum_tokens_befor_me = 0
                 ask_text = None
                 out = False
+                out_trades_len_1 = False
                 for ask in asks:
                     check_existing_trades = existing_trades.find_elements_by_class_name(trades_class)
                     if len(check_existing_trades) == 0:
-                        out = None
+                        out_trades_len_1 = True
                         break
                     ask_text = get_element_text(ask)
                     start_loop = now()
@@ -244,7 +303,6 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                             break
                             # return False, False
                     if ask_text is None or ask_text == "":
-                        out = True
                         break
                     ask_price_devise, token_amount, total_ask_devise = map(
                             lambda x: float(x.replace(",", "")), ask_text.split())
@@ -257,6 +315,7 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                                 ("order_exist_and_is_fine",
                                  sum_tokens_befor_me, "<=", token_amount * ratio_tokens_befor_me_to_cancel))
                         out = True
+                        break
                     else:
                         browser.print(
                                 ("order_exist_and_is_not_fine_cancel_order",
@@ -266,10 +325,17 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                         browser.get_element_n_click(cancel_all_orders_xpath)
                         out = True
                         break
-                if out:
+                if out or out_trades_len_1:
                     break
                 if ask_text is None or ask_text == "":
-                    continue
+                    browser.print("order_exist_and_is_too_high")
+                    cancel_all_orders_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[" \
+                                              "1]/div/div/div[1]/div/div/div[2]/button"
+                    browser.get_element_n_click(cancel_all_orders_xpath)
+                    out = True
+                    break
+                break
+            if out:
                 break
     # lower_ask_amount_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[1]/div[1]/div/div[2]/div[1]"
     # higher_bid_amount_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[1]/div[1]/div/div[
