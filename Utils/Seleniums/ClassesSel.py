@@ -138,13 +138,25 @@ class Browser:
     def update_windows_url(self):
         try:
             url = self.driver.current_url
+        except NoSuchWindowException:
+            url = ""
         except MaxRetryError:
             url = ""
         self.set_windows_url(url, self.get_current_window_num() + 1)
         return url
 
     def current_url(self):
-        return self.update_windows_url()
+        try:
+            url = self.update_windows_url()
+            num = self.get_current_window_num()
+        except NoSuchWindowException:
+            url = ""
+            num = 0
+        except MaxRetryError:
+            url = ""
+            num = 0
+        self.set_windows_url(url, num + 1)
+        return url
 
     def wait_new_created_window(self, old_count=None):
         if old_count is None:
@@ -157,12 +169,12 @@ class Browser:
         return True
 
     def goto(self, window_num, update_working=True):
-        if len(self) <= window_num:
+        if window_num >= len(self.driver.window_handles):
             return False
         try:
             self.driver.switch_to.window(self.driver.window_handles[window_num])
             self.update_windows_url()
-        except WebDriverException:
+        except WebDriverException or IndexError:
             # selenium.common.exceptions.WebDriverException: Message: unknown error: cannot activate web view
             return False
         if update_working:

@@ -5,8 +5,12 @@
       <sourceFolder url="file://$MODULE_DIR$/../Bots" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../Bots/AlienWorlds" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../Bots/FarmersWorld" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../Bots/SpaceCraftX" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../Bots/Xpansion" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/../Bots/AlienWorlds/Profiles" />
       <excludeFolder url="file://$MODULE_DIR$/../Bots/FarmersWorld/Profiles" />
+      <excludeFolder url="file://$MODULE_DIR$/../Bots/SpaceCraftX/Profiles" />
+      <excludeFolder url="file://$MODULE_DIR$/../Bots/Xpansion/Profiles" />
     </content>
     <content url="file://$MODULE_DIR$/Utils" />
     <orderEntry type="jdk" jdkName="Python 3.9 (venv_projects)" jdkType="Python SDK" />
