@@ -1,5 +1,15 @@
 # https://realpython.com/python-data-classes/#alternatives-to-data-classes
+import random
 from collections import namedtuple
+
+
+def a():
+    # TODO pk des fois il y a (2, (1, 2))
+    roles = ["ad", "top", "mid", "jungle"] * 2 + ["support"]
+    choice_a = random.randint(0, len(roles))
+    choice_b = random.randint(0, len(roles))
+    return choice_a == choice_b and a() or choice_a, choice_b
+
 
 # if __name__ == '__main__':
 #     [print("a")]
