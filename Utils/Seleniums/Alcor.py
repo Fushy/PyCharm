@@ -200,9 +200,13 @@ def buy(browser: Browser, asset: str, roof_tokens_to_have: float) -> tuple[bool,
         return False, False
     connect_to_trading(browser, asset)
     higher_bid_amount_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[1]/div[1]/div/div[4]/div[1]"
+    if browser.wait_text(alcor_trade_url, higher_bid_amount_xpath) is None:
+        return False, False
     devise_amount = search_n_get_float(browser.get_text(alcor_trade_url, devise_xpath))
     token_amount = search_n_get_float(browser.get_text(alcor_trade_url, token_xpath))
     higher_bid_amount = search_n_get_float(browser.get_text(alcor_trade_url, higher_bid_amount_xpath))
+    if higher_bid_amount is None:
+        return False, False
     price_input_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[2]/div[1]/div/div[2]/div[2]/div[1]/div/div/div[1]/form/div[1]/div/div/input"
     price_input = browser.get_element(price_input_xpath)
     if token_amount >= roof_tokens_to_have * 0.95:
@@ -212,8 +216,10 @@ def buy(browser: Browser, asset: str, roof_tokens_to_have: float) -> tuple[bool,
         return True, True
     devise_to_send = (roof_tokens_to_have - token_amount) * higher_bid_amount
     if devise_amount <= devise_to_send:
-        browser.print(("Alcor.buy devise_amount <= devise_to_send", devise_amount, devise_to_send), False)
-        return True, True
+        # browser.print(("Alcor.buy devise_amount <= devise_to_send", devise_amount, devise_to_send), False)
+        browser.print(("Alcor.buy devise_amount <= devise_to_send send all", devise_amount, devise_to_send), False)
+        devise_to_send = devise_amount
+        # return True, True
     browser.element_send(price_input, higher_bid_amount + 0.0000001)
     browser.print(("devise_to_send", devise_to_send, "use", devise_to_send * higher_bid_amount))
     total_input_xpath = "/html/body/div[1]/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[2]/div[1]/div/div[2]/div[2]/div[1]/div/div/div[1]/form/div[4]/div/div/input"
@@ -314,12 +320,12 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                         browser.print(
                                 ("order_exist_and_is_fine",
                                  sum_tokens_befor_me, "<=", token_amount * ratio_tokens_befor_me_to_cancel))
-                        out = True
                         break
                     else:
                         browser.print(
                                 ("order_exist_and_is_not_fine_cancel_order",
-                                 sum_tokens_befor_me, ">", token_amount * ratio_tokens_befor_me_to_cancel))
+                                 # sum_tokens_befor_me, ">", token_amount * ratio_tokens_befor_me_to_cancel))
+                                 sum_tokens_befor_me, ">", my_bid * ratio_tokens_befor_me_to_cancel))
                         cancel_all_orders_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[" \
                                                   "1]/div/div/div[1]/div/div/div[2]/button"
                         browser.get_element_n_click(cancel_all_orders_xpath)
@@ -332,7 +338,6 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
                     cancel_all_orders_xpath = "/html/body/div/div/div/div[4]/div/div/div/div[2]/div/div[2]/div[" \
                                               "1]/div/div/div[1]/div/div/div[2]/button"
                     browser.get_element_n_click(cancel_all_orders_xpath)
-                    out = True
                     break
                 break
             if out:

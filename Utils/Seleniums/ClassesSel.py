@@ -174,7 +174,10 @@ class Browser:
         try:
             self.driver.switch_to.window(self.driver.window_handles[window_num])
             self.update_windows_url()
-        except WebDriverException or IndexError:
+        except WebDriverException:
+            # selenium.common.exceptions.WebDriverException: Message: unknown error: cannot activate web view
+            return False
+        except IndexError:
             # selenium.common.exceptions.WebDriverException: Message: unknown error: cannot activate web view
             return False
         if update_working:

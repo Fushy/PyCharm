@@ -29,12 +29,16 @@ def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
                 say(browser.name + " have to login")
             sleep(1)
             login_txt = browser.get_text(url_transfert, login_xpath)
-        input_to_xpath = "/html/body/div/div[2]/div/div[2]/div[2]/div[3]/table/tbody/tr[1]/td[2]/div/div/div/input"
+        input_to_xpath_1 = "/html/body/div/div[2]/div/div[2]/div[2]/div[3]/table/tbody/tr[1]/td[2]/div/div/div/input"
+        input_to_xpath_2 = "/html/body/div/div[2]/div/div[3]/div[2]/div[3]/table/tbody/tr[1]/td[2]/div/div/div/input"
+        input_to_xpath = [input_to_xpath_1, input_to_xpath_2]
         browser.wait_element(url_transfert, input_to_xpath, refresh=10)
         input_to = browser.get_element(input_to_xpath)
         browser.clear_send(input_to)
         browser.element_send(input_to, name_to)
-        send_transfer_button_xpath = "/html/body/div/div[2]/div/div[2]/div[2]/div[3]/div/div[2]/button"
+        send_transfer_button_xpath_1 = "/html/body/div/div[2]/div/div[2]/div[2]/div[3]/div/div[2]/button"
+        send_transfer_button_xpath_2 = "/html/body/div/div[2]/div/div[3]/div[2]/div[3]/div/div[2]/button"
+        send_transfer_button_xpath = [send_transfer_button_xpath_1, send_transfer_button_xpath_2]
         send_transfer_button = browser.wait_element(url_transfert, send_transfer_button_xpath, refresh=10)
         start = now()
         while not send_transfer_button.is_enabled():
@@ -43,16 +47,19 @@ def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
                 sleep(1)
                 return False
         browser.element_click(send_transfer_button)
-        confirm_button_xpath = "/html/body/div[3]/div/div/div[2]/div[2]/div/button"
-        browser.wait_element(url_transfert, confirm_button_xpath)
-        transaction_message_xpath = "/html/body/div[3]/div/div/div/div[2]/div[1]"
+        confirm_button_xpath_1 = "/html/body/div[3]/div/div/div[2]/div[2]/div/button"
+        confirm_button_xpath_2 = "/html/body/div[4]/div/div/div[2]/div[2]/div/button"
+        confirm_button_xpaths = [confirm_button_xpath_1, confirm_button_xpath_2]
+        browser.wait_element(url_transfert, confirm_button_xpaths)
+        transaction_message_xpath_1 = "/html/body/div[3]/div/div/div/div[2]/div[1]"
+        transaction_message_xpath_2 = "/html/body/div[4]/div/div/div/div[2]/div[1]"
         start = now()
         while True:
-            transaction_message_text = browser.get_text(url_transfert, transaction_message_xpath)
+            transaction_message_text = browser.get_text(url_transfert, [transaction_message_xpath_1, transaction_message_xpath_2])
             if transaction_message_text is not None and "Transaction Successful!" in transaction_message_text:
                 return True
             elif transaction_message_text == "Confirm":
-                confirm_button = browser.get_element(confirm_button_xpath)
+                confirm_button = browser.get_element(confirm_button_xpaths)
                 browser.element_click(confirm_button)
             sleep(1)
             if elapsed_seconds(start) >= 3 * 60:

@@ -65,6 +65,9 @@ def check_wax_approve(browser, click=True, pre_sleep: int=1) -> bool | str:
                             message(msg)
                             sleep(10)
                         login_button = browser.get_element(login_buttons_xpath)
+                    if elapsed_seconds(start_while) > 60:
+                        browser.goto_work()
+                        return False
                 if elapsed_seconds(start_while) > 60:
                     browser.goto_work()
                     return False

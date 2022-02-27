@@ -1,9 +1,13 @@
+import json
 import json as json_api
+import socket
 from time import sleep
 from typing import TypeVar, Callable
 
+import requests
 from requests.exceptions import ChunkedEncodingError
 from requests_html import HTMLSession
+from urllib3.exceptions import NewConnectionError, MaxRetryError
 
 from Colors import printc
 
@@ -44,16 +48,25 @@ def url_to_json(url: str) -> dict[T, E]:
     while True:
         try:
             html_result_text = html_session.get(url).text
-        except ChunkedEncodingError:
+        except ConnectionError or NewConnectionError or ChunkedEncodingError or MaxRetryError or socket.gaierror \
+            or json.decoder.JSONDecodeError or requests.exceptions.ConnectTimeout:
             printc("url_to_json ChunkedEncodingError", background_color="red")
             sleep(2)
             return url_to_json(url)
         if "503 Service Unavailable" in html_result_text:
             print("url_to_json error: 503 Service Unavailable in html_result_text")
             sleep(5)
-        else:
+        elif is_json(html_result_text):
             break
     return text_to_json(html_result_text)
+
+
+def is_json(txt):
+    try:
+        json_api.loads(to_correct_json(txt))
+        return True
+    except:
+        return False
 
 
 def url_to_json_ok(url: str,
