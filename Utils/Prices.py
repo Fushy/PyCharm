@@ -11,7 +11,7 @@ from Jsons import url_to_json_ok
 from Regex import re_float
 from Strings import get_beetween_text_with_regex, quote
 from Times import now
-from Util import is_iter, frameinfo
+from Util import is_iter
 
 
 def db_update_price(result, devise, gateway):

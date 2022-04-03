@@ -1,23 +1,17 @@
 import os
-import sys
-import traceback
 from time import sleep
-from typing import Union, Callable, Optional
+from typing import Callable, Optional
 
-from selenium.webdriver import ActionChains, Chrome, ChromeOptions
-from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.opera.options import Options
+from selenium.common.exceptions import NoAlertPresentException, \
+    StaleElementReferenceException
+from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.opera.webdriver import OperaDriver
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.common.exceptions import NoSuchElementException, NoSuchWindowException, NoAlertPresentException, \
-    InvalidSessionIdException, TimeoutException, WebDriverException, SessionNotCreatedException, \
-    StaleElementReferenceException, ElementClickInterceptedException, ElementNotInteractableException
-from urllib3.exceptions import MaxRetryError, NewConnectionError
 
-from Alert import say, notify_win
+from Alert import notify_win
 from Classes import Coord
+from Introspection import frameinfo
 from Times import now, elapsed_seconds
 
 
@@ -62,8 +56,8 @@ def create_chrome_browser(x, y=None, profile=None, headless=False):
 
 
 def profile_name(profile: str):
-    start = profile.rindex("Profiles" + os.path.sep)
-    name = profile[start + len("Profiles" + os.path.sep):]
+    start = profile.rindex(os.path.sep)
+    name = profile[start + len(os.path.sep):]
     return name
 
 
@@ -338,6 +332,6 @@ def get_element_check_all_windows(browser, selector, find_element_fun=None):
     return element
 
 
-
 def get_profile_path(name: str):
-    return "user-data-dir={}{}Profiles{}{}".format(os.getcwd(), os.path.sep, os.path.sep, name)
+    filename = frameinfo(2)["filename"]
+    return "user-data-dir={}Profiles{}{}{}{}".format(os.getcwd()[:-len(filename)], os.path.sep, filename, os.path.sep, name)

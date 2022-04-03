@@ -1,13 +1,14 @@
 import os
+import subprocess
 from hashlib import blake2b
+from tempfile import NamedTemporaryFile
 from time import sleep
 
 from gtts import gTTS
 from pydub import AudioSegment, playback
 from pathlib import Path
 
-# How to install ffmpeg to pydub
-# http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
+
 import Threads
 import Classes
 from Telegrams import message
@@ -23,6 +24,7 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False)
     print("say", speech)
     if filename is None:
         encode = blake2b(digest_size=32)
+        encode = blake2b(digest_size=4)
         encode.update(bytes(speech.encode('utf-8')))
         encode.update(bytes(lang.encode('utf-8')))
         encode.update(bytes(str(speed).encode('utf-8')))
@@ -63,3 +65,9 @@ def notify_win(msg):
     pass
     # toaster = ToastNotifier()
     # toaster.show_toast(msg, threaded=True)
+
+
+if __name__ == '__main__':
+    msg = '5 test 5'
+    say(msg)
+    input()

@@ -4,6 +4,7 @@ from selenium.common.exceptions import StaleElementReferenceException, NoSuchWin
 
 from Alert import say
 from Colors import printc
+from Seleniums.WaxSel import check_wax_approve
 from Telegrams import message
 from Times import now, elapsed_seconds
 from Wax import whitelist_wam_account
@@ -62,6 +63,7 @@ def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
                 confirm_button = browser.get_element(confirm_button_xpaths)
                 browser.element_click(confirm_button)
             sleep(1)
+            check_wax_approve(browser)
             if elapsed_seconds(start) >= 3 * 60:
                 message("wax approve have to validate transfert")
                 sleep(1)
@@ -71,4 +73,3 @@ def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
     except StaleElementReferenceException or NoSuchWindowException:
         browser.relaunch_n_connect()
         return transfert_nft(browser, name_to, nft_ids)
-

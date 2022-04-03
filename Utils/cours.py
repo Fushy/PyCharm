@@ -2,6 +2,15 @@
 import random
 from collections import namedtuple
 
+# int("A", 16)
+
+# Faire un raise ou un return a l'endroi où le code est stoppé si le debug ne fonctionne plus alors que le run fonctionne
+
+# TODO verif type
+# if type(browser).__name__ != WebDriver.__name__ and type(browser).__name__ != WebElement.__name__:
+#     error_text = "\tget_text_selector browser is not a good type {} {}".format(type(browser), WebDriver, WebElement)
+#     if debug: print(error_text)
+#     raise ValueError(error_text)
 
 def a():
     # TODO pk des fois il y a (2, (1, 2))

@@ -3,7 +3,7 @@ import os
 import sys
 import traceback
 from time import sleep
-from typing import Union, Callable, Optional, Iterable
+from typing import Callable, Optional, Iterable
 
 from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
@@ -19,9 +19,9 @@ import Alert
 import Classes
 from Colors import printc
 from Enum import FIRST
+from Introspection import current_lines
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text, get_element_class
 from Sysconf import screen_rect, SCREENS
-from Threads import run
 from Times import now, elapsed_seconds
 from Util import is_iter
 
@@ -36,9 +36,10 @@ class Browser:
         self.profile: str = profile
         self.headless: bool = headless
         self.working_window_num: int = 0
+        self.current_window_num: int = 0
+        self.windows_url: list[str] = [""]
         self.driver: WebDriver = None
         self.name: Optional[str] = None
-        self.windows_url: list[str] = [""]
         self.set_browser(profile)
 
     def __str__(self):
@@ -59,26 +60,32 @@ class Browser:
         """ Prend cerrtaines ms, a eviter si on veut optimiser la vitesse"""
 
         def aux():
-            print(
-                    "{}{} {}\t\t\t{}".format(
-                            "\t" if tab else "", self.name,
-                            " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
-                            self))
+            # print(frameinfo(1))
+            # print(frameinfo(2))
+            # print(frameinfo(3))
+            # print(frameinfo(4))
+            # print(frameinfo(5))
+            print("{}{} {}\t\t\t{} {}".format(
+                "\t" if tab else "",
+                self.name,
+                " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+                self,
+                current_lines(start_depth=4)))
 
         # run(aux)
         aux()
 
     def printc(self, texts: str | Iterable, color="green", background_color=None, attributes: Optional[list] = None,
                tab=True):
-        printc(
-                "{}{} {}\t\t\t{}".format(
-                        "\t" if tab else "",
-                        self.name,
-                        " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
-                        self),
-                color=color,
-                background_color=background_color,
-                attributes=attributes)
+        printc("{}{} {}\t\t\t{} {}".format(
+            "\t" if tab else "",
+            self.name,
+            " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+            self,
+            current_lines(start_depth=3)),
+            color=color,
+            background_color=background_color,
+            attributes=attributes)
 
     def set_browser(self, profile=None):
         global last_browser_set
@@ -91,6 +98,7 @@ class Browser:
         """
         try:
             self.working_window_num = 0
+            self.current_window_num = 0
             self.driver = None
             self.windows_url: list[str] = [""]
             if profile is not None:
@@ -121,9 +129,9 @@ class Browser:
                 sleep(0.1)
             last_browser_set = now()
             driver = Edge(
-                    options=options,
-                    executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
-                        .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+                options=options,
+                executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
+                    .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
             driver.set_window_position(self.point.x, self.point.y)
             driver.set_window_size(1920, 1080)
             self.driver = driver
@@ -148,14 +156,20 @@ class Browser:
     def current_url(self):
         try:
             url = self.update_windows_url()
-            num = self.get_current_window_num()
+            # print(14)
+            # num = self.get_current_window_num()
         except NoSuchWindowException:
             url = ""
             num = 0
-        except MaxRetryError:
-            url = ""
-            num = 0
-        self.set_windows_url(url, num + 1)
+            del self.windows_url[self.current_window_num]
+            self.current_window_num -= 1
+            self.updateinfos_current_page()
+        # except MaxRetryError:
+        #     print(142)
+        #     url = ""
+        #     num = 0
+        # print(143)
+        # self.set_windows_url(url, num + 1)
         return url
 
     def wait_new_created_window(self, old_count=None):
@@ -168,16 +182,23 @@ class Browser:
                 return False
         return True
 
-    def goto(self, window_num, update_working=True):
+    def updateinfos_current_page(self):
+        self.driver.switch_to.window(self.driver.window_handles[self.get_current_window_num()])
+        self.update_windows_url()
+
+    def goto(self, window_num, update_working=True) -> bool:
         if window_num >= len(self.driver.window_handles):
             return False
         try:
+            self.current_window_num = window_num
             self.driver.switch_to.window(self.driver.window_handles[window_num])
             self.update_windows_url()
         except WebDriverException:
+            printc("goto WebDriverException", color="black", background_color="red")
             # selenium.common.exceptions.WebDriverException: Message: unknown error: cannot activate web view
             return False
         except IndexError:
+            printc("goto IndexError", color="black", background_color="red")
             # selenium.common.exceptions.WebDriverException: Message: unknown error: cannot activate web view
             return False
         if update_working:
@@ -187,11 +208,24 @@ class Browser:
     def goto_main(self):
         return self.goto(FIRST)
 
-    def goto_work(self):
-        return self.goto(self.working_window_num)
-
     def goto_last(self):
         return self.goto(len(self) - 1)
+
+    def goto_work(self):
+        """ Selon le browser """
+        return self.goto(self.working_window_num)
+
+    # ne peut pas faire cette methode car après un clique qui change de page, le driver n'est pas actualisé est l'ancienne page reste celle active
+    # def goto_current_active_page(self):
+    def goto_current_working_page(self):
+        """ Selon le driver """
+        return self.goto(self.get_current_index_window())
+
+    def get_current_active_window(self) -> str:
+        return self.driver.current_window_handle
+
+    def get_current_index_window(self) -> int:
+        return self.driver.window_handles.index(self.get_current_active_window())
 
     def set_windows_url(self, url, window_num):
         for i in range(window_num):
@@ -224,8 +258,8 @@ class Browser:
             return self.new_page(url, window_num, tries + 1)
         except WebDriverException or MaxRetryError or ConnectionRefusedError or NewConnectionError as err:
             print(
-                    "\terror new_page WebDriverException MaxRetryError ConnectionRefusedError NewConnectionError",
-                    str(err))
+                "\terror new_page WebDriverException MaxRetryError ConnectionRefusedError NewConnectionError",
+                str(err))
             Alert.say("critical error new_page")
             print(traceback.format_exc(), file=sys.stderr)
             self.relaunch()
@@ -236,8 +270,13 @@ class Browser:
         self.set_windows_url("", self.get_current_window_num() + 1)
 
     def new_tab_and_go(self):
+        self.goto_last()
         self.new_tab()
         self.goto_last()
+
+    def new_url_tab(self, url):
+        self.new_tab_and_go()
+        self.new_page(url)
 
     def close_current_and_go_main(self):
         self.windows_url[self.get_current_window_num()] = ""
@@ -259,7 +298,7 @@ class Browser:
         try:
             if wanted_url not in self.current_url():
                 self.print(("url_is_not_good", wanted_url, self.current_url()))
-                Alert.say("url is not good")
+                # Alert.say("url is not good")
                 self.new_page(wanted_url, self.get_current_window_num())
                 return False
             return True
@@ -270,7 +309,10 @@ class Browser:
             return None
 
     def get_current_window_num(self):
-        return self.driver.window_handles.index(self.driver.current_window_handle)
+        try:
+            return self.driver.window_handles.index(self.driver.current_window_handle)
+        except NoSuchWindowException:
+            return self.current_window_num
 
     def get_current_url(self):
         return self.driver.current_url
@@ -279,6 +321,7 @@ class Browser:
         assert self.get_current_window_num() != 0
         self.windows_url[self.get_current_window_num()] = ""
         self.driver.close()
+        self.goto(self.current_window_num - 1)
 
     def quit(self):
         self.windows_url = None
@@ -402,8 +445,8 @@ class Browser:
                 start_refresh = now()
             if debug:
                 self.print(
-                        ("r", refresh, (now() - start_refresh).total_seconds(),
-                         "l", leave, (now() - start_leave).total_seconds(), "url =", url))
+                    ("r", refresh, (now() - start_refresh).total_seconds(),
+                     "l", leave, (now() - start_leave).total_seconds(), "url =", url))
             if leave is not None and (now() - start_leave).total_seconds() >= leave:
                 return False
 

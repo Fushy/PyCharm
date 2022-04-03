@@ -1,97 +1,57 @@
-import inspect
 import itertools
-import os.path
+import string
 from collections.abc import Iterable
 from datetime import timedelta, datetime
-from inspect import FrameInfo
+from hashlib import blake2b
 from time import sleep
 from typing import Callable
 
 import pyperclip
 
+from Files import file_get_1st_line
 from Times import now
-
-
 # pip install --upgrade
 # pip install --upgrade pip
+# pip install --upgrade setuptools
 # pip install --upgrade pip setuptools
 # pip install numpy
-# pip install telegram
+# pip install wheel
+# pip install python-telegram-bot
 # pip install python-telegram-bot --upgrade
+# pip install python-telegram-bot
 # pip install ffmpeg-python
 # pip install pydub
 # pip install selenium
 # pip install msedge-selenium-tools
-# pip install http-request-randomizer
-# pip install python-telegram-bot
-# pip install screeninfo
 # pip install requests-html
+# pip install http-request-randomizer
+# pip install screeninfo
+# pip install termcolor
+# pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
+# pip install simpleaudio   sinon la lecture avec gtts n'est pas possible
+from bot_util import SEED_PATH_1, SEED_PATH_2
 
-# TODO verif type
-# if type(browser).__name__ != WebDriver.__name__ and type(browser).__name__ != WebElement.__name__:
-#     error_text = "\tget_text_selector browser is not a good type {} {}".format(type(browser), WebDriver, WebElement)
-#     if debug: print(error_text)
-#     raise ValueError(error_text)
+
+def str_to_hashcode(text: str | list[str], len_hashcode=8, seed=1337, whitelist="") -> list[str] | str:
+    if whitelist == "":
+        whitelist = string.ascii_letters + string.digits
+    if is_iter(text):
+        return [str_to_hashcode(txt, len_hashcode, seed, whitelist) for txt in text]
+    encode = blake2b()
+    if len_hashcode > encode.digest_size * 2 or len(str(seed)) >= 9:
+        return ""
+    encode.update(bytes(text.encode('utf-8')))
+    hashcode = encode.hexdigest()
+    hashtext = []
+    for i in range(len_hashcode):
+        txt = hashcode[i * (encode.digest_size * 2 // len_hashcode):(i + 1) * (encode.digest_size * 2 // len_hashcode)]
+        num = sum([(ord(c) << seed) * seed for c in txt]) % len(whitelist)
+        hashtext.append(whitelist[num])
+    return "".join(hashtext)
 
 
 def datetime_to_timedelta(x):
     return x - datetime.strptime("0:0:0", "%H:%M:%S")
-
-
-def current():
-    print("Current file:", inspect.currentframe().f_code.co_filename)
-    # print("Current fun:", inspect.stack(1)[0].function)
-    print("Current fun:", inspect.currentframe().f_code.co_name)
-    # print("Current line:", inspect.currentframe().f_lineno)
-
-
-def frameinfo(backtimes=0, debug=False):
-    frame = inspect.currentframe()
-    for _ in range(backtimes):
-        frame = frame.f_back
-    pathname = frame.f_code.co_filename
-    # fun_name = frame.f_code.co_name
-    fun_args = frame.f_locals
-    # line = frame.f_lineno
-    sep = os.path.sep
-    if pathname.find(os.path.sep) == -1:
-        sep = "/"
-    if debug:
-        print("Current path:", pathname)
-        # print("Current fun:", fun_name)
-        print("Current fun args:", fun_args)
-        # print("Current line:", line)
-        print(os.path.sep, pathname.rfind(sep))
-        print(os.path.sep, pathname.rfind("."))
-    filename = pathname[pathname.rindex(sep) + 1:pathname.rindex(".")]
-    pathname = pathname[:pathname.rindex(sep) + 1]
-    if debug:
-        print("Current file:", filename)
-    # return {"filename": filename, "pathname": pathname, "fun_name": fun_name, "lineno": line, "fun_args": fun_args}
-    return {"filename": filename, "pathname": pathname, "fun_args": fun_args}
-
-
-def frameinfo_stack(stack=0, debug=False):
-    """ ne fonctionne pas dans les threads"""
-    frame: FrameInfo = inspect.stack()[stack]
-    pathname = frame.filename
-    sep = os.path.sep
-    if pathname.find(os.path.sep) == -1:
-        sep = "/"
-    if debug:
-        print("Current path:", pathname)
-        print("Current fun:", frame.function)
-        print("Current line:", frame.lineno)
-        print(os.path.sep, pathname.rfind(sep))
-        print(os.path.sep, pathname.rfind("."))
-    filename = pathname[pathname.rindex(sep) + 1:pathname.rindex(".")]
-    if debug:
-        print("Current file:", filename)
-    return {"filename": filename, "pathname": pathname, "function": frame.function, "lineno": frame.lineno}
-
-
-def current_file():
-    return inspect.currentframe().f_code.co_filename
 
 
 def is_iter(element):
@@ -197,6 +157,7 @@ def util_repeat_function_binance(fun: Callable, interval_time: timedelta, debug=
             print(now().strftime("%Y-%m-%d %H:%M:%S"), "executed successfully", *args)
         sleep(interval_time.total_seconds())
 
+
 # def set_bag_alienworlds(browser, tool_name):
 #     """ Doit  au préalable être connecté """
 #     left_interface_xpath = "/html/body/div/div[3]/div[1]/div/div[2]/button"
@@ -275,3 +236,25 @@ def util_repeat_function_binance(fun: Callable, interval_time: timedelta, debug=
 #         return set_bag_waxblocks(browser, to, ids)
 #
 #
+
+if __name__ == '__main__':
+    seed = int(str_to_hashcode(file_get_1st_line(SEED_PATH_1) + file_get_1st_line(SEED_PATH_2), whitelist=string.digits))
+    # txt = "xvzwu.wam"
+    txt = "pyyfu.wam"
+    txt = "oj3.e.c.wam"
+    txt = "e33ke.c.wam"
+    txt = "n11k2.c.wam"
+    txt = "jd1.2.c.wam"
+    txt = "g32ke.c.wam"
+    txt = "xvzwu.wam"
+    print(txt, str_to_hashcode(txt, seed=seed))
+    print(str_to_hashcode(["b4nvi.wam",
+                           "pyyfu.wam",
+                           "progk.wam",
+                           "o.gvy.wam",
+                           "xvzwu.wam",
+                           "n11k2.c.wam",
+                           "jd1.2.c.wam",
+                           "g32ke.c.wam",
+                           "e33ke.c.wam",
+                           "oj3.e.c.wam"], seed=seed))

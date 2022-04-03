@@ -11,9 +11,11 @@
       <excludeFolder url="file://$MODULE_DIR$/../Bots/FarmersWorld/Profiles" />
       <excludeFolder url="file://$MODULE_DIR$/../Bots/SpaceCraftX/Profiles" />
       <excludeFolder url="file://$MODULE_DIR$/../Bots/Xpansion/Profiles" />
+      <excludeFolder url="file://$MODULE_DIR$/../Bots/Profiles" />
     </content>
     <content url="file://$MODULE_DIR$/Utils" />
     <orderEntry type="jdk" jdkName="Python 3.10 (venv_bots)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="Bots" />
   </component>
 </module>
