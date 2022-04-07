@@ -27,6 +27,10 @@ from Times import now
 # pip install http-request-randomizer
 # pip install screeninfo
 # pip install termcolor
+# pip install gtts
+# pip install simpleaudio
+# pip install pyperclip
+# pip install mysql-connector-python
 # pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
 # pip install simpleaudio   sinon la lecture avec gtts n'est pas possible
 from bot_util import SEED_PATH_1, SEED_PATH_2
@@ -239,23 +243,15 @@ def util_repeat_function_binance(fun: Callable, interval_time: timedelta, debug=
 
 if __name__ == '__main__':
     seed = int(str_to_hashcode(file_get_1st_line(SEED_PATH_1) + file_get_1st_line(SEED_PATH_2), whitelist=string.digits))
-    # txt = "xvzwu.wam"
-    txt = "pyyfu.wam"
-    txt = "oj3.e.c.wam"
-    txt = "e33ke.c.wam"
-    txt = "n11k2.c.wam"
-    txt = "jd1.2.c.wam"
-    txt = "g32ke.c.wam"
-    txt = "xvzwu.wam"
-    txt = "progk.wam"
-    print(txt, str_to_hashcode(txt, seed=seed))
-    print(str_to_hashcode(["b4nvi.wam",
-                           "pyyfu.wam",
-                           "progk.wam",
-                           "o.gvy.wam",
-                           "xvzwu.wam",
-                           "n11k2.c.wam",
-                           "jd1.2.c.wam",
-                           "g32ke.c.wam",
-                           "e33ke.c.wam",
-                           "oj3.e.c.wam"], seed=seed))
+    a = ["b4nvi.wam",
+         "pyyfu.wam",
+         "progk.wam",
+         "o.gvy.wam",
+         "xvzwu.wam",
+         "n11k2.c.wam",
+         "jd1.2.c.wam",
+         "g32ke.c.wam",
+         "e33ke.c.wam",
+         "oj3.e.c.wam"]
+    print(a[0], str_to_hashcode(a[0], seed=seed))
+    print(list(zip(a, str_to_hashcode(a, seed=seed))))

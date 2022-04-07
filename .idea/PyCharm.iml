@@ -14,7 +14,7 @@
       <excludeFolder url="file://$MODULE_DIR$/../Bots/Profiles" />
     </content>
     <content url="file://$MODULE_DIR$/Utils" />
-    <orderEntry type="jdk" jdkName="Python 3.10 (venv_bots)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.10 (venv)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Bots" />
   </component>

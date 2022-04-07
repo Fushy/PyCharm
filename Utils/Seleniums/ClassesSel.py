@@ -215,6 +215,9 @@ class Browser:
         """ Selon le browser """
         return self.goto(self.working_window_num)
 
+    def goto_next(self):
+        return self.goto((self.get_current_index_window() + 1) % len(browser))
+
     # ne peut pas faire cette methode car après un clique qui change de page, le driver n'est pas actualisé est l'ancienne page reste celle active
     # def goto_current_active_page(self):
     def goto_current_working_page(self):
@@ -266,6 +269,7 @@ class Browser:
             return self.new_page(url, window_num, tries + 1)
 
     def new_tab(self):
+        self.updateinfos_current_page()
         self.driver.execute_script("window.open('');")
         self.set_windows_url("", self.get_current_window_num() + 1)
 
@@ -318,7 +322,7 @@ class Browser:
         return self.driver.current_url
 
     def close(self):
-        assert self.get_current_window_num() != 0
+        # assert self.get_current_window_num() != 0
         self.windows_url[self.get_current_window_num()] = ""
         self.driver.close()
         self.goto(self.current_window_num - 1)
@@ -334,8 +338,11 @@ class Browser:
         except WebDriverException:
             return None
 
-    def get_element(self, selectors: str | list[str], find_element_fun: Callable[[WebDriver], str] = None,
-                    debug=False) \
+    def get_element(self,
+                    selectors: str | list[str],
+                    find_element_fun: Callable[[WebDriver], str] = None,
+                    debug=False,
+                    all_windows=False) \
             -> None | WebElement | list[WebElement]:
         if debug is None:
             self.print(("get_element", selectors), False)
@@ -345,27 +352,34 @@ class Browser:
         is_elements = "elements" in find_element_fun_name
         if not is_elements:
             find_element_fun = check_find_fun(self.driver, find_element_fun_name)
-        try:
-            if type(selectors) is str:
-                selectors = [selectors]
-            for selector in selectors:
-                elements: list[WebElement] = find_element_fun(selector)
-                if is_elements:
-                    return elements
-                elif type(elements) == list and len(elements) > 0:
-                    return elements[0]
-            return None
-        except NoSuchWindowException or WebDriverException as err:
-            # selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed
-            # self.print("win dont exist")
-            # sleep(1)
-            return None
-        # except Exception or UnboundLocalError or AttributeError or NoSuchElementException or \
-        #        StaleElementReferenceException or ElementClickInterceptedException:
-        #     print(traceback.format_exc(), file=sys.stderr)
-        #     Alert.say("\tget_element None")
-        #     sleep(1)
-        #     return self.get_element(url, selector, find_element_fun, debug)
+        for i in range(len(self)):
+            if i != 0:
+                self.goto_next()
+            try:
+                if type(selectors) is str:
+                    selectors = [selectors]
+                for selector in selectors:
+                    elements: list[WebElement] = find_element_fun(selector)
+                    if is_elements:
+                        return elements
+                    elif type(elements) == list and len(elements) > 0:
+                        return elements[0]
+                if all_windows:
+                    continue
+                return None
+            except NoSuchWindowException or WebDriverException as err:
+                # selenium.common.exceptions.NoSuchWindowException: Message: no such window: target window already closed
+                # self.print("win dont exist")
+                # sleep(1)
+                if all_windows:
+                    continue
+                return None
+            # except Exception or UnboundLocalError or AttributeError or NoSuchElementException or \
+            #        StaleElementReferenceException or ElementClickInterceptedException:
+            #     print(traceback.format_exc(), file=sys.stderr)
+            #     Alert.say("\tget_element None")
+            #     sleep(1)
+            #     return self.get_element(url, selector, find_element_fun, debug)
 
     def get_class(self, selector: str, find_element_fun: Callable[[WebDriver], str] = None, debug: bool = False) \
             -> Optional[WebElement]:
@@ -437,7 +451,7 @@ class Browser:
             if debug:
                 self.print((selectors, find_element_fun, "url =", url))
             if refresh is not None and (now() - start_refresh).total_seconds() >= refresh:
-                if url is not None:
+                if url is not None and url != "":
                     self.new_page(url)
                 else:
                     self.refresh()
@@ -642,7 +656,7 @@ class Browser:
 
     def wait_element_n_click(self, url, selector, find_element_fun=None, refresh=None) -> bool:
         element = self.wait_element(url, selector, find_element_fun, refresh=refresh)
-        if element is None:
+        if element is bool:
             return False
         return self.element_click(element)
 
