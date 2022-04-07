@@ -247,6 +247,7 @@ if __name__ == '__main__':
     txt = "jd1.2.c.wam"
     txt = "g32ke.c.wam"
     txt = "xvzwu.wam"
+    txt = "progk.wam"
     print(txt, str_to_hashcode(txt, seed=seed))
     print(str_to_hashcode(["b4nvi.wam",
                            "pyyfu.wam",
