@@ -222,7 +222,7 @@ class Browser:
         return self.goto(self.working_window_num)
 
     def goto_next(self):
-        return self.goto((self.get_current_index_window() + 1) % len(browser))
+        return self.goto((self.get_current_index_window() + 1) % len(self))
 
     # ne peut pas faire cette methode car après un clique qui change de page, le driver n'est pas actualisé est l'ancienne page reste celle active
     # def goto_current_active_page(self):
