@@ -160,7 +160,6 @@ class Browser:
             # num = self.get_current_window_num()
         except NoSuchWindowException:
             url = ""
-            self.decr_current_window_num()
         # except MaxRetryError:
         #     print(142)
         #     url = ""
@@ -170,7 +169,8 @@ class Browser:
         return url
 
     def decr_current_window_num(self):
-        del self.windows_url[self.current_window_num]
+        if len(self.windows_url) > self.current_window_num:
+            del self.windows_url[self.current_window_num]
         self.current_window_num -= 1
         self.updateinfos_current_page()
 
@@ -185,12 +185,12 @@ class Browser:
         return True
 
     def updateinfos_current_page(self):
-        # try:
-        self.driver.switch_to.window(self.driver.window_handles[self.get_current_window_num()])
-        self.update_windows_url()
-        # except IndexError:
-        #     self.decr_current_window_num()
-        #     return self.updateinfos_current_page()
+        try:
+            self.driver.switch_to.window(self.driver.window_handles[self.get_current_window_num()])
+            self.update_windows_url()
+        except IndexError:
+            # step by step all
+            self.decr_current_window_num()
 
     def goto(self, window_num, update_working=True) -> bool:
         if window_num >= len(self.driver.window_handles):

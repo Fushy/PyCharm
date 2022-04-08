@@ -2,7 +2,7 @@ import sqlite3
 from sqlite3 import Connection, OperationalError
 
 import mysql.connector
-from mysql.connector import MySQLConnection
+from mysql.connector import MySQLConnection, InternalError
 
 from Strings import quote
 from Times import now
@@ -13,12 +13,25 @@ def mysql_connect_remote() -> MySQLConnection:
     DATABASE = "6fLyxUf3eM"
     USER = "6fLyxUf3eM"
     password = 'IhNaLib2PI'
-    connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password)
+    connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password, buffered=True)
     return connection
 
 
 def is_mysql(connection) -> bool:
-    return type(connection) is mysql.connector.connection_cext.CMySQLConnection
+    state = False
+    if "mysql.connector.connection" in str(type(connection)):
+        state = True
+        mysql_reset_buffer(connection)
+    return state
+
+
+def mysql_reset_buffer(connection, c=None):
+    try:
+        connection.reconnect()
+    except Exception as err:
+        if "Unread result found" in str(err):
+            if c:
+                c.fetchall()
 
 
 def create_table(request: str, connection: Connection):
@@ -50,8 +63,9 @@ def insert(connection: Connection, table_name, values, columns, debug=False):
 def get_column_names(connection, table_name: str):
     column_names = []
     if is_mysql(connection):
-        column_names = list(map(lambda x: x[0], connection.cmd_query("""SELECT * from MINING LIMIT 1""")["columns"]))
-        connection.reconnect()
+        cursor = connection.cursor(buffered=True)
+        cursor.execute("""SELECT * FROM {}""".format(table_name))
+        column_names = cursor.column_names
     else:
         cursor = connection.cursor()
         for tuples in cursor.execute("PRAGMA table_info({})".format(table_name)):

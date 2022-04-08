@@ -20,13 +20,16 @@
         </library>
       </libraries>
     </data-source>
-    <data-source source="LOCAL" name="Runs" uuid="b7b6d614-92ff-4ec3-8249-e03113f63d69">
+    <data-source source="LOCAL" name="Runs" uuid="29f19d70-8b72-420b-b89a-b422a21daf05">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:B:\_Documents\Pycharm\Bots\Runs.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:C:\Users\Alexis\PycharmProjects\Bots\Runs.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
       <libraries>
+        <library>
+          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.36.0.3/sqlite-jdbc-3.36.0.3.jar</url>
+        </library>
         <library>
           <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.36.0.3/sqlite-jdbc-3.36.0.3.jar</url>
         </library>

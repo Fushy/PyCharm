@@ -1,5 +1,6 @@
 import re
 import string
+from random import randint
 from time import sleep
 
 from selenium.common.exceptions import NoSuchWindowException, WebDriverException
@@ -59,7 +60,7 @@ def check_wax_approve(browser: Browser, click=True, pre_sleep: int = 1) -> bool:
                     white_login_empty_button = browser.get_element(white_login_empty_button_xpath)
                     white_login_button = browser.get_element(login_button_white_xpaths)
                     width = browser.get_width()
-                    if width is None or elapsed_seconds(start) >= 10:
+                    if width is None or elapsed_seconds(start) >= randint(3, 10):
                         if width is not None and width < 1000:
                             browser.close()
                         end_wax_approve(browser, i)

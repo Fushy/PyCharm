@@ -10,6 +10,7 @@ import pyperclip
 
 from Files import file_get_1st_line
 from Times import now
+# https://stackoverflow.com/questions/14684968/how-to-export-virtualenv
 # pip install --upgrade
 # pip install --upgrade pip
 # pip install --upgrade setuptools
@@ -31,7 +32,6 @@ from Times import now
 # pip install simpleaudio
 # pip install pyperclip
 # pip install mysql-connector-python
-# pip install sqlite-web
 # pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
 # pip install simpleaudio   sinon la lecture avec gtts n'est pas possible
 from util_bot import SEED_PATH_1, SEED_PATH_2
