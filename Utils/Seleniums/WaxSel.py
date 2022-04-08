@@ -15,7 +15,7 @@ from Telegrams import message
 from Times import now, elapsed_seconds
 from Util import str_to_hashcode
 from Wax import WAX_APPROVE_URL
-from bot_util import SEED_PATH_1, SEED_PATH_2
+from util_bot import SEED_PATH_1, SEED_PATH_2
 
 
 def check_wax_approve(browser: Browser, click=True, pre_sleep: int = 1) -> bool:
@@ -139,11 +139,13 @@ def get_login_input(browser: Browser) -> str | bool:
     connect_xpath = "/html/body/header/div/aside/div/nav/ul/li[2]/a"
     messages_header_xpath_1 = "/html/body/div[3]/div/div[2]/div[2]/div[1]/div/div/div[3]/div[2]/div/div[1]/div[2]/div/div/div/div/div"
     messages_header_xpath_2 = "/html/body/div[3]/div/div[2]/div[2]/div[2]/div[2]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div/div/div"
-    messages_header_xpaths = [messages_header_xpath_1, messages_header_xpath_2]
+    messages_header_xpath_3 = "/html/body/div[3]/div/div[2]/div[2]/div[2]/div/div/div[3]/div[2]/div/div[1]/div[2]/div/div/div/div/div"
+    messages_header_xpath_4 = "/html/body/div[3]/div/div[2]/div[2]/div[2]/div[1]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div/div/div"
+    messages_header_xpaths = [messages_header_xpath_1, messages_header_xpath_2, messages_header_xpath_3, messages_header_xpath_4]
     popup_close_xpath_1 = "/html/body/div[6]/div/div/div/div[2]/div[2]/div/div[1]/div[2]/button"
     popup_close_xpath_2 = "/html/body/div[7]/div/div/div/div[2]/div[2]/div/div[1]/div[2]/button"
     popup_close_xpaths = [popup_close_xpath_1, popup_close_xpath_2]
-    browser.wait_element("", [connect_xpath, messages_header_xpath_1, messages_header_xpath_2, popup_close_xpath_1, popup_close_xpath_2], refresh=5)
+    browser.wait_element("", [messages_header_xpath_4, messages_header_xpath_3, connect_xpath, messages_header_xpath_1, messages_header_xpath_2, popup_close_xpath_1, popup_close_xpath_2], refresh=15)
     sleep(1)
     while browser.get_element(connect_xpath):
         browser.get_element_n_click(connect_xpath)

@@ -160,10 +160,7 @@ class Browser:
             # num = self.get_current_window_num()
         except NoSuchWindowException:
             url = ""
-            num = 0
-            del self.windows_url[self.current_window_num]
-            self.current_window_num -= 1
-            self.updateinfos_current_page()
+            self.decr_current_window_num()
         # except MaxRetryError:
         #     print(142)
         #     url = ""
@@ -171,6 +168,11 @@ class Browser:
         # print(143)
         # self.set_windows_url(url, num + 1)
         return url
+
+    def decr_current_window_num(self):
+        del self.windows_url[self.current_window_num]
+        self.current_window_num -= 1
+        self.updateinfos_current_page()
 
     def wait_new_created_window(self, old_count=None):
         if old_count is None:
@@ -183,8 +185,12 @@ class Browser:
         return True
 
     def updateinfos_current_page(self):
+        # try:
         self.driver.switch_to.window(self.driver.window_handles[self.get_current_window_num()])
         self.update_windows_url()
+        # except IndexError:
+        #     self.decr_current_window_num()
+        #     return self.updateinfos_current_page()
 
     def goto(self, window_num, update_working=True) -> bool:
         if window_num >= len(self.driver.window_handles):
@@ -323,9 +329,9 @@ class Browser:
 
     def close(self):
         # assert self.get_current_window_num() != 0
-        self.windows_url[self.get_current_window_num()] = ""
+        self.decr_current_window_num()
         self.driver.close()
-        self.goto(self.current_window_num - 1)
+        self.goto(self.current_window_num)
 
     def quit(self):
         self.windows_url = None
@@ -602,7 +608,7 @@ class Browser:
                     return text
         return None
 
-    def element_click(self, element: WebElement, actionchain=False, debug=False) -> bool:
+    def element_click(self, element: WebElement, actionchain=False, debug=False, leave=15) -> bool:
         self.print(("element_click", element), False)
         if element is None:
             if debug:
@@ -611,9 +617,12 @@ class Browser:
         try:
             if debug:
                 self.print(("click_check_if_is_enable0", element.is_enabled()))
+            start = now()
             while not element.is_enabled():
                 if debug:
                     self.print(("click_check_if_is_enable1", element.is_enabled()))
+                if elapsed_seconds(start) <= leave:
+                    return False
             if debug:
                 self.print(("clickA", element.is_enabled()))
             if actionchain:
@@ -625,9 +634,12 @@ class Browser:
             if debug:
                 self.print("error_element_click")
                 self.print(("click_check_if_is_enable2", element.is_enabled()))
+            start = now()
             while not element.is_enabled():
                 if debug:
                     self.print(("click_check_if_is_enable3", element.is_enabled()))
+                if elapsed_seconds(start) <= leave:
+                    return False
             if actionchain:
                 element.click()
             else:

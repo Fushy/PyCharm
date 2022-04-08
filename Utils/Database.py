@@ -1,7 +1,24 @@
 import sqlite3
 from sqlite3 import Connection, OperationalError
+
+import mysql.connector
+from mysql.connector import MySQLConnection
+
 from Strings import quote
 from Times import now
+
+
+def mysql_connect_remote() -> MySQLConnection:
+    HOST = "remotemysql.com"
+    DATABASE = "6fLyxUf3eM"
+    USER = "6fLyxUf3eM"
+    password = 'IhNaLib2PI'
+    connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password)
+    return connection
+
+
+def is_mysql(connection) -> bool:
+    return type(connection) is mysql.connector.connection_cext.CMySQLConnection
 
 
 def create_table(request: str, connection: Connection):
@@ -32,9 +49,13 @@ def insert(connection: Connection, table_name, values, columns, debug=False):
 
 def get_column_names(connection, table_name: str):
     column_names = []
-    cursor = connection.cursor()
-    for tuples in cursor.execute("PRAGMA table_info({})".format(table_name)):
-        column_names.append(tuples[1])
+    if is_mysql(connection):
+        column_names = list(map(lambda x: x[0], connection.cmd_query("""SELECT * from MINING LIMIT 1""")["columns"]))
+        connection.reconnect()
+    else:
+        cursor = connection.cursor()
+        for tuples in cursor.execute("PRAGMA table_info({})".format(table_name)):
+            column_names.append(tuples[1])
     return column_names
 
 
@@ -58,8 +79,11 @@ def insert_or_update(connection, table_name, values, columns,
                   .format(table_name, ", ".join(columns), ",".join(map(quote, values))))
         if is_update:
             raise sqlite3.IntegrityError
-        connection.execute("INSERT INTO {} ({}) VALUES ({})"
-                           .format(table_name, ", ".join(columns), ",".join(map(quote, values))))
+        query = "INSERT INTO {} ({}) VALUES ({})".format(table_name, ", ".join(columns), ",".join(map(quote, values)))
+        if is_mysql(connection):
+            connection.cmd_query(query)
+        else:
+            connection.execute(query)
     except sqlite3.IntegrityError:
         new_columns = columns
         new_values = values
@@ -77,6 +101,10 @@ def insert_or_update(connection, table_name, values, columns,
         keys_constraint = keys_constraint[:-5]
         if debug:
             print("""\tUPDATE {}\nSET {}\n{}""".format(table_name, set_pattern, keys_constraint))
-        connection.execute("""UPDATE {}\nSET {}\n{}""".format(table_name, set_pattern, keys_constraint))
+        query = """UPDATE {}\nSET {}\n{}""".format(table_name, set_pattern, keys_constraint)
+        if is_mysql(connection):
+            connection.cmd_query(query)
+        else:
+            connection.execute(query)
     if commit:
         connection.commit()

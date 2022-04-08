@@ -31,9 +31,10 @@ from Times import now
 # pip install simpleaudio
 # pip install pyperclip
 # pip install mysql-connector-python
+# pip install sqlite-web
 # pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
 # pip install simpleaudio   sinon la lecture avec gtts n'est pas possible
-from bot_util import SEED_PATH_1, SEED_PATH_2
+from util_bot import SEED_PATH_1, SEED_PATH_2
 
 
 def str_to_hashcode(text: str | list[str], len_hashcode=8, seed=1337, whitelist="") -> list[str] | str:
