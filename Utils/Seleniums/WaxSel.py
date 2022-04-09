@@ -19,7 +19,7 @@ from Wax import WAX_APPROVE_URL
 from util_bot import SEED_PATH_1, SEED_PATH_2
 
 
-def check_wax_approve(browser: Browser, click=True, pre_sleep: int = 1) -> bool:
+def check_wax_approve(browser: Browser, click=True, pre_sleep: int = 1, refresh_min=None) -> bool:
     sleep(pre_sleep)
     clicked = False
     browser.print(("check_wax_approve", len(browser)), False)
@@ -60,7 +60,7 @@ def check_wax_approve(browser: Browser, click=True, pre_sleep: int = 1) -> bool:
                     white_login_empty_button = browser.get_element(white_login_empty_button_xpath)
                     white_login_button = browser.get_element(login_button_white_xpaths)
                     width = browser.get_width()
-                    if width is None or elapsed_seconds(start) >= randint(3, 10):
+                    if width is None or refresh_min and elapsed_seconds(start) >= randint(refresh_min, 10):
                         if width is not None and width < 1000:
                             browser.close()
                         end_wax_approve(browser, i)
@@ -117,12 +117,17 @@ def check_wax_approve(browser: Browser, click=True, pre_sleep: int = 1) -> bool:
                             input, seed = "13", "37"
                             sleep(3)
                             browser.updateinfos_current_page()
-                            browser.refresh()
+                            # browser.refresh()
                             # browser.wait_element("", auth_input_xpath, appear=False)
                             # sleep(1)
                             # browser.close()
                 width = browser.get_width()
                 if width is None:
+                    end_wax_approve(browser, i)
+                    return clicked
+                if elapsed_seconds(start) >= 30:
+                    message("check waxsel 129")
+                    browser.close()
                     end_wax_approve(browser, i)
                     return clicked
             i -= 1

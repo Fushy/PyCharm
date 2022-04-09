@@ -4,6 +4,8 @@ from collections import namedtuple
 
 # int("A", 16)
 
+# >>> sample = [timedelta(seconds=generate_sleep_time(120)) for _ in range(200000)]
+# >>> print(sum(sample, timedelta(0)) / len(sample))
 # Faire un raise ou un return a l'endroi où le code est stoppé si le debug ne fonctionne plus alors que le run fonctionne
 
 # TODO verif type

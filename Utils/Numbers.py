@@ -31,16 +31,17 @@ def rng_nearly(n, percent, floor=False) -> float:
                              n * (1 + percent) if not floor else n * percent)
 
 
-def generate_sleep_time(run_seconds, hit_per_run):
-    """ En secondes """
-    pattern = [24, [(0, 0.6689), (5, 0.2), (60, 0.1), (5 * 60, 0.0265), (30 * 60, 0.005)]]
-    aim_pause = run_seconds * 0.1
-    hit_per_run = run_seconds / hit_per_run
-    sleep_per_hit = aim_pause / hit_per_run
+def generate_sleep_time(hit_cooldown):
+    """ En secondes
+    >>> sample = [timedelta(seconds=generate_sleep_time(120)) for _ in range(200000)]
+    >>> print(sum(sample, timedelta(0)) / len(sample))
+    """
+    pattern = [24, [(0, 0.6689), (5, 0.2), (60, 0.1), (5 * 60, 0.05), (30 * 60, 0.005)]]
+    aim_pause_per_hit = hit_cooldown * 0.1
     rng = random()
     for sleep_time, odds in pattern[1][::-1]:
         if rng <= odds:
-            return rng_nearly(sleep_time * sleep_per_hit / pattern[0], 0.25)
+            return rng_nearly(sleep_time * aim_pause_per_hit / pattern[0], 0.25)
         rng -= odds
     return 0
 
