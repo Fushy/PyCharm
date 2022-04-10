@@ -61,8 +61,8 @@ def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
 def alert(msg, level):
     if level == 3:
         for _ in range(1):
-            say(msg)
             message(msg)
+            say(msg)
             sleep(3)
 
 
