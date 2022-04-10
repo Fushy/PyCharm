@@ -37,11 +37,16 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False)
         tts = gTTS(text=speech, lang=lang, slow=False)
         tts.save(filename)
         speedup_mp3(filename, speed=speed)
-    sound = AudioSegment.from_mp3(filename)
-    if blocking:
-        playback.play(sound)
-    else:
-        Threads.run(playback.play(sound))
+    try:
+        sound = AudioSegment.from_mp3(filename)
+        if blocking:
+            playback.play(sound)
+        else:
+            Threads.run(playback.play(sound))
+    except FileNotFoundError:
+        print(FileNotFoundError)
+        sleep(1)
+        return say(speech, filename, lang, speed, blocking)
 
 
 def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
