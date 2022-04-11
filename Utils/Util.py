@@ -33,7 +33,7 @@ from Times import now
 # pip install pyperclip
 # pip install mysql-connector-python
 # pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
-# pip install simpleaudio   sinon la lecture avec gtts n'est pas possible
+# pip install simpleaudio   sinon la lecture avec gtts n'est pas possible https://visualstudio.microsoft.com/visual-cpp-build-tools/
 from util_bot import SEED_PATH_1, SEED_PATH_2
 
 

@@ -58,7 +58,11 @@ def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
     fun() if blocking else Threads.run(fun)
 
 
-def alert(msg, level):
+def alert(msg, level=1):
+    if level == 1:
+        message(msg)
+        say(msg)
+        sleep(3)
     if level == 3:
         for _ in range(1):
             message(msg)

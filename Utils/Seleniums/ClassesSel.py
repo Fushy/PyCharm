@@ -150,8 +150,12 @@ class Browser:
             url = ""
         except MaxRetryError:
             url = ""
-        self.set_windows_url(url, self.get_current_window_num() + 1)
-        return url
+        if len(url) <= 1:
+            self.goto_last()
+            return self.update_windows_url()
+        else:
+            self.set_windows_url(url, self.get_current_window_num() + 1)
+            return url
 
     def current_url(self):
         try:
@@ -306,11 +310,26 @@ class Browser:
 
     def assert_url(self, wanted_url):
         try:
+            if self.current_url() == "about:blank":
+                browser.close()
+                return self.assert_url(wanted_url)
             if wanted_url not in self.current_url():
-                self.print(("url_is_not_good", wanted_url, self.current_url()))
-                # Alert.say("url is not good")
-                self.new_page(wanted_url, self.get_current_window_num())
-                return False
+                sleep(1)
+                self.goto_work()
+                if self.current_url() == "about:blank":
+                    browser.close()
+                    return self.assert_url(wanted_url)
+                if wanted_url not in self.current_url():
+                    sleep(1)
+                    self.goto_current_working_page()
+                    if self.current_url() == "about:blank":
+                        browser.close()
+                        return self.assert_url(wanted_url)
+                    if wanted_url not in self.current_url():
+                        Alert.say("url is not good")
+                        self.print(("url_is_not_good", wanted_url, self.current_url()))
+                        self.new_page(wanted_url, self.get_current_window_num())
+                    return False
             return True
         except NoSuchWindowException:
             #     """NoSuchWindowException: Si la fenetre n'existe plus"""

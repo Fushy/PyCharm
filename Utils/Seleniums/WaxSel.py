@@ -126,7 +126,6 @@ def check_wax_approve(browser: Browser, click=True, pre_sleep: int = 1, refresh_
                     end_wax_approve(browser, i)
                     return clicked
                 if elapsed_seconds(start) >= 30:
-                    message("check waxsel 129")
                     browser.close()
                     end_wax_approve(browser, i)
                     return clicked
