@@ -63,11 +63,11 @@ def alert(msg, level=1):
         message(msg)
         say(msg)
         sleep(3)
-    if level == 3:
-        for _ in range(1):
+    elif level == 3:
+        while True:
             message(msg)
             say(msg)
-            sleep(3)
+            sleep(10)
 
 
 def notify_win(msg):
@@ -77,6 +77,6 @@ def notify_win(msg):
 
 
 if __name__ == '__main__':
-    msg = '5 test 5'
-    say(msg)
+    message = '5 test 5'
+    say(message)
     input()

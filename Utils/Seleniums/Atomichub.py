@@ -22,12 +22,17 @@ def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
         if accept_cooki_btn is not None:
             browser.element_click(accept_cooki_btn)
         login_xpath = "/html/body/div/div[2]/div/div/div/div[2]/button"
+        cloud_wallet_xpath = "/html/body/div[3]/div/div/div[2]/div[1]/div[1]/div/button"
         login_txt = browser.get_text(url_transfert, login_xpath)
         start = now()
         while login_txt is not None and login_txt == "Login":
             if elapsed_seconds(start) >= 5:
                 printc(login_txt, background_color="red")
-                say(browser.name + " have to login")
+                # say(browser.name + " have to login")
+                browser.get_element_n_click(login_xpath)
+                cloud_wallet = browser.wait_element(url_transfert, cloud_wallet_xpath)
+                browser.element_click(cloud_wallet)
+                check_wax_approve(browser)
             sleep(1)
             login_txt = browser.get_text(url_transfert, login_xpath)
         input_to_xpath_1 = "/html/body/div/div[2]/div/div[2]/div[2]/div[3]/table/tbody/tr[1]/td[2]/div/div/div/input"

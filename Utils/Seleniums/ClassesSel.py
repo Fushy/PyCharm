@@ -60,11 +60,6 @@ class Browser:
         """ Prend cerrtaines ms, a eviter si on veut optimiser la vitesse"""
 
         def aux():
-            # print(frameinfo(1))
-            # print(frameinfo(2))
-            # print(frameinfo(3))
-            # print(frameinfo(4))
-            # print(frameinfo(5))
             print("{}{} {}\t\t\t{} {}".format(
                 "\t" if tab else "",
                 self.name,
@@ -143,21 +138,21 @@ class Browser:
         except InvalidArgumentException:
             raise InvalidSessionIdException("profile is already open")
 
-    def update_windows_url(self):
+    def update_windows_url(self) -> Optional[str]:
         try:
             url = self.driver.current_url
         except NoSuchWindowException:
             url = ""
         except MaxRetryError:
             url = ""
-        if len(url) <= 1:
+        if url is None or len(url) <= 1:
             self.goto_last()
             return self.update_windows_url()
         else:
             self.set_windows_url(url, self.get_current_window_num() + 1)
             return url
 
-    def current_url(self):
+    def current_url(self) -> Optional[str]:
         try:
             url = self.update_windows_url()
             # print(14)
@@ -225,8 +220,8 @@ class Browser:
         """ Selon le browser """
         return self.goto(self.working_window_num)
 
-    def goto_next(self):
-        return self.goto((self.get_current_index_window() + 1) % len(self))
+    def goto_next(self, update_working=True):
+        return self.goto((self.get_current_index_window() + 1) % len(self), update_working=update_working)
 
     # ne peut pas faire cette methode car après un clique qui change de page, le driver n'est pas actualisé est l'ancienne page reste celle active
     # def goto_current_active_page(self):
@@ -242,8 +237,8 @@ class Browser:
 
     def set_windows_url(self, url, window_num):
         for i in range(window_num):
-            if i >= len(self):
-                self.new_tab()
+            # if i >= len(self):
+            #     self.new_tab()
             if i >= len(self.windows_url):
                 self.windows_url.append("")
         self.windows_url[window_num - 1] = url
@@ -326,7 +321,7 @@ class Browser:
                         browser.close()
                         return self.assert_url(wanted_url)
                     if wanted_url not in self.current_url():
-                        Alert.say("url is not good")
+                        # Alert.say("url is not good")
                         self.print(("url_is_not_good", wanted_url, self.current_url()))
                         self.new_page(wanted_url, self.get_current_window_num())
                     return False
@@ -377,17 +372,22 @@ class Browser:
         is_elements = "elements" in find_element_fun_name
         if not is_elements:
             find_element_fun = check_find_fun(self.driver, find_element_fun_name)
+        save_work_num = self.working_window_num
         for i in range(len(self)):
             if i != 0:
-                self.goto_next()
+                self.goto_next(update_working=True)
             try:
                 if type(selectors) is str:
                     selectors = [selectors]
                 for selector in selectors:
                     elements: list[WebElement] = find_element_fun(selector)
                     if is_elements:
+                        # if all_windows:
+                        #     self.goto_work()
                         return elements
                     elif type(elements) == list and len(elements) > 0:
+                        # if all_windows:
+                        #     self.goto_work()
                         return elements[0]
                 if all_windows:
                     continue
@@ -399,12 +399,9 @@ class Browser:
                 if all_windows:
                     continue
                 return None
-            # except Exception or UnboundLocalError or AttributeError or NoSuchElementException or \
-            #        StaleElementReferenceException or ElementClickInterceptedException:
-            #     print(traceback.format_exc(), file=sys.stderr)
-            #     Alert.say("\tget_element None")
-            #     sleep(1)
-            #     return self.get_element(url, selector, find_element_fun, debug)
+        if all_windows:
+            self.goto(save_work_num)
+        return None
 
     def get_class(self, selector: str, find_element_fun: Callable[[WebDriver], str] = None, debug: bool = False) \
             -> Optional[WebElement]:
@@ -627,8 +624,9 @@ class Browser:
                     return text
         return None
 
-    def element_click(self, element: WebElement, actionchain=False, debug=False, leave=15) -> bool:
-        self.print(("element_click", element), False)
+    def element_click(self, element: Optional[WebElement], actionchain=False, debug=False, leave=15) -> bool:
+        self.print(("element_click", element, type(element)), False)
+        assert type(element) is WebElement or element is None
         if element is None:
             if debug:
                 self.print("element_click_element_is_None")
@@ -685,10 +683,11 @@ class Browser:
         element = self.get_element(selector, find_element_fun)
         return self.element_click(element)
 
-    def wait_element_n_click(self, url, selector, find_element_fun=None, refresh=None) -> bool:
+    def wait_element_n_click(self, url, selector, find_element_fun=None, refresh=None, sleep_after_find=0) -> bool:
         element = self.wait_element(url, selector, find_element_fun, refresh=refresh)
         if element is bool:
             return False
+        sleep(sleep_after_find)
         return self.element_click(element)
 
     def click_n_wait_new_created_window(self, element: WebElement) -> bool:

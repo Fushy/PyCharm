@@ -16,6 +16,7 @@ def frameinfo(backtimes=0, debug=False):
     for _ in range(backtimes):
         frame = frame.f_back
     pathname = frame.f_code.co_filename
+    pathname_complete = pathname
     # fun_name = frame.f_code.co_name
     fun_args = frame.f_locals
     line = frame.f_lineno
@@ -34,7 +35,7 @@ def frameinfo(backtimes=0, debug=False):
     if debug:
         print("Current file:", filename)
     # return {"filename": filename, "pathname": pathname, "fun_name": fun_name, "lineno": line, "fun_args": fun_args}
-    return {"filename": filename, "pathname": pathname, "fun_args": fun_args, "line": line}
+    return {"filename": filename, "pathname": pathname, "fun_args": fun_args, "line": line, "pathname_complete": pathname_complete}
 
 
 def current_lines(start_depth=2, end_depth: Optional[int] = None):
@@ -43,7 +44,7 @@ def current_lines(start_depth=2, end_depth: Optional[int] = None):
     try:
         while end_depth is None or end_depth < i:
             frame = frameinfo(i)
-            lst.append(str(frame["line"]) + " " + frame["filename"])
+            lst.append(frame["filename"] + ":" + str(frame["line"]))
             i += 1
     except AttributeError:
         return lst

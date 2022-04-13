@@ -237,7 +237,7 @@ def wait_alerte_and_close_it(browser, leave=60):
     return alert_text
 
 
-def get_element_text(element: WebElement, debug=False) -> Optional[str]:
+def get_element_text(element: Optional[WebElement], debug=False) -> Optional[str]:
     if element is None:
         return None
     try:

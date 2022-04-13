@@ -38,7 +38,7 @@ def connect(browser: Browser) -> bool:
         wallet_wax = browser.get_element(wallet_wax_xpath)
         browser.element_click(wallet_wax)
         sleep(1)
-        check_wax_approve(browser, click=False)
+        check_wax_approve(browser)
     name_xpath_1 = "/html/body/div/div/div/div[4]/nav/div[2]/div/div[2]/div/div[2]"
     name_xpath_2 = "/html/body/div[1]/div/div/div[3]/nav/div[2]/div/div[2]/div/div[2]"
     if not browser.wait_element(ALCOR_TRANSFERT_URL, [name_xpath_1, name_xpath_2]):
@@ -179,8 +179,16 @@ def transaction(browser: Browser,
     browser.element_click(send_transfer)
     # laaa
     browser.print(("transaction_sent", to, amount, token_send, memo))
+    wierd_header_xpath = "/html/body"
     msgbox_header_xpath = "/html/body/div[3]/div/div[1]/div"
-    transaction_text = browser.wait_text(ALCOR_TRANSFERT_URL, msgbox_header_xpath)
+    msgbox_header = None
+    while not msgbox_header:
+        msgbox_header = browser.get_element(msgbox_header_xpath)
+        wierd_header_text = browser.get_text(ALCOR_TRANSFERT_URL, wierd_header_xpath)
+        if wierd_header_text and "Transfer error" in wierd_header_text and "duplicate" in wierd_header_text:
+            return True
+        sleep(0.5)
+    transaction_text = get_element_text(msgbox_header)
     if send_msg:
         browser.print(("transaction", to, amount, token_send, memo), False)
         message("{} {} Alcor transaction sent to {} {}".format(amount, token_send, to, memo))
@@ -234,6 +242,10 @@ def buy(browser: Browser, asset: str, roof_tokens_to_have: float) -> tuple[bool,
     trades_class = "el-table__row"
     existing_trades = browser.get_element(existing_trades_xpath)
     while len(existing_trades.find_elements_by_class_name(trades_class)) == 0:
+        wierd_header_xpath = "/html/body"
+        wierd_header_text = browser.get_text(ALCOR_TRANSFERT_URL, wierd_header_xpath)
+        if wierd_header_text and "Transfer error" in wierd_header_text and "duplicate" in wierd_header_text:
+            return True, False
         if elapsed_seconds(start) > 30:
             return False, False
         sleep(1)
@@ -371,9 +383,15 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float) -> tuple[boo
     browser.get_element_n_click(sell_button_xpath)
     # laaa
     start = now()
+    wierd_header_xpath = "/html/body"
     while len(existing_trades.find_elements_by_class_name(trades_class)) == 0:
+        wierd_header_text = browser.get_text(ALCOR_TRANSFERT_URL, wierd_header_xpath)
+        if wierd_header_text and "Transfer error" in wierd_header_text and "duplicate" in wierd_header_text:
+            return True, False
         if elapsed_seconds(start) > 30:
             return False, False
+        # if elapsed_seconds(start) > 15:
+        #     return True, False
         sleep(1)
         existing_trades = browser.get_element(existing_trades_xpath)
     return True, False

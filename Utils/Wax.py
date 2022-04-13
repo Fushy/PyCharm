@@ -118,7 +118,7 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
     # all_asset_amount = call_request_api("get_tokens", {"account": account_name})
     connection = sqlite3.connect(r"../Bank.db")
     instant = now()
-    assets = list(all_asset_amount) + ["WAXP"]
+    assets = list(all_asset_amount) + ["WAXP"] + tokens
     if tokens is not None:
         assets = list(filter(lambda x: x in tokens, assets))
     if update:
@@ -181,5 +181,4 @@ def get_nft_price(collection_name: Optional[str] = None,
                 "symbol": "WAX",
             })
     infos = json["data"][0]
-    decimal_pos = len(infos["price"]) - int(infos["token_precision"])
-    return float(infos["price"][:decimal_pos] + "." + infos["price"][decimal_pos:])
+    return round(int(infos["price"]) / (10**int(infos["token_precision"])), infos["token_precision"])

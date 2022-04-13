@@ -20,16 +20,25 @@
         </library>
       </libraries>
     </data-source>
-    <data-source source="LOCAL" name="Runs" uuid="29f19d70-8b72-420b-b89a-b422a21daf05">
+    <data-source source="LOCAL" name="Runs [2]" uuid="a5081d3b-9144-40bb-8a0c-bf74bd9752af">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\Users\Alexis\PycharmProjects\Bots\Runs.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:B:\_Documents\Pycharm\Bots\Runs.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
       <libraries>
         <library>
           <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.36.0.3/sqlite-jdbc-3.36.0.3.jar</url>
         </library>
+      </libraries>
+    </data-source>
+    <data-source source="LOCAL" name="Bank" uuid="08db1553-d66b-4d03-b013-b773d6f85f9c">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:B:\_Documents\Pycharm\Bots\Bank.db</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+      <libraries>
         <library>
           <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.36.0.3/sqlite-jdbc-3.36.0.3.jar</url>
         </library>

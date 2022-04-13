@@ -31,7 +31,7 @@ def rng_nearly(n, percent, floor=False) -> float:
                              n * (1 + percent) if not floor else n * percent)
 
 
-def generate_sleep_time(hit_cooldown):
+def generate_sleep_time(hit_cooldown=120):
     """ En secondes
     >>> sample = [timedelta(seconds=generate_sleep_time(120)) for _ in range(200000)]
     >>> print(sum(sample, timedelta(0)) / len(sample))
