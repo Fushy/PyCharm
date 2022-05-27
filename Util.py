@@ -31,6 +31,7 @@ from Times import now
 # pip install gtts
 # pip install simpleaudio
 # pip install pyperclip
+# pip install pandas
 # pip install mysql-connector-python
 
 # pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
