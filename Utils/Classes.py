@@ -12,6 +12,7 @@ class Condition:
         self.__dict__.update(kwargs)
 
     def is_done(self):
+        # print(za
         return all(self.__dict__.values())
 
 
@@ -142,7 +143,7 @@ class OpenPack:
 
     def __str__(self):
         self.total_price = round(self.total_price, 2)
-        # return "pack_open {} {}$ nft_open {}\nnft_per_pack {}\nnft_values {}\nnft_total {}".format(
+        # return "pack_open {} {}$ nft_open {}\nnft_per_pack {}\nnft_values {}\nnft_total {}".date_format(
         #     self.pack_open, self.total_price, self.nft_open, self.nft_per_pack, self.nft_values, self.nft_total)
         return "pack_open {} {}$ nft_open {}\nnft_per_pack {}\nnft_values {}\n".format(
             self.pack_open, self.total_price, self.nft_open, self.nft_per_pack, self.nft_values)

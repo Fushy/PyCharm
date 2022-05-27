@@ -1,4 +1,4 @@
-import inspect
+import os
 import os
 import sys
 import traceback
@@ -19,20 +19,22 @@ import Alert
 import Classes
 from Colors import printc
 from Enum import FIRST
-from Introspection import current_lines
+from Files import file_get_1st_line
+from Introspection import current_lines, frameinfo
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text, get_element_class
 from Sysconf import screen_rect, SCREENS
 from Times import now, elapsed_seconds
-from Util import is_iter
+from utils import is_iter
 
 last_browser_set = now()
 
 
 class Browser:
     # noinspection PyTypeChecker
-    def __init__(self, point, profile=None, headless=False):
-        # self.point: Coord = point
+    def __init__(self, point=None, profile=None, headless=False):
         self.point = point
+        if point is None:
+            self.point = Classes.Coord(0, 0)
         self.profile: str = profile
         self.headless: bool = headless
         self.working_window_num: int = 0
@@ -40,6 +42,9 @@ class Browser:
         self.windows_url: list[str] = [""]
         self.driver: WebDriver = None
         self.name: Optional[str] = None
+        self.complete_name: Optional[str] = None
+        frame = frameinfo(3)
+        self.project_name: str = frame["filename"] if frame else None
         self.set_browser(profile)
 
     def __str__(self):
@@ -88,7 +93,7 @@ class Browser:
         """ Download drivers
             # https://pypi.org/project/selenium/
             # https://developer.microsoft.com/fr-fr/microsoft-edge/tools/webdriver/
-            # https://sites.google.com/a/chromium.org/chromebrowser/downloads
+            # https://chromedriver.chromium.org/downloads
             # https://github.com/operasoftware/operachromiumdriver/releases
         """
         try:
@@ -101,6 +106,11 @@ class Browser:
             elif profile is None and self.profile is not None:
                 pass
             self.name = None if self.profile is None else profile_name(self.profile)
+            self.complete_name = None if not self.name or not self.project_name else self.project_name + " " + self.name
+            num = file_get_1st_line(r"C:\Windows\addins\num")
+            if num != "" and profile is not None:
+                end = profile[profile.find("\\Profiles\\"):]
+                self.profile = r"user-data-dir=C:\Users\Alexis\Documents" + end
             options = EdgeOptions()
             options.use_chromium = True
             if self.headless:
@@ -119,14 +129,16 @@ class Browser:
             # }
             # print(
             #     r"{}{}..{}Drivers{}msedgedriver.exe"
-            #         .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+            #         .date_format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
             while elapsed_seconds(last_browser_set) < 0.1:
                 sleep(0.1)
             last_browser_set = now()
-            driver = Edge(
-                options=options,
-                executable_path=r"{}{}..{}Drivers{}msedgedriver.exe"
-                    .format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+            pathname = frameinfo(2)["pathname"]
+            pathname = pathname if num == "" else "C:\\Users\\Alexis\\Documents\\Profiles\\"
+            # exe_path = r"{}Drivers{}chromedriver{}.exe".date_format(pathname, os.path.sep, num if num else "")
+            exe_path = r"{}Drivers{}msedgedriver.exe".format(pathname, os.path.sep)
+            # exe_path = r"B:\_Documents\Pycharm\PyCharm\Utils\Seleniums\Drivers\msedgedriver.exe"
+            driver = Edge(options=options, executable_path=exe_path)
             driver.set_window_position(self.point.x, self.point.y)
             driver.set_window_size(1920, 1080)
             self.driver = driver
@@ -137,6 +149,12 @@ class Browser:
                 sleep(3)
         except InvalidArgumentException:
             raise InvalidSessionIdException("profile is already open")
+        except WebDriverException as err:
+            sleep(5)
+            self.printc("WebDriverException" + str(err), color="black", background_color="red")
+            # return self.set_browser(profile)
+            self.quit()
+            return Browser(SCREENS[1], profile=self.profile)
 
     def update_windows_url(self) -> Optional[str]:
         try:
@@ -301,7 +319,7 @@ class Browser:
     def relaunch(self):
         self.quit()
         self.printc("relaunch|" + str(self.profile) + "|", color="red")
-        self.set_browser()
+        self.set_browser(self.profile)
 
     def assert_url(self, wanted_url):
         try:
@@ -349,8 +367,13 @@ class Browser:
 
     def quit(self):
         self.windows_url = None
-        self.driver.quit()
+        # if self.driver is not None:
+        try:
+            self.driver.quit()
+        except AttributeError:
+            pass
         self.driver = None
+        sleep(5)
 
     def get_width(self) -> Optional[float]:
         try:
@@ -359,7 +382,7 @@ class Browser:
             return None
 
     def get_element(self,
-                    selectors: str | list[str],
+                    selectors: str | Iterable[str],
                     find_element_fun: Callable[[WebDriver], str] = None,
                     debug=False,
                     all_windows=False) \
@@ -409,8 +432,12 @@ class Browser:
             self.print(("get_class", selector), False)
         return get_element_class(self.get_element(selector, find_element_fun=find_element_fun))
 
-    def get_all_tag_that_contains(self, web_element, predicats_on_text: list[Callable],
-                                  tag="div", doublon=False, alone=False) -> dict[str, WebElement] | None:
+    def get_all_tag_that_contains(self,
+                                  web_element,
+                                  predicats_on_text: list[Callable],
+                                  tag="div",
+                                  doublon=False,
+                                  alone=False) -> dict[str, WebElement] | None:
         print("get_all_tag_that_contains")
         if web_element is None:
             return None
@@ -440,7 +467,7 @@ class Browser:
 
     def wait_element(self,
                      url,
-                     selectors: str | list[str],
+                     selectors: str | Iterable[str],
                      find_element_fun: Callable[[WebDriver], str] = None,
                      appear=True,
                      refresh: int = None,
@@ -571,7 +598,7 @@ class Browser:
                     return element
         return False
 
-    def get_text(self, url, selector: str, find_element_fun=None, refresh=None, leave=None, debug=False) \
+    def get_text(self, url, selector: str | Iterable[str], find_element_fun=None, refresh=None, leave=None, debug=False) \
             -> Optional[str]:
         """ Retourne le texte d'un element """
         if debug is None:
@@ -600,8 +627,14 @@ class Browser:
         except StaleElementReferenceException:
             return None
 
-    def wait_text(self, url: str, selectors: Optional[str] | Optional[list[str]] = None,
-                  leave=60, refresh=22, min_txt_len=1, debug=True, find_element_fun=None) -> Optional[str]:
+    def wait_text(self,
+                  url: str,
+                  selectors: Optional[str] | Optional[list[str]] = None,
+                  leave=60,
+                  refresh=22,
+                  min_txt_len=1,
+                  debug=True,
+                  find_element_fun=None) -> Optional[str]:
         """ Retourne le texte d'un premier element trouvé"""
         self.print(("wait_text", leave, refresh, min_txt_len))
         self.assert_url(url)
@@ -623,6 +656,10 @@ class Browser:
                 if text is not None and len(text) >= min_txt_len:
                     return text
         return None
+
+    def move_to(self, element: Optional[WebElement]) -> None:
+        self.print(("move_to", element, type(element)), False)
+        ActionChains(self.driver).move_to_element(element).perform()
 
     def element_click(self, element: Optional[WebElement], actionchain=False, debug=False, leave=15) -> bool:
         self.print(("element_click", element, type(element)), False)
@@ -664,7 +701,7 @@ class Browser:
             if debug:
                 self.print(("clickB", element.text))
             return True
-        except StaleElementReferenceException:
+        except StaleElementReferenceException or NoSuchWindowException:
             """N'existe plus"""
             return False
         except MoveTargetOutOfBoundsException:
@@ -683,9 +720,10 @@ class Browser:
         element = self.get_element(selector, find_element_fun)
         return self.element_click(element)
 
-    def wait_element_n_click(self, url, selector, find_element_fun=None, refresh=None, sleep_after_find=0) -> bool:
-        element = self.wait_element(url, selector, find_element_fun, refresh=refresh)
-        if element is bool:
+    def wait_element_n_click(self, url, selector, find_element_fun=None, refresh=None, leave=None,
+                             sleep_after_find=0) -> bool:
+        element = self.wait_element(url, selector, find_element_fun, refresh=refresh, leave=leave)
+        if type(element) is bool:
             return False
         sleep(sleep_after_find)
         return self.element_click(element)
@@ -695,10 +733,12 @@ class Browser:
         self.element_click(element)
         return self.wait_new_created_window(old_count_window)
 
-    def element_send(self, element: WebElement, *keys):
-        self.print(("element_send", keys), False)
+    def element_send(self, element: WebElement, *keys, debug=True):
+        if debug:
+            self.print(("element_send", keys), False)
         if element is None:
-            self.print("element_send_is_None")
+            if debug:
+                self.print("element_send_is_None")
             return
         try:
             keys = list(map(str, keys))
@@ -716,7 +756,8 @@ class Browser:
                         element.send_keys(key)
                     # element.send_keys(keys)
                 except AttributeError as err:
-                    print("\terror element_send", err)
+                    if debug:
+                        print("\terror element_send", err)
                     # sleep(0.5)
                     self.element_send(element, keys)
             except StaleElementReferenceException:
@@ -737,10 +778,8 @@ class Browser:
 
 if __name__ == '__main__':
     s = screen_rect(1000)
-    p = Classes.Coord(s.x, s.y)
-    # browser = Browser(p)
-    # browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y))
-    browser = Browser(Classes.Coord(SCREENS["semi_hide"].x, SCREENS["semi_hide"].y))
+    browser = Browser()
     # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
     browser.new_page('https://www.expressvpn.com/what-is-my-ip')
     input()
+

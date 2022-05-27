@@ -9,19 +9,16 @@ WAXBLOCKS_URL = r"https://wax.bloks.io/"
 
 def waxblocks_connection(browser):
     try:
-        print("waxblocks_connection")
+        browser.print("waxblocks_connection")
         browser.new_tab_and_go()
-        sleep(5)
         browser.new_page(WAXBLOCKS_URL)
-        print("login_transfert_waxblock")
         login_xpath = "/html/body/div[1]/div[1]/div[1]/div/div/div/div[6]/div/div"
         if not browser.wait_element(WAXBLOCKS_URL, login_xpath, leave=10):
             say("change VPN connection")
             return waxblocks_connection(browser)
         connected_xpath = "/html/body/div[1]/div[1]/div[1]/div/div/div/div[6]/div[1]/div"
-        is_connected = browser.get_element(connected_xpath) is not None and \
-                       "(active)" in browser.get_text(connected_xpath)
-        if is_connected:
+        connected_txt = browser.get_text(WAXBLOCKS_URL, connected_xpath)
+        if connected_txt and "(active)" in connected_txt:
             return True
         login_button = browser.get_element(login_xpath)
         browser.element_click(login_button)
@@ -41,9 +38,7 @@ def waxblocks_connection(browser):
             wallet_container = browser.get_element(wallet_container_xpath)
             # cloud_wallet_xpath = "/html/body/div[1]/div[1]/div[3]/div[2]/div/div[2]/div/div[2]/div/div[1]/div/div[2]"
             cloud_wallet = list(
-                browser.get_all_tag_that_contains(
-                    wallet_container,
-                    [lambda x: "Cloud Wallet" == x]).values())[0]
+                browser.get_all_tag_that_contains(wallet_container, [lambda x: "Cloud Wallet" == x]).values())[0]
             # cloud_wallet = get_element(browser, cloud_wallet)
             if cloud_wallet is not None:
                 browser.element_click(cloud_wallet)

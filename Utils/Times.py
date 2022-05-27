@@ -1,25 +1,41 @@
-import datetime
 import inspect
+from datetime import datetime, timedelta
 from typing import Callable
 
-TIMEDELTA_ZERO = datetime.timedelta(seconds=0)
+TIMEDELTA_ZERO = timedelta(seconds=0)
 
 
 def now(utc=False, offset_h=0, offset_m=0, offset_s=0) -> datetime:
-    offset = datetime.timedelta(hours=offset_h, minutes=offset_m, seconds=offset_s)
-    return offset + (datetime.datetime.utcnow() if utc else datetime.datetime.now())
+    offset = timedelta(hours=offset_h, minutes=offset_m, seconds=offset_s)
+    return offset + (datetime.utcnow() if utc else datetime.now())
+
+
+def to_timestamp(date_time: datetime) -> float:
+    try:
+        return date_time.timestamp()
+    except AttributeError:
+        return to_timestamp(to_datetime(date_time))
+
+
+def to_datetime(obj, format: str = "%Y-%m-%d %H:%M:%S") -> datetime:
+    try:
+        return datetime.fromtimestamp(int(obj))
+    except TypeError:
+        return datetime.strptime(str(obj), format.replace("/", "-"))
+    except ValueError:
+        return datetime.strptime(str(obj), format.replace("/", "-"))
 
 
 def elapsed_timedelta(date_time: datetime):
-    return datetime.datetime.now() - date_time
+    return datetime.now() - date_time
 
 
 def elapsed_seconds(date_time: datetime):
-    return (datetime.datetime.now() - date_time).total_seconds()
+    return (datetime.now() - date_time).total_seconds()
 
 
 def elapsed_minutes(date_time: datetime):
-    return (datetime.datetime.now() - date_time).total_seconds() / 60
+    return (datetime.now() - date_time).total_seconds() / 60
 
 
 def time_it(fun: Callable, *args):

@@ -3,12 +3,12 @@ from typing import Optional
 
 from Alert import say
 from Database import insert_or_update, get_column_names
-from Jsons import url_to_json_ok, url_to_json, json_to_json_ok, call_request_api
+from Jsons import json_to_json_ok, call_request_api
 from Prices import db_get_prices, get_n_update_prices
-from Regex import re_float
 from Telegrams import message
 from Times import now
-from Util import is_iter
+from utils import is_iter
+from util_bot import NAMES
 
 WAX_APPROVE_URL = r"https://all-access.wax.io/"
 # WAX_API = r"https://hyperion.docs.eosrio.io/endpoint/#wax"
@@ -112,31 +112,39 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
         # wax_amount = float(re_float.search(asset_amount["account"]["core_liquid_balance"]).group(1))
         asset_amount = json_to_json_ok(asset_amount, ["currency"], ["balances"])
         asset_amount = {asset: float(infos["amount"]) for (asset, infos) in asset_amount.items()
-                        if float(infos["amount"]) > 0}
+                        if float(infos["amount"]) > 0 or asset == "WAX"}
         all_asset_amount.update(asset_amount)
         account_assets_amount[account_name] = asset_amount
     # all_asset_amount = call_request_api("get_tokens", {"account": account_name})
     connection = sqlite3.connect(r"../Bank.db")
+    columns = get_column_names(connection, "PRICES")
+    if len(columns) == 0:
+        connection = sqlite3.connect(r"Bank.db")
     instant = now()
-    assets = list(all_asset_amount) + ["WAXP"] + tokens
+    assets = list(all_asset_amount) + ["WAXP"]
+    if tokens:
+        assets += tokens
     if tokens is not None:
         assets = list(filter(lambda x: x in tokens, assets))
     if update:
         prices = get_n_update_prices(assets)
     else:
         prices = db_get_prices(assets, update_if_not_present=True)
+    if prices is None:
+        prices = db_get_prices(assets, update_if_not_present=False)
     for account_name, asset_amount in account_assets_amount.items():
         for asset, amount in asset_amount.items():
             asset = "WAXP" if asset == "WAX" else asset
-            if amount == 0 or asset not in prices:
+            # if amount == 0 or asset not in prices:
+            if asset not in prices:
                 continue
             dol = round(prices[asset] * amount, 2)
             dol = -1 if dol < 0 else dol
             columns = get_column_names(connection, "WALLETS")
             values = [dol, asset, amount, account_name, "WAXBLOCKS", instant]
             insert_or_update(
-                    connection, "WALLETS", values, columns,
-                    ["asset", "account_name", "gateway"], [asset, account_name, "WAXBLOCKS"])
+                connection, "WALLETS", values, columns,
+                ["asset", "account_name", "gateway"], [asset, account_name, "WAXBLOCKS"])
     connection.commit()
     connection.close()
     result = {}
@@ -158,15 +166,15 @@ def get_nfts(account: str,
              schema_name: Optional[str] = None,
              limit: int = 1000):
     json = call_request_api(
-            WAX_NFT_API_URL_ORDERS, parameters_n_values={"collection_name": collection_name,
-                                                         "template_id": template_id,
-                                                         "schema_name": schema_name,
-                                                         "owner": account,
-                                                         "limit": str(limit),
-                                                         })
+        WAX_NFT_API_URL_ORDERS, parameters_n_values={"collection_name": collection_name,
+                                                     "template_id": template_id,
+                                                     "schema_name": schema_name,
+                                                     "owner": account,
+                                                     "limit": str(limit),
+                                                     })
     return json_to_json_ok(json, ["name"], ["data"])
     # url = "{}?collection_name=farmersworld&template_id=260676&owner=b4nvi.wam&limit=1000&order=desc&sort=asset_id" \
-    # .format(WAX_NFT_API_URL_ORDERS, )
+    # .date_format(WAX_NFT_API_URL_ORDERS, )
 
 
 def get_nft_price(collection_name: Optional[str] = None,
@@ -174,11 +182,12 @@ def get_nft_price(collection_name: Optional[str] = None,
                   schema_name: Optional[str] = None) -> float:
     sales_url = "https://wax.api.atomicassets.io/atomicmarket/v1/prices/sales"
     json = call_request_api(
-            [sales_url], parameters_n_values={
-                "collection_name": collection_name,
-                "schema_name": schema_name,
-                "template_id": template_id,
-                "symbol": "WAX",
-            })
+        [sales_url], parameters_n_values={
+            "collection_name": collection_name,
+            "schema_name": schema_name,
+            "template_id": template_id,
+            "symbol": "WAX",
+        })
     infos = json["data"][0]
-    return round(int(infos["price"]) / (10**int(infos["token_precision"])), infos["token_precision"])
+    return round(int(infos["price"]) / (10 ** int(infos["token_precision"])), infos["token_precision"])
+

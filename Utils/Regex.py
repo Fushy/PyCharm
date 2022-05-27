@@ -25,18 +25,23 @@ def search_n_get_float(text: str) -> Optional[float]:
         return float(re_float.search(text).group(1).replace(",", ""))
 
 
-def get_timer(timer: str):
+def get_timer(timer: str) -> Optional[list[Optional[float]]]:
     if ":" in timer:
         is_timer = re_time_dot.search(timer)
         _, _, h, _, m, s = is_timer.groups()
     else:
         is_timer = re_time_hms.search(timer)
         _, _, h, _, m, _, s = is_timer.groups()
+    if all((x is None for x in [h, m, s])):
+        return None
     return list(map(lambda x: 0 if x is None else float(x), (h, m, s)))
 
 
-def get_timer_as_timedelta(timer: str):
-    h, m, s = get_timer(timer)
+def get_timer_as_timedelta(timer: str) -> Optional[timedelta]:
+    result = get_timer(timer)
+    if result is None:
+        return
+    h, m, s = result
     return timedelta(hours=h, minutes=m, seconds=s)
 
 

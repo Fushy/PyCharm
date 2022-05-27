@@ -27,17 +27,17 @@
 #     while WEIGHT.sum_update() >= 1000:
 #         sleep(1)
 #     # return_value = CLIENT.get_historical_klines(pair, interval, int(start_time.timestamp() * 1000))[0]
-#     candles = CLIENT.get_klines(symbol=pair, interval=interval, limit=500,
+#     plot_datas = CLIENT.get_klines(symbol=pair, interval=interval, limit=500,
 #                                      startTime=int(start_time.timestamp() * 1000))
 #     if sleep_time > 0:
 #         time.sleep(sleep_time)
-#     if len(candles) > 0:
+#     if len(plot_datas) > 0:
 #         # return list(map(lambda x: (str(binance_timestamp_to_datetime(x[0])), x[4]), return_value))
 #         if looking == "Open":
 #             look = 1
 #         elif looking == "Close":
 #             look = 4
-#         return list(map(lambda x: float(x[look]), candles))
+#         return list(map(lambda x: float(x[look]), plot_datas))
 #     return None
 #
 #
@@ -241,7 +241,7 @@
 #         if cash < 1 and asset_infos["asset"] != "USDT" or asset_infos["asset"] in not_pair:
 #             continue
 #         cash_bank += cash
-#         cash_visuel = float("{:.2f}".format(cash))
+#         cash_visuel = float("{:.2f}".date_format(cash))
 #         if cash_visuel > 0:
 #             assets_cash[asset_infos["asset"]] = (cash_visuel, coins)
 #     cash_bank_eur = cash_bank / float(pair_prices["EURUSDT"]["askPrice"])

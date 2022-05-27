@@ -8,6 +8,13 @@ def count_lines(file_name):
 def file_exist(path):
     return os.path.exists(path)
 
+
+def file_path(path):
+    if not file_exist(path):
+        return None
+    return os.path.abspath(path)
+
+
 def get_current_files():
     cwd = os.getcwd()  # Get the current working directory (cwd)
     files = os.listdir(cwd)  # Get all the files in that directory
@@ -16,10 +23,13 @@ def get_current_files():
 
 
 def file_get_1st_line(file):
-    file = open(file, "r")
-    line = file.readline()
-    file.close()
-    return line
+    try:
+        file = open(file, "r")
+        line = file.readline()
+        file.close()
+        return line
+    except FileNotFoundError:
+        return None
 
 
 def file_write_1st_line(file, value):

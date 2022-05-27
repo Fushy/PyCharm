@@ -33,7 +33,7 @@ def message(msg: str, to: str = None):
         id_to = user_ids["ale"]
     else:
         id_to = user_ids[to]
-    # logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    # logging.basicConfig(date_format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
     api_key: str = "1810940314:AAGLq3Z7SQ90GZMJWzDNS4enHR-QFg_sasw"
     bot: Bot = telegram.Bot(token=api_key)
     updater: Updater = Updater(token=api_key, use_context=True)

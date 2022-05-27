@@ -2,15 +2,17 @@
 import random
 from collections import namedtuple
 
+# Python Fast Learning
 # int("A", 16)
-
+# chapitre des evaluations equivalentes trier par ordre de prio
+# bool("")
 # >>> sample = [timedelta(seconds=generate_sleep_time(120)) for _ in range(200000)]
 # >>> print(sum(sample, timedelta(0)) / len(sample))
 # Faire un raise ou un return a l'endroi où le code est stoppé si le debug ne fonctionne plus alors que le run fonctionne
 
 # TODO verif type
 # if type(browser).__name__ != WebDriver.__name__ and type(browser).__name__ != WebElement.__name__:
-#     error_text = "\tget_text_selector browser is not a good type {} {}".format(type(browser), WebDriver, WebElement)
+#     error_text = "\tget_text_selector browser is not a good type {} {}".date_format(type(browser), WebDriver, WebElement)
 #     if debug: print(error_text)
 #     raise ValueError(error_text)
 

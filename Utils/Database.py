@@ -1,8 +1,9 @@
 import sqlite3
 from sqlite3 import Connection, OperationalError
+from time import sleep
 
 import mysql.connector
-from mysql.connector import MySQLConnection, InternalError
+from mysql.connector import MySQLConnection
 
 from Strings import quote
 from Times import now
@@ -13,7 +14,11 @@ def mysql_connect_remote() -> MySQLConnection:
     DATABASE = "6fLyxUf3eM"
     USER = "6fLyxUf3eM"
     password = 'IhNaLib2PI'
-    connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password, buffered=True)
+    try:
+        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password, buffered=True)
+    except mysql.connector.errors.DatabaseError:
+        sleep(30)
+        return mysql_connect_remote()
     return connection
 
 

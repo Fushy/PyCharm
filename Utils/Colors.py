@@ -1,6 +1,6 @@
 from termcolor import colored
 
-from Util import all_permutations, permutations
+from utils import all_permutations, permutations
 
 
 def printc(text: str, color="green", background_color=None, attributes: list[str] = None):
@@ -30,4 +30,4 @@ if __name__ == '__main__':
                 printc('Hello, World! {}'.format(perms), color=c, attributes=perms)
                 printc('Hello, World! {}'.format(perms), color=c, attributes=perms + ("reverse",))
                 # for cc in colors:
-                #     printc('Hello, World! {}'.format(perms), color=cc, background_color=c, attributes=perms)
+                #     printc('Hello, World! {}'.date_format(perms), color=cc, background_color=c, attributes=perms)

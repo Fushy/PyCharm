@@ -13,9 +13,13 @@ from typing import Optional
 
 def frameinfo(backtimes=0, debug=False):
     frame = inspect.currentframe()
-    for _ in range(backtimes):
-        frame = frame.f_back
-    pathname = frame.f_code.co_filename
+    try:
+        for _ in range(backtimes):
+            frame = frame.f_back
+        pathname = frame.f_code.co_filename
+    except AttributeError:
+        # print("backtimes is too high")
+        return None
     pathname_complete = pathname
     # fun_name = frame.f_code.co_name
     fun_args = frame.f_locals
@@ -30,8 +34,12 @@ def frameinfo(backtimes=0, debug=False):
         # print("Current line:", line)
         print(os.path.sep, pathname.rfind(sep))
         print(os.path.sep, pathname.rfind("."))
-    filename = pathname[pathname.rindex(sep) + 1:pathname.rindex(".")]
-    pathname = pathname[:pathname.rindex(sep) + 1]
+    try:
+        filename = pathname[pathname.rindex(sep) + 1:pathname.rindex(".")]
+        pathname = pathname[:pathname.rindex(sep) + 1]
+    except ValueError:
+        filename = "debuging"
+        pathname = "debuging"
     if debug:
         print("Current file:", filename)
     # return {"filename": filename, "pathname": pathname, "fun_name": fun_name, "lineno": line, "fun_args": fun_args}
@@ -44,10 +52,13 @@ def current_lines(start_depth=2, end_depth: Optional[int] = None):
     try:
         while end_depth is None or end_depth < i:
             frame = frameinfo(i)
+            if frame is None:
+                break
             lst.append(frame["filename"] + ":" + str(frame["line"]))
             i += 1
     except AttributeError:
         return lst
+    return lst
 
 
 def frameinfo_stack(stack=0, debug=False):

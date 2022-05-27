@@ -28,7 +28,7 @@ def create_opera_browser(x, y=None, profile=None, headless=False):
     # if profile is not None:
     #     options.add_argument(profile)
     # print(r"{}{}Selenium{}Drivers{}operadriver.exe"
-    #                       .format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep))
+    #                       .date_format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep))
     browser = OperaDriver(
         options=options, executable_path=r"{}{}Selenium{}Drivers{}operadriver.exe"
             .format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep))

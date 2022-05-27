@@ -22,31 +22,31 @@ def speedup_mp3(file, speed: float = 2):
 
 def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False) -> None:
     print("say", speech)
-    if filename is None:
-        encode = blake2b(digest_size=32)
-        encode = blake2b(digest_size=4)
-        encode.update(bytes(speech.encode('utf-8')))
-        encode.update(bytes(lang.encode('utf-8')))
-        encode.update(bytes(str(speed).encode('utf-8')))
-        filename = encode.hexdigest()
-    pathname = "{}{}Sounds{}mp3{}".format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep)
-    if not os.path.exists(pathname):
-        Path(pathname).mkdir(parents=True, exist_ok=True)
-    filename = pathname + filename + ".mp3"
-    if not os.path.exists(filename):
-        tts = gTTS(text=speech, lang=lang, slow=False)
-        tts.save(filename)
-        speedup_mp3(filename, speed=speed)
-    try:
-        sound = AudioSegment.from_mp3(filename)
-        if blocking:
-            playback.play(sound)
-        else:
-            Threads.run(playback.play(sound))
-    except FileNotFoundError:
-        print(FileNotFoundError)
-        sleep(1)
-        return say(speech, filename, lang, speed, blocking)
+    # if filename is None:
+    #     encode = blake2b(digest_size=32)
+    #     encode = blake2b(digest_size=4)
+    #     encode.update(bytes(speech.encode('utf-8')))
+    #     encode.update(bytes(lang.encode('utf-8')))
+    #     encode.update(bytes(str(speed).encode('utf-8')))
+    #     filename = encode.hexdigest()
+    # pathname = "{}{}Sounds{}mp3{}".date_format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep)
+    # if not os.path.exists(pathname):
+    #     Path(pathname).mkdir(parents=True, exist_ok=True)
+    # filename = pathname + filename + ".mp3"
+    # if not os.path.exists(filename):
+    #     tts = gTTS(text=speech, lang=lang, slow=False)
+    #     tts.save(filename)
+    #     speedup_mp3(filename, speed=speed)
+    # try:
+    #     sound = AudioSegment.from_mp3(filename)
+    #     if blocking:
+    #         playback.play(sound)
+    #     else:
+    #         Threads.run(playback.play(sound))
+    # except FileNotFoundError:
+    #     print(FileNotFoundError)
+    #     sleep(1)
+    #     return say(speech, filename, lang, speed, blocking)
 
 
 def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
@@ -55,19 +55,23 @@ def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
             say(msg)
             sleep(seconds)
         print("loop_say end", condition)
-    fun() if blocking else Threads.run(fun)
+    if blocking:
+        fun()
+    else:
+        Threads.run(fun)
 
 
-def alert(msg, level=1):
+def alert(msg, level=1, after_sleep=30):
+    debug_change = True
     if level == 1:
         message(msg)
         say(msg)
-        sleep(3)
+        sleep(after_sleep)
     elif level == 3:
-        while True:
+        while debug_change:
             message(msg)
             say(msg)
-            sleep(10)
+            sleep(after_sleep)
 
 
 def notify_win(msg):
@@ -77,6 +81,5 @@ def notify_win(msg):
 
 
 if __name__ == '__main__':
-    message = '5 test 5'
-    say(message)
-    input()
+    alert("message", after_sleep=0)
+

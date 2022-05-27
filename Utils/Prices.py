@@ -1,6 +1,6 @@
 import sqlite3
 from time import sleep
-from typing import Iterable
+from typing import Iterable, Optional
 
 from requests.exceptions import ChunkedEncodingError
 from requests_html import HTMLSession
@@ -11,22 +11,26 @@ from Jsons import url_to_json_ok
 from Regex import re_float
 from Strings import get_beetween_text_with_regex, quote
 from Times import now
-from Util import is_iter
+from utils import is_iter
 
 
 def db_update_price(result, devise, gateway):
     connection = sqlite3.connect(r"../Bank.db")
     columns = get_column_names(connection, "PRICES")
+    if len(columns) == 0:
+        connection = sqlite3.connect(r"Bank.db")
+        columns = get_column_names(connection, "PRICES")
     instant = now()
     for asset, price in result.items():
+        print("update " + asset)
         values = [price, asset, devise, gateway, instant]
         insert_or_update(connection, "PRICES", values, columns, ["asset", "devise"], [asset, devise])
     connection.commit()
     connection.close()
 
 
-def from_alcor(assets: str | Iterable[str]):
-    """ Retourn les prix des assets en WAX"""
+def from_alcor(assets: str | Iterable[str]) -> Optional[dict]:
+    """ Retourne les prix des assets en WAX"""
     result = {}
     if not is_iter(assets):
         assets = [assets]
@@ -35,8 +39,11 @@ def from_alcor(assets: str | Iterable[str]):
         keys=["quote_token", "symbol", "name"],
         condition=lambda x: x["base_token"]["symbol"]["name"] == "WAX"
     )
+    if json is None:
+        return None
     for asset in assets:
         if asset in json:
+            # TODO last bid et non price
             result[asset] = round(float(json[asset]["last_price"]), 8)
     db_update_price(result, "WAXP", "ALCOR")
     return result
@@ -68,11 +75,13 @@ def from_gateio(assets: str | Iterable[str]):
     return result
 
 
-def get_n_update_prices(assets: str | Iterable[str]):
+def get_n_update_prices(assets: str | Iterable[str]) -> Optional[dict]:
     """ Retourne les prix des assets de la blockchain WAX en USDT et met a jour la base de données """
     if not is_iter(assets):
         assets = [assets]
     wax_result = from_alcor(assets)
+    if wax_result is None:
+        return None
     wax_price = from_gateio("WAXP")
     while "WAXP" not in wax_price:
         sleep(5)

@@ -2,17 +2,54 @@ import json
 import json as json_api
 import socket
 from time import sleep
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, Optional
 
 import requests
-from requests.exceptions import ChunkedEncodingError
+from requests.exceptions import ChunkedEncodingError, SSLError
 from requests_html import HTMLSession
 from urllib3.exceptions import NewConnectionError, MaxRetryError
 
 from Colors import printc
+from Times import now, elapsed_minutes
 
 T = TypeVar("T")
 E = TypeVar("E")
+json_T = dict[T, E]
+
+
+def to_correct_json(string) -> str:
+    return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"")
+    # return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"").replace("\\",
+    # "\\\\")
+
+
+def text_to_json(json_text: str) -> json_T:
+    return json_api.loads(to_correct_json(json_text))
+
+
+def url_to_json(url: str) -> Optional[json_T]:
+    html_session = HTMLSession()
+    try:
+        start = now()
+        while True:
+            try:
+                if elapsed_minutes(start) >= 1:
+                    return None
+                html_result_text = html_session.get(url)
+                html_result_text = html_result_text.text
+            except ChunkedEncodingError or ConnectionError or NewConnectionError or socket.gaierror \
+                   or json.decoder.JSONDecodeError or requests.exceptions.ConnectTimeout:
+                printc("url_to_json ChunkedEncodingError", background_color="red")
+                sleep(2)
+                return url_to_json(url)
+            if "503 Service Unavailable" in html_result_text or "<Response [403]>" in html_result_text:
+                print("url_to_json error: err Response in html_result_text")
+                sleep(5)
+            elif is_json(html_result_text):
+                break
+        return text_to_json(html_result_text)
+    except MaxRetryError or SSLError:
+        return None
 
 
 def call_request_api(base_urls: list[str], *start_with, parameters_n_values=None):
@@ -33,34 +70,6 @@ def call_request_api(base_urls: list[str], *start_with, parameters_n_values=None
     return all_asset_price
 
 
-def to_correct_json(string) -> str:
-    return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"")
-    # return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"").replace("\\",
-    # "\\\\")
-
-
-def text_to_json(json_text: str) -> dict[T, E]:
-    return json_api.loads(to_correct_json(json_text))
-
-
-def url_to_json(url: str) -> dict[T, E]:
-    html_session = HTMLSession()
-    while True:
-        try:
-            html_result_text = html_session.get(url).text
-        except ConnectionError or NewConnectionError or ChunkedEncodingError or MaxRetryError or socket.gaierror \
-            or json.decoder.JSONDecodeError or requests.exceptions.ConnectTimeout:
-            printc("url_to_json ChunkedEncodingError", background_color="red")
-            sleep(2)
-            return url_to_json(url)
-        if "503 Service Unavailable" in html_result_text:
-            print("url_to_json error: 503 Service Unavailable in html_result_text")
-            sleep(5)
-        elif is_json(html_result_text):
-            break
-    return text_to_json(html_result_text)
-
-
 def is_json(txt):
     try:
         json_api.loads(to_correct_json(txt))
@@ -69,26 +78,14 @@ def is_json(txt):
         return False
 
 
-def url_to_json_ok(url: str,
-                   keys: list[T],
-                   keys_start: list[T] = None,
-                   condition: Callable[[dict[T, E]], bool] = None,
-                   doublons=True) -> dict[T, E]:
-    json = url_to_json(url)
-    json_ok = json_to_json_ok(json, keys, keys_start, condition, doublons)
-    if len(json_ok) == 0:
-        raise ValueError("is not json")
-    return json_ok
-
-
-def json_to_json_ok(dictionaries: dict[T, E],
+def json_to_json_ok(dictionaries: json_T,
                     keys_aim: list[T],
                     keys_start: list[T] = None,
-                    condition: Callable[[dict[T, E]], bool] = None,
-                    doublons=True) -> dict[T, E]:
+                    condition: Callable[[json_T], bool] = None,
+                    doublons=True) -> json_T:
     """
-    On remplace les indices de la liste de base en la transformant en un dictionnaire où les clefs seront les
-    valeurs associés à la clef donné en paramètre des dictionnaires de la liste.
+    On remplace les indices de la liste de base en la transformant en un dictionnaire où
+    les clefs seront les valeurs associés à la clef donné en paramètre des dictionnaires de la liste
     Si il y a plusieurs keys, tous les champs doivent avoir le même pattern
     """
     result = {}
@@ -111,21 +108,28 @@ def json_to_json_ok(dictionaries: dict[T, E],
     return result
 
 
+def url_to_json_ok(url: str,
+                   keys: list[T],
+                   keys_start: list[T] = None,
+                   condition: Callable[[json_T], bool] = None,
+                   doublons=True) -> Optional[json_T]:
+    json = url_to_json(url)
+    if json is None:
+        return None
+    json_ok = json_to_json_ok(json, keys, keys_start, condition, doublons)
+    if len(json_ok) == 0:
+        raise ValueError("is not json")
+    return json_ok
+
+
 def text_to_json_ok(json_text: str,
                     keys: list[T] | T,
                     keys_start: list[T] = None,
-                    condition: Callable[[dict[T, E]], bool] = None,
-                    doublons=True) -> dict[T, E]:
+                    condition: Callable[[json_T], bool] = None,
+                    doublons=True) -> json_T:
     return json_to_json_ok(text_to_json(json_text), keys, keys_start, condition, doublons)
 
 
 if __name__ == '__main__':
-    # search value html
-    # asset = "waxp"
-    # nb_filter = "0.49"
-    # url = "https://coinmarketcap.com/fr/currencies/"
-    # print(url)
-    # html_session = HTMLSession()
-    # html = html_session.get('https://www.gate.io/fr/trade/{}_USDT'.format(asset)).text
-    # res = list(map(lambda x: x[0], filter(lambda n: nb_filter in n[0], re_float.findall(html))))
-    pass
+    asset_amount = call_request_api(["https://wax.light-api.net/api"], "account", "wax", "b4nvi.wam")
+    asset_amount = json_to_json_ok(asset_amount, ["currency"], ["balances"])
