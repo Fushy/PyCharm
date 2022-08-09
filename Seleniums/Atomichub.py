@@ -21,11 +21,11 @@ def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
         accept_cooki_btn = browser.get_element(accept_cooki_btn_xpath)
         if accept_cooki_btn is not None:
             browser.element_click(accept_cooki_btn)
-        login_xpath = "/html/body/div/div[2]/div/div/div/div[2]/button"
+        login_xpath = "/html/body/div/div[2]/div/div/div/div[2]/div[3]/button"
         cloud_wallet_xpath = "/html/body/div[3]/div/div/div[2]/div[1]/div[1]/div/button"
         login_txt = browser.get_text(url_transfert, login_xpath)
         start = now()
-        while login_txt is not None and login_txt == "Login":
+        while login_txt is not None and login_txt == "LOGIN":
             if elapsed_seconds(start) >= 5:
                 printc(login_txt, background_color="red")
                 # say(browser.name + " have to login")
@@ -35,14 +35,20 @@ def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
                 check_wax_approve(browser)
             sleep(1)
             login_txt = browser.get_text(url_transfert, login_xpath)
+        login_txt = browser.get_text(url_transfert, login_xpath)
+        if login_txt is not None and login_txt == "LOGIN":
+            browser.get_element_n_click(login_xpath)
         input_to_xpath_1 = "/html/body/div/div[3]/div/div[2]/div[2]/div[3]/table/tbody/tr[1]/td[2]/div/div/div/input"
-        input_to_xpath = [input_to_xpath_1]
+        input_to_xpath_2 = "/html/body/div/div[3]/div/div[3]/div[2]/div[3]/table/tbody/tr[1]/td[2]/div/div/div/input"
+        input_to_xpath = [input_to_xpath_1, input_to_xpath_2]
+        check_wax_approve(browser)
         browser.wait_element(url_transfert, input_to_xpath, refresh=10)
         input_to = browser.get_element(input_to_xpath)
         browser.clear_send(input_to)
         browser.element_send(input_to, name_to)
         send_transfer_button_xpath_1 = "/html/body/div/div[3]/div/div[2]/div[2]/div[3]/div/div[2]/button"
-        send_transfer_button_xpath = [send_transfer_button_xpath_1]
+        send_transfer_button_xpath_2 = "/html/body/div/div[3]/div/div[3]/div[2]/div[3]/div/div[2]/button"
+        send_transfer_button_xpath = [send_transfer_button_xpath_1, send_transfer_button_xpath_2]
         send_transfer_button = browser.wait_element(url_transfert, send_transfer_button_xpath, refresh=10)
         start = now()
         while not send_transfer_button.is_enabled():
@@ -75,6 +81,7 @@ def transfert_nft(browser, name_to: str, nft_ids: list[int | str]):
                 return True
                 # say(browser.name + " wax approve have to validate transfert")
                 # sleep(1)
+        sleep(1)
     except StaleElementReferenceException or NoSuchWindowException:
         browser.relaunch_n_connect()
         return transfert_nft(browser, name_to, nft_ids)

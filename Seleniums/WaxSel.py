@@ -28,17 +28,20 @@ def check_wax_approve(browser: Browser, pre_sleep: int = 1, refresh_min=None, al
         messages_header_xpath_2 = "/html/body/div[3]/div/div[2]/div[2]/div[2]/div[2]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div/div/div"
         messages_header_xpath_3 = "/html/body/div[3]/div/div[2]/div[2]/div[2]/div/div/div[3]/div[2]/div/div[1]/div[2]/div/div/div/div/div"
         messages_header_xpath_4 = "/html/body/div[3]/div/div[2]/div[2]/div[2]/div[1]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div/div/div"
-        messages_header_xpaths = [messages_header_xpath_1, messages_header_xpath_2, messages_header_xpath_3,
-                                  messages_header_xpath_4]
+        messages_header_xpath_5 = "/html/body/div[2]/div/div[2]/div[2]/div[2]/div[1]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div/div/div"
+        messages_header_xpath_6 = "/html/body/div[2]/div/div[2]/div[2]/div[2]/div[2]/div/div/div[3]/div/div/div[1]"
+        messages_header_xpaths = [messages_header_xpath_1, messages_header_xpath_2, messages_header_xpath_3, messages_header_xpath_5,
+                                  messages_header_xpath_4, messages_header_xpath_6][::-1]
         popup_close_xpath_1 = "/html/body/div[6]/div/div/div/div[2]/div[2]/div/div[1]/div[2]/button"
         popup_close_xpath_2 = "/html/body/div[7]/div/div/div/div[2]/div[2]/div/div[1]/div[2]/button"
         connexion_auth_xpath = "/html/body/div/form[1]/div/div/div[2]/div[1]/div/div/div/div/div[1]/div[3]/div/div/div/div[2]/div[2]/div/input[1]"
         connexion_input_xpath_1 = "/html/body/div/form[1]/div/div/div[2]/div[1]/div/div/div/div/div/div[3]/div/div[2]/div/div[4]/div/div[2]/input"
         connexion_input_xpath_2 = "/html/body/div/form[1]/div/div/div[2]/div[1]/div/div/div/div/div/div[3]/div/div[2]/div/div[3]/div/div[2]/input"
         popup_close_xpaths = [popup_close_xpath_1, popup_close_xpath_2]
+        sleep(10)
         browser.wait_element("", [connexion_input_xpath_1, connexion_input_xpath_2, connexion_auth_xpath,
-                                  messages_header_xpath_4, messages_header_xpath_3, connect_xpath,
-                                  messages_header_xpath_1, messages_header_xpath_2, popup_close_xpath_1,
+                                  messages_header_xpath_4, messages_header_xpath_3, messages_header_xpath_5, connect_xpath,
+                                  messages_header_xpath_1, messages_header_xpath_2, popup_close_xpath_1, messages_header_xpath_6,
                                   popup_close_xpath_2], refresh=15)
         sleep(1)
         while browser.get_element(connect_xpath):
@@ -53,7 +56,7 @@ def check_wax_approve(browser: Browser, pre_sleep: int = 1, refresh_min=None, al
             browser.element_send(connexion, Keys.ENTER)
         sleep(1)
         browser.wait_element("", [connexion_input_xpath_1, connexion_input_xpath_2, connexion_auth_xpath,
-                                  messages_header_xpath_4, messages_header_xpath_3, connect_xpath,
+                                  messages_header_xpath_4, messages_header_xpath_3, messages_header_xpath_5, connect_xpath, messages_header_xpath_6,
                                   messages_header_xpath_1, messages_header_xpath_2, popup_close_xpath_1,
                                   popup_close_xpath_2], refresh=15)
         connexion_input = browser.get_element([connexion_input_xpath_1, connexion_input_xpath_2])
@@ -176,6 +179,15 @@ def check_wax_approve(browser: Browser, pre_sleep: int = 1, refresh_min=None, al
                     if width and not white_login_button and not white_login_empty_button and not red_login_button:
                         sleep(1)
                         width = browser.get_width()
+                        agree_1_xpath = "/html/body/div[1]/div/section/div[2]/section/form/label[1]/span[1]/span[1]/input"
+                        agree_2_xpath = "/html/body/div[1]/div/section/div[2]/section/form/label[2]/span[1]/span[1]/input"
+                        agree_1 = browser.get_element(agree_1_xpath)
+                        agree_2 = browser.get_element(agree_2_xpath)
+                        if agree_1 and agree_2:
+                            browser.element_click(agree_1)
+                            browser.element_click(agree_2)
+                            agree_button_xpath = "/html/body/div[1]/div/section/div[2]/section/form/div/button/div"
+                            browser.get_element_n_click(agree_button_xpath)
                         continue
                     start = now()
                     while (red_login_button or white_login_empty_button or white_login_button) and width < 1000 \

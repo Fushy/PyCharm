@@ -134,7 +134,7 @@ class Browser:
                 sleep(0.1)
             last_browser_set = now()
             pathname = frameinfo(2)["pathname"]
-            pathname = pathname if num == "" else "C:\\Users\\Alexis\\Documents\\Profiles\\"
+            # pathname = pathname if num == "" else "C:\\Users\\Alexis\\Documents\\Profiles\\"
             # exe_path = r"{}Drivers{}chromedriver{}.exe".date_format(pathname, os.path.sep, num if num else "")
             exe_path = r"{}Drivers{}msedgedriver.exe".format(pathname, os.path.sep)
             # exe_path = r"B:\_Documents\Pycharm\PyCharm\Utils\Seleniums\Drivers\msedgedriver.exe"
@@ -210,9 +210,9 @@ class Browser:
             self.decr_current_window_num()
 
     def goto(self, window_num, update_working=True) -> bool:
-        if window_num >= len(self.driver.window_handles):
-            return False
         try:
+            if window_num >= len(self.driver.window_handles):
+                return False
             self.current_window_num = window_num
             self.driver.switch_to.window(self.driver.window_handles[window_num])
             self.update_windows_url()
@@ -353,6 +353,8 @@ class Browser:
     def get_current_window_num(self):
         try:
             return self.driver.window_handles.index(self.driver.current_window_handle)
+        except WebDriverException:
+            return self.current_window_num
         except NoSuchWindowException:
             return self.current_window_num
 
