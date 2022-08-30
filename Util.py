@@ -259,6 +259,21 @@ def action_on_clipboard_update(fun: Callable):
         old_clipboard = clipboard
         sleep(0.5)
 
+
+def two_complement_representation(x: int):
+    mask = 2 ** (8 * ((x.bit_length() // 8) + 1)) - 1
+    return x & mask
+
+
+def two_complement_representation_2(x: int):
+    shift = 8 * ((x.bit_length() // 8) + 1)
+    return x % (1 << shift)
+
+
+def two_complement_representation_3(x: int):
+    from ctypes import c_uint8 as unsigned_byte
+    return unsigned_byte(x).value
+
 # if __name__ == '__main__':
 #     seed = int(str_to_hashcode(file_get_1st_line(SEED_PATH_1) + file_get_1st_line(SEED_PATH_2), whitelist=string.digits))
 #     a = ["b4nvi.wam",
