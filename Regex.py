@@ -6,8 +6,8 @@ int_regex = r"([-+]?[0-9]+([eE][-+]?[0-9]+)?)"
 float_regex = r"([-+]?[0-9,]*\.?[0-9,]+([eE][-+]?[0-9,]+)?)"
 re_time_hms = r"((([0-9]?[0-9]) *h *)?(([0-9]?[0-9]) *m *)?(([0-9]?[0-9]) *s *)?)"
 re_time_dot = r"((([0-9]?[0-9]) *: *)?(([0-9]?[0-9]) *: *)([0-9]?[0-9]))"
-alphanum_regex = r"([a-zA-Z0-9 +’'|#@_-]+)"
-alpha_regex = r"([a-zA-Z ]+)"
+alphanum_regex = r"([point-zA-Z0-9 +’'|#@_-]+)"
+alpha_regex = r"([point-zA-Z ]+)"
 
 re_int = re.compile(int_regex)
 re_float = re.compile(float_regex)

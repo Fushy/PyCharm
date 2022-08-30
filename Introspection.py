@@ -1,13 +1,6 @@
 import inspect
 import os.path
 from inspect import FrameInfo
-
-# def current_infos(backtimes=0):
-#     print(frameinfo(backtimes))
-# print("Current file:", inspect.currentframe().f_code.co_filename)
-# print("Current fun:", inspect.stack(1)[0].function)
-# print("Current fun:", inspect.currentframe().f_code.co_name)
-# print("Current line:", inspect.currentframe().f_lineno)
 from typing import Optional
 
 
@@ -22,7 +15,7 @@ def frameinfo(backtimes=0, debug=False):
         return None
     pathname_complete = pathname
     # fun_name = frame.f_code.co_name
-    fun_args = frame.f_locals
+    local_args = frame.f_locals
     line = frame.f_lineno
     sep = os.path.sep
     if pathname.find(os.path.sep) == -1:
@@ -30,7 +23,7 @@ def frameinfo(backtimes=0, debug=False):
     if debug:
         print("Current path:", pathname)
         # print("Current fun:", fun_name)
-        print("Current fun args:", fun_args)
+        print("Current fun args:", local_args)
         # print("Current line:", line)
         print(os.path.sep, pathname.rfind(sep))
         print(os.path.sep, pathname.rfind("."))
@@ -42,8 +35,20 @@ def frameinfo(backtimes=0, debug=False):
         pathname = "debuging"
     if debug:
         print("Current file:", filename)
-    # return {"filename": filename, "pathname": pathname, "fun_name": fun_name, "lineno": line, "fun_args": fun_args}
-    return {"filename": filename, "pathname": pathname, "fun_args": fun_args, "line": line, "pathname_complete": pathname_complete}
+    # return {"filename": filename, "pathname": pathname, "fun_name": fun_name, "lineno": line, "local_args": local_args}
+    return {"filename": filename,
+            "line": line,
+            "pathname": pathname,
+            "pathname_complete": pathname_complete,
+            "local_args": local_args}
+
+
+def current_infos(backtimes=0):
+    print(frameinfo(backtimes))
+
+
+def current_file():
+    return inspect.currentframe().f_code.co_filename
 
 
 def current_lines(start_depth=2, end_depth: Optional[int] = None):
@@ -80,5 +85,8 @@ def frameinfo_stack(stack=0, debug=False):
     return {"filename": filename, "pathname": pathname, "function": frame.function, "lineno": frame.lineno}
 
 
-def current_file():
-    return inspect.currentframe().f_code.co_filename
+if __name__ == '__main__':
+    print(current_file())
+    print(current_lines())
+    print(current_infos())
+    print(frameinfo_stack())

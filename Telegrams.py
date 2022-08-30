@@ -1,13 +1,14 @@
-from telegram.error import NetworkError
-
-import Threads
-import telegram
-
 from time import sleep
+
+import telegram
 from telegram import Update, Bot
+from telegram.error import NetworkError
 from telegram.ext import CallbackContext, Updater, Dispatcher, MessageHandler, Filters, CommandHandler
 
-user_ids = {"ale": 1522961892}
+import Threads
+from Files import get_first_line
+
+USER_IDS = {"ale": 1522961892}
 
 
 def start(update: Update, context: CallbackContext):
@@ -30,11 +31,11 @@ def echo(update: Update, context: CallbackContext):
 
 def message(msg: str, to: str = None):
     if to is None:
-        id_to = user_ids["ale"]
+        id_to = USER_IDS["ale"]
     else:
-        id_to = user_ids[to]
+        id_to = USER_IDS[to]
     # logging.basicConfig(date_format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-    api_key: str = "1810940314:AAGLq3Z7SQ90GZMJWzDNS4enHR-QFg_sasw"
+    api_key: str = get_first_line("B:\\_Documents\\APIs\\telegram_key")  # temp and whatever api key
     bot: Bot = telegram.Bot(token=api_key)
     updater: Updater = Updater(token=api_key, use_context=True)
     dispatcher: Dispatcher = updater.dispatcher
@@ -59,4 +60,4 @@ def message(msg: str, to: str = None):
 
 
 if __name__ == '__main__':
-    message("Bonjour")
+    message("telegram message")

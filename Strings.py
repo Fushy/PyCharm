@@ -1,12 +1,11 @@
 from typing import Optional, Match
 
-# int("A", 16)
 
 def quote(obj, simple=False):
     return "\"" + str(obj) + "\"" if not simple else "'" + str(obj).replace("'", "\'") + "'"
 
 
-def get_beetween_text(text, start: str, end: str) -> str:
+def get_between_text(text, start: str, end: str) -> str:
     i_start = text.find(start)
     i_end = text.find(end, i_start)
     if i_start == -1 or i_end == -1:
@@ -15,6 +14,6 @@ def get_beetween_text(text, start: str, end: str) -> str:
     return find_text
 
 
-def get_beetween_text_with_regex(text, start: str, end: str, regex) -> Optional[Match[str]]:
-    find_text = get_beetween_text(text, start, end)
+def get_between_text_with_regex(text, start: str, end: str, regex) -> Optional[Match[str]]:
+    find_text = get_between_text(text, start, end)
     return regex.search(find_text)

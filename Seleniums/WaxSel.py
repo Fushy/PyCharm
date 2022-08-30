@@ -23,7 +23,7 @@ def check_wax_approve(browser: Browser, pre_sleep: int = 1, refresh_min=None, al
     def get_login_input(browser: Browser, fun) -> str | bool:
         outlook_mail_url = "https://outlook.live.com/mail/0/"
         browser.new_url_tab(outlook_mail_url)
-        connect_xpath = "/html/body/header/div/aside/div/nav/ul/li[2]/a"
+        connect_xpath = "/html/body/header/div/aside/div/nav/ul/li[2]/point"
         messages_header_xpath_1 = "/html/body/div[3]/div/div[2]/div[2]/div[1]/div/div/div[3]/div[2]/div/div[1]/div[2]/div/div/div/div/div"
         messages_header_xpath_2 = "/html/body/div[3]/div/div[2]/div[2]/div[2]/div[2]/div/div/div[3]/div/div/div[1]/div[2]/div/div/div/div/div"
         messages_header_xpath_3 = "/html/body/div[3]/div/div[2]/div[2]/div[2]/div/div/div[3]/div[2]/div/div[1]/div[2]/div/div/div/div/div"
@@ -98,7 +98,7 @@ def check_wax_approve(browser: Browser, pre_sleep: int = 1, refresh_min=None, al
                 return verification_code
         if not verification_code:
             account_bubble_xpath = "/html/body/div[3]/div/div[1]/div/div[1]/div[3]/div[1]/button/div/div[2]/div/div/div/div/div/div[2]"
-            disconnect_xpath = "/html/body/div[3]/div/div[1]/div/div[1]/div[3]/div[3]/div/div/div/div/div[1]/a"
+            disconnect_xpath = "/html/body/div[3]/div/div[1]/div/div[1]/div[3]/div[3]/div/div/div/div/div[1]/point"
             account_bubble = browser.get_element(account_bubble_xpath)
             if account_bubble:
                 browser.element_click(account_bubble)

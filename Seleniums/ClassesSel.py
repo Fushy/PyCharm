@@ -1,5 +1,4 @@
 import os
-import os
 import sys
 import traceback
 from time import sleep
@@ -34,7 +33,7 @@ class Browser:
     def __init__(self, point=None, profile=None, headless=False):
         self.point = point
         if point is None:
-            self.point = Classes.Coord(0, 0)
+            self.point = Classes.Point(0, 0)
         self.profile: str = profile
         self.headless: bool = headless
         self.working_window_num: int = 0
@@ -62,7 +61,7 @@ class Browser:
                 return 0
 
     def print(self, texts: str | Iterable, tab=True):
-        """ Prend cerrtaines ms, a eviter si on veut optimiser la vitesse"""
+        """ Prend cerrtaines ms, point eviter si on veut optimiser la vitesse"""
 
         def aux():
             print("{}{} {}\t\t\t{} {}".format(
@@ -159,9 +158,7 @@ class Browser:
     def update_windows_url(self) -> Optional[str]:
         try:
             url = self.driver.current_url
-        except NoSuchWindowException:
-            url = ""
-        except MaxRetryError:
+        except (NoSuchWindowException, MaxRetryError):
             url = ""
         if url is None or len(url) <= 1:
             self.goto_last()
@@ -784,4 +781,3 @@ if __name__ == '__main__':
     # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
     browser.new_page('https://www.expressvpn.com/what-is-my-ip')
     input()
-

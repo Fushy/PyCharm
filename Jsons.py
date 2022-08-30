@@ -37,8 +37,7 @@ def url_to_json(url: str) -> Optional[json_T]:
                     return None
                 html_result_text = html_session.get(url)
                 html_result_text = html_result_text.text
-            except ChunkedEncodingError or ConnectionError or NewConnectionError or socket.gaierror \
-                   or json.decoder.JSONDecodeError or requests.exceptions.ConnectTimeout:
+            except ChunkedEncodingError or ConnectionError or NewConnectionError or socket.gaierror or json.decoder.JSONDecodeError or requests.exceptions.ConnectTimeout:
                 printc("url_to_json ChunkedEncodingError", background_color="red")
                 sleep(2)
                 return url_to_json(url)
@@ -85,7 +84,7 @@ def json_to_json_ok(dictionaries: json_T,
                     doublons=True) -> json_T:
     """
     On remplace les indices de la liste de base en la transformant en un dictionnaire où
-    les clefs seront les valeurs associés à la clef donné en paramètre des dictionnaires de la liste
+    les clefs seront les valeurs associés à la clef donné en paramètre des dictionnaires de la liste.
     Si il y a plusieurs keys, tous les champs doivent avoir le même pattern
     """
     result = {}
@@ -133,3 +132,4 @@ def text_to_json_ok(json_text: str,
 if __name__ == '__main__':
     asset_amount = call_request_api(["https://wax.light-api.net/api"], "account", "wax", "b4nvi.wam")
     asset_amount = json_to_json_ok(asset_amount, ["currency"], ["balances"])
+    print(asset_amount)

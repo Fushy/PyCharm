@@ -76,7 +76,7 @@ def from_gateio(assets: str | Iterable[str]):
 
 
 def get_n_update_prices(assets: str | Iterable[str]) -> Optional[dict]:
-    """ Retourne les prix des assets de la blockchain WAX en USDT et met a jour la base de données """
+    """ Retourne les prix des assets de la blockchain WAX en USDT et met point jour la base de données """
     if not is_iter(assets):
         assets = [assets]
     wax_result = from_alcor(assets)

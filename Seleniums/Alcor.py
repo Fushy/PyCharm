@@ -337,7 +337,7 @@ def sell(browser: Browser, asset: str, floor_tokens_to_keep: float = -1, verif=F
                     is_my_ask = float(my_price) == ask_price_devise
                     if not is_my_ask:
                         sum_tokens_befor_me += token_amount
-                    # N'actualise pas le trade lorsque la somme des tokens jusqu'a l'ordre est < à l'ordre
+                    # N'actualise pas le trade lorsque la somme des tokens jusqu'point l'ordre est < à l'ordre
                     elif sum_tokens_befor_me <= my_tokens_amount * ratio_tokens_befor_me_to_cancel:
                         browser.print(
                             ("order_exist_and_is_fine",

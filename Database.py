@@ -8,8 +8,10 @@ from mysql.connector import MySQLConnection
 from Strings import quote
 from Times import now
 
+# TODO with SQLAlchemy
 
 def mysql_connect_remote() -> MySQLConnection:
+    # a temp whatever database
     HOST = "remotemysql.com"
     DATABASE = "6fLyxUf3eM"
     USER = "6fLyxUf3eM"

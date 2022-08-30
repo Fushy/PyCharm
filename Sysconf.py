@@ -1,7 +1,5 @@
 from screeninfo import get_monitors, Monitor
 
-from Classes import Coord
-
 
 def monitor_1080p(x, y):
     return Monitor(

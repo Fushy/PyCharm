@@ -1,4 +1,15 @@
+import math
 import random
+from datetime import datetime
+from time import sleep
+from typing import Callable
+from typing import Generic, Union
+from typing import TypeVar
+
+from Times import now
+from Util import get_first_deeply_value
+
+T = TypeVar("T")
 
 
 class Condition:
@@ -16,13 +27,148 @@ class Condition:
         return all(self.__dict__.values())
 
 
-class Coord:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+class Point:
+    """ Numerical points """
+    x: int
+    y: int
+
+    def __init__(self, x: int, y: int):
+        self.x, self.y = x, y
 
     def __str__(self):
         return "({}, {})".format(self.x, self.y)
+
+    def __repr__(self):
+        return "{} {}".format(self.x, self.y)
+
+    def distance(self, point):
+        return math.sqrt((self.x - point.x) ** 2 + (self.y - point.y) ** 2)
+
+    def slope(self, point: "Point") -> float:
+        return (point.y - self.y) / (point.x - self.x)
+
+    def intercept(self, point: "Point") -> float:
+        return -self.slope(point) * self.x + self.y
+
+    def equation(self, point: "Point") -> Callable[[int], float]:
+        return lambda x: self.slope(point) * x + self.intercept(point)
+
+    def points_between(self, point: "Point") -> set["Point"]:
+        points = set()
+        for x in range(min(self.x, point.x) + 1, abs(self.x - point.x)):
+            points.add(Point(min(self.x, point.x) + x, point.y))
+        for y in range(min(self.y, point.y) + 1, abs(self.y - point.y)):
+            points.add(Point(point.y, min(self.y, point.y) + y))
+        return points
+
+
+class DatedObj(Generic[T]):
+    def __init__(self, obj: T = None):
+        if obj is None:
+            self.dated = None
+            self.value = None
+        else:
+            self.dated: T = datetime.now()
+            self.value: datetime = obj
+
+    def __lt__(self, other):
+        value = get_first_deeply_value(self.value)
+        other_value = get_first_deeply_value(other.value)
+        if value < other_value:
+            return True
+        elif value == other_value and self.dated < other.dated:
+            return True
+        return False
+
+    def __gt__(self, other):
+        value = get_first_deeply_value(self.value)
+        other_value = get_first_deeply_value(other.value)
+        if value > other_value:
+            return True
+        elif value == other_value and self.dated > other.dated:
+            return True
+        return False
+
+    def __repr__(self):
+        return "({}: {:.2f}s)".format(self.value, (now() - self.dated).total_seconds())
+
+
+# le type doit pouvoir déduire min max et sum, si l'objet est un iterable, la regle est que le premier index recursif soit la valeur
+class DatedLists:
+    def __init__(self, timer: float):
+        self.time_interval: float = timer  # En secondes
+        self.objs: list[DatedObj[T]] = []  # Du plus ancien au plus récent
+        self.is_updated: bool = False
+        self.min: Union[DatedObj[T], None] = None
+        self.max: Union[DatedObj[T], None] = None
+        self.sum: T = 0
+
+    def __len__(self):
+        return len(self.objs)
+
+    def __repr__(self):
+        return self.info() + " : " + ", ".join([repr(obj) for obj in self.objs])
+
+    def info(self):
+        return (self.update() and "f" or "") + "|{}-{}| {} {}s ".format(self.min, self.max,
+                                                                        self.sum,
+                                                                        self.time_interval)
+
+    def put(self, obj: T):
+        dated = DatedObj(obj)
+        if self.min is None or self.max is None:
+            self.min = dated
+            self.max = dated
+        elif obj < self.min.value:
+            self.min = dated
+        elif obj < self.max.value:
+            self.max = dated
+        self.objs.append(dated)
+        self.sum += get_first_deeply_value(obj)
+        self.is_updated = False
+
+    def first(self):
+        return self.objs[0]
+
+    def last(self):
+        return self.objs[-1]
+
+    def index(self, n):
+        return self.objs[n]
+
+    # On parcours toutes les valeurs outdated et on les supprime
+    # N'utiliser qu'avant le moment ou on en à besoin que la liste soit mise à jour
+    def remove_outdated(self, fun=None, value=None):
+        i = 0
+        now = datetime.now()
+        for dated_obj in self.objs:
+            if (now - dated_obj.dated).total_seconds() <= self.time_interval:
+                break
+            self.sum -= get_first_deeply_value(dated_obj.value)
+            if value is not None:
+                value = fun(value, dated_obj.value)
+            i += 1
+        del self.objs[:i]
+        self.is_updated = True
+        if self.min is not None and len(self.objs) and (now - self.min.dated).total_seconds() > self.time_interval:
+            self.min = min(self.objs)
+        if self.max is not None and len(self.objs) and (now - self.max.dated).total_seconds() > self.time_interval:
+            self.max = max(self.objs)
+        return value
+
+    def update(self):
+        if self.is_updated is False:
+            self.remove_outdated()
+            return True
+        return False
+
+    def sum_update(self):
+        self.update()
+        return self.sum
+
+    def values(self):
+        self.update()
+        return self.objs
 
 
 class OpenPack:
@@ -156,26 +302,64 @@ class OpenPack:
 
 
 if __name__ == '__main__':
-    godslegend = OpenPack(
-        9.99,
-        [
-            [2, {"Base": 56, "Rare": 28, "Epic": 10, "Legendary": 4, "Mythic": 0, "Divine": 0, "Eternal": 0}],
-            [1, {"Rare": 56 + 28, "Epic": 10, "Legendary": 4, "Mythic": 0, "Divine": 0, "Eternal": 0}],
-        ], {"extra_pack": 2},
-        bend={"Rare": ["Base", 1, 5],
-              "Epic": ["Rare", 2, 3],
-              "Legendary": ["Epic", 3, 3],
-              "Mythic": ["Legendary", 4, 3],
-              "Divine": ["Mythic", 5, 3],
-              "Eternal": ["Divine", 6, 3]})
-    realmnftgame = OpenPack(
-        24.95,
-        [
-            [5, {"1 star": 26, "2 star": 35, "3 star": 32, "4 star": 5.5, "5 star": 1.5}]
-        ], {"beta_access": 1.5},
-        bend={"2 star": ["1 star", 1, 3],
-              "3 star": ["2 star", 2, 3],
-              "4 star": ["3 star", 3, 3],
-              "5 star": ["4 star", 4, 3]})
-    godslegend.estimate(1_000_000)
-    realmnftgame.estimate(1_000_000)
+    a = Point(0, 0)
+    b = Point(5, 5)
+    print(a, b)
+    print(a.slope(b))
+    print(a.intercept(b))
+    print(a.equation(b)(2))
+    print(a.points_between(b))
+
+    a = DatedLists(6)
+    a.put((1, "point"))
+    sleep(1)
+    a.put((2, "b"))
+    sleep(1)
+    a.put((3, "c"))
+    sleep(1)
+    a.put((4, "d"))
+    sleep(1)
+    a.put((5, "e"))
+    sleep(1)
+    a.put((6, "f"))
+    sleep(1)
+    a.put((7, "g"))
+    sleep(1)
+    a.put((8, "h"))
+    sleep(1)
+    a.put((9, "i"))
+    sleep(1)
+    a.put((10, "j"))
+    print(a.first())
+    # print("min", point.min)
+    # print()
+    # print("max", point.max)
+    # print()
+    # print("sum", point.sum)
+    # print()
+    print(a)
+    # print(point)
+
+    # godslegend = OpenPack(
+    #     9.99,
+    #     [
+    #         [2, {"Base": 56, "Rare": 28, "Epic": 10, "Legendary": 4, "Mythic": 0, "Divine": 0, "Eternal": 0}],
+    #         [1, {"Rare": 56 + 28, "Epic": 10, "Legendary": 4, "Mythic": 0, "Divine": 0, "Eternal": 0}],
+    #     ], {"extra_pack": 2},
+    #     bend={"Rare": ["Base", 1, 5],
+    #           "Epic": ["Rare", 2, 3],
+    #           "Legendary": ["Epic", 3, 3],
+    #           "Mythic": ["Legendary", 4, 3],
+    #           "Divine": ["Mythic", 5, 3],
+    #           "Eternal": ["Divine", 6, 3]})
+    # realmnftgame = OpenPack(
+    #     24.95,
+    #     [
+    #         [5, {"1 star": 26, "2 star": 35, "3 star": 32, "4 star": 5.5, "5 star": 1.5}]
+    #     ], {"beta_access": 1.5},
+    #     bend={"2 star": ["1 star", 1, 3],
+    #           "3 star": ["2 star", 2, 3],
+    #           "4 star": ["3 star", 3, 3],
+    #           "5 star": ["4 star", 4, 3]})
+    # godslegend.estimate(1_000_000)
+    # realmnftgame.estimate(1_000_000)

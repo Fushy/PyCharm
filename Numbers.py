@@ -5,8 +5,8 @@ from random import random, randint
 
 
 def roundup(n):
-    decimal = n - int(n)
-    return int(n) if decimal == 0 else int(n) + 1
+    decimal_part = n - int(n)
+    return int(n) if decimal_part == 0 else int(n) + 1
 
 
 def convert(text, x):
@@ -16,19 +16,24 @@ def convert(text, x):
         return x * 60
     elif text == "hours_to_days":
         return x / 24
+    # todo
 
 
-def rng_int_between(minimal, maximal):
+def rng_int_between(minimal: int, maximal: int) -> int:
     return randint(minimal, maximal)
 
 
-def rng_float_between(a, b):
+def rng_float_between(a: float, b: float) -> float:
     return (b - a) * random() + a
 
 
 def rng_nearly(n, percent, floor=False) -> float:
     return rng_float_between(n * (1 - percent) if not floor else 0,
                              n * (1 + percent) if not floor else n * percent)
+
+
+def rng_nearly_timedelta(n, percent, floor=False) -> timedelta:
+    return timedelta(seconds=rng_nearly(n, percent, floor))
 
 
 def generate_sleep_time(hit_cooldown=120):
@@ -44,14 +49,6 @@ def generate_sleep_time(hit_cooldown=120):
             return rng_nearly(sleep_time * aim_pause_per_hit / pattern[0], 0.25)
         rng -= odds
     return 0
-
-
-def rng_nearly_timedelta(n, percent, floor=False):
-    return timedelta(seconds=rng_nearly(n, percent, floor))
-
-
-# if __name__ == '__main__':
-#     print(list(filter(lambda x: x != 0, [generate_sleep_time(8 * 60 * 60, 4 * 60) for _ in range(1000000)])))
 
 
 def float_stepsize(value: float, step_size: float) -> float:
@@ -82,3 +79,15 @@ def last_decimal_position(number: float) -> tuple[float, int]:
     """
     count_decimal = abs(Decimal(str(number)).as_tuple().exponent)
     return 1 / (10 ** count_decimal), count_decimal
+
+
+# if __name__ == '__main__':
+#     a = 10
+#     b = 0.2
+#     print([rng_nearly(a, b, floor=True) for _ in range(1000)])
+#     print(max([rng_nearly(a, b, floor=True) for _ in range(1000)]))
+#     print(min([rng_nearly(a, b, floor=True) for _ in range(1000)]))
+#     sample = [timedelta(seconds=generate_sleep_time(120)) for _ in range(200000)]
+#     print(min(sample))
+#     print(max(sample))
+#     print(sum(sample, timedelta(0)) / len(sample))

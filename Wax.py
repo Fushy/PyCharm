@@ -49,7 +49,7 @@ WAX_NFT_API_URL_ORDERS = [
 #         return "jd1.2.c"
 #     elif name == "n11k2.c":
 #         return "n11k2.c"
-#     raise ValueError(name + " base_name_to_whitelist_name is not a base account from me")
+#     raise ValueError(name + " base_name_to_whitelist_name is not point base account from me")
 
 
 # def base_wam_name_to_whitelist_name(name: str):
@@ -70,7 +70,7 @@ WAX_NFT_API_URL_ORDERS = [
 #     elif name == "n11k2.c":
 #         return name
 #     else:
-#         raise ValueError("base_wam_name_to_whitelist_name is not a base account from me")
+#         raise ValueError("base_wam_name_to_whitelist_name is not point base account from me")
 
 
 def whitelist_wam_account(name: str, memo: str = None) -> bool:

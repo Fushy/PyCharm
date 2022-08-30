@@ -1,14 +1,16 @@
 import sys
 import threading
+from typing import Optional, Callable
 
+import keyboard
 import matplotlib
 import matplotlib.dates
 import matplotlib.pyplot as plt
-from matplotlib import pyplot
+
+from Times import now, elapsed_seconds
 
 
 class CursorPlt(object):
-    """ ? """
     def __init__(self, ax):
         self.ax = ax
         self.lx = ax.axhline(color='k')  # the horiz line
@@ -38,10 +40,30 @@ def exit_event(event):
         sys.exit()
 
 
+def wait_key_press(i):
+    while not keyboard.is_pressed("right") and not keyboard.is_pressed("left"):
+        plt.pause(.005)
+    start = now()
+    if keyboard.is_pressed("right"):
+        while keyboard.is_pressed("right"):
+            plt.pause(.005)
+            if elapsed_seconds(start) >= 0.5:
+                break
+        i += 1
+    if keyboard.is_pressed("left"):
+        while keyboard.is_pressed("left"):
+            plt.pause(.005)
+            if elapsed_seconds(start) >= 0.5:
+                break
+        i -= 1
+    is_looping = elapsed_seconds(start) >= 0.5
+    return i, is_looping
+
+
 def init_gui(plt, axis_color, fig=None, fullscreen=True, title="", date_format=None) -> plt:
     curve_color = "#0F1623"
     plt.rcParams['figure.figsize'] = (16, 8)
-    plt.rcParams["keymap.zoom"].append("a")
+    plt.rcParams["keymap.zoom"].append("point")
     plt.rcParams["keymap.back"].append("²")
     if "left" in plt.rcParams["keymap.back"]:
         plt.rcParams["keymap.back"].remove("left")
