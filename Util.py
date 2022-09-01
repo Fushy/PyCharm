@@ -56,7 +56,7 @@ from Times import now
 COMMON_CHARS = (string.ascii_lowercase
                 + string.ascii_uppercase
                 + string.digits
-                + "!#$%&()-@^_`{}~+,\\'.;=[] \n")
+                + "\ !#$%&()-@^_`{}~+,.;=[]\n")     # do not change "\ " it disables space character on command line
 
 
 def restrict_num(x: float, _min: float, _max: float):
