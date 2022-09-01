@@ -3,7 +3,7 @@ from termcolor import colored
 from denombrement import permutations_all_size
 
 
-def printc(text: str, color="green", background_color=None, attributes: list[str] = None):
+def printc(text: str, color="green", background_color=None, attributes: list[str] = None, details=False):
     """
         color & background_color: red, green, yellow, blue, magenta, cyan, white, black
         attributes: bold, dark, underline, blink, reverse, concealed
@@ -13,7 +13,10 @@ def printc(text: str, color="green", background_color=None, attributes: list[str
         color = "grey"
     if background_color == "black":
         background_color = "grey"
-    print(colored("{} [{} {}]".format(text, color, attributes),
+    details_txt = ""
+    if details:
+        details_txt = "[{} {}]".format(color, attributes)
+    print(colored("{} {}".format(text, details_txt),
                   color,
                   "on_" + background_color if background_color is not None else None,
                   attrs=attributes))

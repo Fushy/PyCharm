@@ -15,7 +15,6 @@ from pandas import DataFrame
 
 from Times import now
 
-
 # https://developer.microsoft.com/fr-fr/microsoft-edge/tools/webdriver/
 # https://stackoverflow.com/questions/14684968/how-to-export-virtualenv
 # pip install --upgrade pip
@@ -53,6 +52,20 @@ from Times import now
 # def a(a):
 #     pyperclip.copy(a - 270)
 #     return a - 270
+
+COMMON_CHARS = (string.ascii_lowercase
+                + string.ascii_uppercase
+                + string.digits
+                + "!#$%&()-@^_`{}~+,\\'.;=[] \n")
+
+
+def restrict_num(x: float, _min: float, _max: float):
+    if x < _min:
+        x = _min
+    if x > _max:
+        x = _max
+    return x
+
 
 def reverse_dict(d: dict):
     return {tuple(v): k for (k, v) in d.items()}
