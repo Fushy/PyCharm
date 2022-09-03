@@ -4,6 +4,7 @@ select the folder where the opencv package is located (ctrl+click on cv2) -> don
 https://www.delftstack.com/howto/python/python-color-spectrums/
 https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
 """
+import copy
 import threading
 from typing import Optional, Callable
 
@@ -18,7 +19,7 @@ import win32gui
 import win32ui
 
 from Colors import printc
-from Files import delete
+from Files import delete, get_files_from_path, get_current_path
 from Times import now, elapsed_seconds
 from Util import COMMON_CHARS, restrict_num
 
@@ -116,11 +117,12 @@ def filtering_intensity(image: np.array,
         ((b > image[:, :, 1]) | (image[:, :, 1] > e)) &
         ((c > image[:, :, 2]) | (image[:, :, 2] > f))
     )
+    new_image = copy.copy(image)
     if set_color_in is not None:
-        image[filter_in] = set_color_in
+        new_image[filter_in] = set_color_in
     if set_color_out is not None:
-        image[filter_out] = set_color_out
-    return image
+        new_image[filter_out] = set_color_out
+    return new_image
 
 
 def filtering_color(image: np.array,
@@ -140,11 +142,12 @@ def filtering_color(image: np.array,
         ((b > image[:, :, 1]) | (image[:, :, 1] > e)) |
         ((c > image[:, :, 2]) | (image[:, :, 2] > f))
     )
+    new_image = copy.copy(image)
     if set_color_in is not None:
-        image[filter_in] = set_color_in
+        new_image[filter_in] = set_color_in
     if set_color_out is not None:
-        image[filter_out] = set_color_out
-    return image
+        new_image[filter_out] = set_color_out
+    return new_image
 
 
 def filter_pixels(image: np.array,
@@ -427,7 +430,7 @@ if __name__ == '__main__':
     images = list(map(lambda x: cv.cvtColor(cv.imread(x), cv.COLOR_BGR2RGB), image_files))
 
     # images_modified = [fun(image) for image in images for fun in MODIFIERS_FUNCTION]
-    # display_images_n_debug(*images_modified, ocr=True)
+    # display_images_n_debug(images_modified, ocr=True)
 
     image = images[0]
     # by color
