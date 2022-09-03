@@ -8,9 +8,6 @@ from typing import Callable
 
 import pandas as pd
 import pyperclip
-import win32con
-import win32gui
-import win32ui
 from pandas import DataFrame
 
 from Times import now
@@ -56,7 +53,7 @@ from Times import now
 COMMON_CHARS = (string.ascii_lowercase
                 + string.ascii_uppercase
                 + string.digits
-                + "\ !#$%&()-@^_`{}~+,.;=[]\n")     # do not change "\ " it disables space character on command line
+                + "\ !#$%&()-@^_`{}~+,.;=[]\n")  # do not change "\ " it disables space character on command line
 
 
 def restrict_num(x: float, _min: float, _max: float):
@@ -202,25 +199,6 @@ def debug_selenium(browser):
     while True:
         selenium_screenshot(browser)
         sleep(0.5)
-
-
-def screenshot_fastest(x0, y0, x1, y1, dest="out.png"):
-    w = x1 - x0
-    h = y1 - y0
-    bmpfilenamename = dest
-    hwnd = None
-    wDC = win32gui.GetWindowDC(hwnd)
-    dcObj = win32ui.CreateDCFromHandle(wDC)
-    cDC = dcObj.CreateCompatibleDC()
-    dataBitMap = win32ui.CreateBitmap()
-    dataBitMap.CreateCompatibleBitmap(dcObj, w, h)
-    cDC.SelectObject(dataBitMap)
-    cDC.BitBlt((0, 0), (w, h), dcObj, (x0, y0), win32con.SRCCOPY)
-    dataBitMap.SaveBitmapFile(cDC, bmpfilenamename)
-    dcObj.DeleteDC()
-    cDC.DeleteDC()
-    win32gui.ReleaseDC(hwnd, wDC)
-    win32gui.DeleteObject(dataBitMap.GetHandle())
 
 
 def sorted_dict(dictionary: dict, key=lambda x: x, reverse=False) -> dict:

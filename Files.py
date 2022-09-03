@@ -80,7 +80,8 @@ def append(file_name: str, value: str, encoding="utf-8"):
 
 
 def delete(file_name: str):
-    os.remove(file_name)
+    if is_existing(file_name):
+        os.remove(file_name)
 
 
 def concat_files(dest, *args):
