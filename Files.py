@@ -69,14 +69,22 @@ def get_current_path():
     return os.getcwd()
 
 
-def overwrite(file_name: str, value: str, encoding="utf-8"):
-    with open(file_name, 'w', encoding=encoding) as file:
-        file.write(str(value))
+def overwrite(file_name: str, value: str, encoding="utf-8", mode="w"):
+    if "b" in mode:
+        with open(file_name, mode) as file:
+            file.write(str(value))
+    else:
+        with open(file_name, mode, encoding=encoding) as file:
+            file.write(str(value))
 
 
-def append(file_name: str, value: str, encoding="utf-8"):
-    with open(file_name, 'a+', encoding=encoding) as file:
-        file.write(value)
+def append(file_name: str, value: str, encoding="utf-8", mode="a+"):
+    if "b" in mode:
+        with open(file_name, mode) as file:
+            file.write(value)
+    else:
+        with open(file_name, mode, encoding=encoding) as file:
+            file.write(value)
 
 
 def delete(file_name: str):

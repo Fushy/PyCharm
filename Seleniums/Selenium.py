@@ -10,13 +10,13 @@ from selenium.webdriver.opera.webdriver import OperaDriver
 from selenium.webdriver.remote.webelement import WebElement
 
 from Alert import notify_win
-from Classes import Coord
+from Classes import Point
 from Introspection import frameinfo
 from Times import now, elapsed_seconds
 
 
 def create_opera_browser(x, y=None, profile=None, headless=False):
-    if type(x) is Coord:
+    if type(x) is Point:
         y = x.y
         x = x.x
     options = ChromeOptions()
@@ -38,7 +38,7 @@ def create_opera_browser(x, y=None, profile=None, headless=False):
 
 
 def create_chrome_browser(x, y=None, profile=None, headless=False):
-    if type(x) is Coord:
+    if type(x) is Point:
         y = x.y
         x = x.x
     options = ChromeOptions()

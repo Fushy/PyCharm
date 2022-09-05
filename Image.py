@@ -4,8 +4,12 @@ select the folder where the opencv package is located (ctrl+click on cv2) -> don
 https://www.delftstack.com/howto/python/python-color-spectrums/
 https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
 """
+import _pickle
 import copy
+import pickle
+import sys
 import threading
+import traceback
 from typing import Optional, Callable
 
 import cv2 as cv
@@ -13,15 +17,18 @@ import matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pyqrcode
 import pytesseract
+import pywhatkit
 import win32con
 import win32gui
 import win32ui
+from pyzbar.pyzbar import decode
 
 from Colors import printc
-from Files import delete, get_files_from_path, get_current_path
+from Files import delete
 from Times import now, elapsed_seconds
-from Util import COMMON_CHARS, restrict_num
+from Util import COMMON_CHARS, restrict_num, string_encoded_to_bytes
 
 # RGB config most of the time because matplotlib is RGB
 EVENT_DICT = {}
@@ -423,10 +430,48 @@ def save(img: np.ndarray, dest: str = "out.jpeg", quality: int = 100):
     cv.imwrite(dest, img, [cv.IMWRITE_JPEG_QUALITY, quality])
 
 
+def image_to_ascii_art(file_name: str, dest: str = "out"):
+    """ Don't put add .txt extension on the dest name"""
+    pywhatkit.image_to_ascii_art(file_name, dest)
+
+
+def create_qrcode(data: str | object, dest="out", scale=5) -> bool:
+    if type(data) is not str:
+        data = pickle.dumps(data)
+    try:
+        qrcode = pyqrcode.create(data, encoding="unicode_escape")  # utf-8 isn't working
+    except ValueError:
+        print(traceback.format_exc(), file=sys.stderr)
+        printc("The data is too big to be stored through a QRCode", background_color="red")
+        return False
+    qrcode.png("{}.png".format(dest), scale=scale)
+    qrcode.svg("{}.svg".format(dest), scale=scale)
+    return True
+
+
+def decode_qrcode(file_name="out.png"):
+    # TODO svg to png
+    assert ".svg" not in file_name, "convert svg to another format"
+    # import cairosvg
+    # cairosvg.svg2pdf(url='image.svg', write_to='image.pdf')
+    qrcode = cv.imread(file_name)
+    qrdecode = decode(qrcode)[0]  # utf-8 encoding, cannot change
+    text_utf8 = qrdecode.data
+    str_encoded_raw = text_utf8.decode(encoding='utf-8')
+    text_unicode_escape = string_encoded_to_bytes(str_encoded_raw)
+    try:
+        value = pickle.loads(text_unicode_escape, encoding='unicode_escape')
+    except _pickle.UnpicklingError:
+        value = str_encoded_raw
+    return value
+
+
 if __name__ == '__main__':
+    create_qrcode({"ee": 56, (1, 2, 3): "486"})
+    print(decode_qrcode())
+
     # image_files = get_files_from_path(get_current_path() + "\\images\\", recursive=True)
-    # image_files = ["images/spectrum.jpeg"]
-    image_files = ["images/words1.jpeg"]
+    image_files = ["images/spectrum.jpeg"]
     images = list(map(lambda x: cv.cvtColor(cv.imread(x), cv.COLOR_BGR2RGB), image_files))
 
     # images_modified = [fun(image) for image in images for fun in MODIFIERS_FUNCTION]

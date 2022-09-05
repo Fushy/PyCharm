@@ -56,6 +56,11 @@ COMMON_CHARS = (string.ascii_lowercase
                 + "\ !#$%&()-@^_`{}~+,.;=[]\n")  # do not change "\ " it disables space character on command line
 
 
+def string_encoded_to_bytes(str_encoded_raw: str) -> bytes:
+    """ '\x80\x04K\x05.' -> b'\x80\x04K\x05.'"""
+    return bytes(bytearray(list(map(ord, str_encoded_raw))))
+
+
 def restrict_num(x: float, _min: float, _max: float):
     if x < _min:
         x = _min

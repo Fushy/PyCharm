@@ -18,12 +18,12 @@ import Alert
 import Classes
 from Colors import printc
 from Enum import FIRST
-from Files import file_get_1st_line
+from Files import get_first_line
 from Introspection import current_lines, frameinfo
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text, get_element_class
 from Sysconf import screen_rect, SCREENS
 from Times import now, elapsed_seconds
-from utils import is_iter
+from Util import is_iter
 
 last_browser_set = now()
 
@@ -95,65 +95,66 @@ class Browser:
             # https://chromedriver.chromium.org/downloads
             # https://github.com/operasoftware/operachromiumdriver/releases
         """
-        try:
-            self.working_window_num = 0
-            self.current_window_num = 0
-            self.driver = None
-            self.windows_url: list[str] = [""]
-            if profile is not None:
-                self.profile = profile
-            elif profile is None and self.profile is not None:
-                pass
-            self.name = None if self.profile is None else profile_name(self.profile)
-            self.complete_name = None if not self.name or not self.project_name else self.project_name + " " + self.name
-            num = file_get_1st_line(r"C:\Windows\addins\num")
-            if num != "" and profile is not None:
-                end = profile[profile.find("\\Profiles\\"):]
-                self.profile = r"user-data-dir=C:\Users\Alexis\Documents" + end
-            options = EdgeOptions()
-            options.use_chromium = True
-            if self.headless:
-                options.add_argument("headless")
-            if self.profile is not None:
-                options.add_argument(self.profile)
-            # req_proxy = RequestProxy()  # you may get different number of proxy when  you run this at each time
-            # proxies = req_proxy.get_proxy_list()  # this will create proxy list
-            # PROXY = proxies[0].get_address()
-            # print(proxies)
-            # webdriver.DesiredCapabilities.EDGE['proxy'] = {
-            #     "httpProxy": PROXY,
-            #     "ftpProxy": PROXY,
-            #     "sslProxy": PROXY,
-            #     "proxyType": "MANUAL",
-            # }
-            # print(
-            #     r"{}{}..{}Drivers{}msedgedriver.exe"
-            #         .date_format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
-            while elapsed_seconds(last_browser_set) < 0.1:
-                sleep(0.1)
-            last_browser_set = now()
-            pathname = frameinfo(2)["pathname"]
-            # pathname = pathname if num == "" else "C:\\Users\\Alexis\\Documents\\Profiles\\"
-            # exe_path = r"{}Drivers{}chromedriver{}.exe".date_format(pathname, os.path.sep, num if num else "")
-            exe_path = r"{}Drivers{}msedgedriver.exe".format(pathname, os.path.sep)
-            # exe_path = r"B:\_Documents\Pycharm\PyCharm\Utils\Seleniums\Drivers\msedgedriver.exe"
-            driver = Edge(options=options, executable_path=exe_path)
-            driver.set_window_position(self.point.x, self.point.y)
-            driver.set_window_size(1920, 1080)
-            self.driver = driver
-            self.print("set_browser", False)
-        except SessionNotCreatedException:
-            while True:
-                Alert.say("Have to download new browser driver version")
-                sleep(3)
-        except InvalidArgumentException:
-            raise InvalidSessionIdException("profile is already open")
-        except WebDriverException as err:
-            sleep(5)
-            self.printc("WebDriverException" + str(err), color="black", background_color="red")
-            # return self.set_browser(profile)
-            self.quit()
-            return Browser(SCREENS[1], profile=self.profile)
+        # try:
+        self.working_window_num = 0
+        self.current_window_num = 0
+        self.driver = None
+        self.windows_url: list[str] = [""]
+        if profile is not None:
+            self.profile = profile
+        elif profile is None and self.profile is not None:
+            pass
+        self.name = None if self.profile is None else profile_name(self.profile)
+        self.complete_name = None if not self.name or not self.project_name else self.project_name + " " + self.name
+        num = get_first_line(r"C:\Windows\addins\num")
+        if num != "" and profile is not None:
+            end = profile[profile.find("\\Profiles\\"):]
+            self.profile = r"user-data-dir=C:\Users\Alexis\Documents" + end
+        options = EdgeOptions()
+        options.use_chromium = True
+        if self.headless:
+            options.add_argument("headless")
+        if self.profile is not None:
+            options.add_argument(self.profile)
+        # req_proxy = RequestProxy()  # you may get different number of proxy when  you run this at each time
+        # proxies = req_proxy.get_proxy_list()  # this will create proxy list
+        # PROXY = proxies[0].get_address()
+        # print(proxies)
+        # webdriver.DesiredCapabilities.EDGE['proxy'] = {
+        #     "httpProxy": PROXY,
+        #     "ftpProxy": PROXY,
+        #     "sslProxy": PROXY,
+        #     "proxyType": "MANUAL",
+        # }
+        # print(
+        #     r"{}{}..{}Drivers{}msedgedriver.exe"
+        #         .date_format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+        while elapsed_seconds(last_browser_set) < 0.1:
+            sleep(0.1)
+        last_browser_set = now()
+        pathname = frameinfo(2)["pathname"]
+        # pathname = pathname if num == "" else "C:\\Users\\Alexis\\Documents\\Profiles\\"
+        # exe_path = r"{}Drivers{}chromedriver{}.exe".date_format(pathname, os.path.sep, num if num else "")
+        exe_path = r"{}Drivers{}msedgedriver.exe".format(pathname, os.path.sep)
+        # exe_path = r"B:\_Documents\Pycharm\PyCharm\Utils\Seleniums\Drivers\msedgedriver.exe"
+        driver = Edge(options=options, executable_path=exe_path)
+        driver.set_window_position(self.point.x, self.point.y)
+        driver.set_window_size(1920, 1080)
+        self.driver = driver
+        self.print("set_browser", False)
+        # except SessionNotCreatedException:
+        #     printc("SessionNotCreatedException", background_color="red")
+        #     while True:
+        #         Alert.say("Have to download new browser driver version")
+        #         sleep(3)
+        # except InvalidArgumentException:
+        #     raise InvalidSessionIdException("profile is already open")
+        # except WebDriverException as err:
+        #     sleep(5)
+        #     self.printc("WebDriverException" + str(err), color="black", background_color="red")
+        #     # return self.set_browser(profile)
+        #     self.quit()
+        #     return Browser(SCREENS[1], profile=self.profile)
 
     def update_windows_url(self) -> Optional[str]:
         try:
@@ -433,7 +434,7 @@ class Browser:
 
     def get_all_tag_that_contains(self,
                                   web_element,
-                                  predicats_on_text: list[Callable],
+                                  predicats_on_text: list[Callable] = (lambda x: True,),
                                   tag="div",
                                   doublon=False,
                                   alone=False) -> dict[str, WebElement] | None:

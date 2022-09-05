@@ -59,7 +59,7 @@ def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
         Threads.run(fun)
 
 
-def alert(msg, level=1, after_sleep=30):
+def alert(msg: str, level: int = 1, after_sleep: float = 30):
     debug_change = True
     if level == 1:
         message(msg)
