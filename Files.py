@@ -133,9 +133,9 @@ def p(*args, log_file=None, end="\n"):
 
 
 if __name__ == '__main__':
-    pre = "B:\\_Documents\\"
-    dest1 = pre + "anglais_full.txt"
-    dest2 = "anglais.txt"
+    # pre = "B:\\_Documents\\"
+    # dest1 = pre + "anglais_full.txt"
     # concat_files(dest1, pre + "anglais Fairy tail.txt", pre + "anglais FFVII Remake.txt", pre + "anglais.txt")
-    sort_file(dest2, dest=dest2)
-    remove_same_lines(dest2)
+    dest = "anglais.txt"
+    sort_file(dest, dest=dest)
+    remove_same_lines(dest)

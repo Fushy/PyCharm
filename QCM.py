@@ -11,8 +11,8 @@ from Util import str_to_hashdigits
 class QuestionsAnswers:
 
     def __init__(self, questions_answers: dict[str, list[str]]):
-        self.questions_answers = questions_answers
-        self.questions_answers_active = copy.deepcopy(self.questions_answers)
+        self.questions_answers: dict[str, list[str]] = questions_answers
+        self.questions_answers_active: dict[str, list[str]] = copy.deepcopy(self.questions_answers)
         self.hashcode: Optional[int] = None
         self.__hash__()
 
@@ -50,20 +50,32 @@ class QuestionsAnswers:
     def reverse_dict(self):
         hashtext = str(self.hashcode)
         self.questions_answers = {
-            hashtext.join(v) if type(v) is list else v: [k] if type(v) is list else k.split(hashtext)
+            hashtext.join(v) if type(v) is list else v: k.split(hashtext) if type(v) is list else k.split(hashtext)
             for (k, v) in self.questions_answers.items()}
         self.questions_answers_active = {
-            hashtext.join(v) if type(v) is list else v: [k] if type(v) is list else k.split(hashtext)
+            hashtext.join(v) if type(v) is list else v: k.split(hashtext) if type(v) is list else k.split(hashtext)
             for (k, v) in self.questions_answers_active.items()}
 
-    def training(self, just_one: bool = False):
+    def training(self, just_one: bool = False, pickup: Optional[int] = None):
+        if pickup is not None:
+            pickup_keys = list(self.questions_answers_active.keys())
+            random.shuffle(pickup_keys)
+            pickup_keys = pickup_keys[:pickup]
+            self.questions_answers_active = {k: self.questions_answers_active[k] for k in pickup_keys}
         while True:
             question = self.question()
             answer = self.questions_answers_active[question]
             answer_recovery = sorted(answer)
-            print(question.replace(str(self.hashcode), "\t"))
+            printc(question.replace(str(self.hashcode), "\t"), color="blue")
             for _ in range(len(answer)):
                 response = input("\t")
+                if response == ".":
+                    for (q, a) in self.questions_answers_active.items():
+                        print("{}\n\t{}".format(q, "\n\t".join(a)))
+                    continue
+                elif response == "+":
+                    self.reverse_dict()
+                    continue
                 correct = self.answer(question, response)
                 if correct:
                     print("\tok")
@@ -141,8 +153,8 @@ if __name__ == '__main__':
     # q.reverse_dict()
     # q.training()
     # q.exam(reset_if_wrong=True)
-    q = file_to_questions_answers("anglais.txt")
-    q.training()
+    q = file_to_questions_answers(r"B:\_Documents\Pycharm\Util\anglais.txt")
+    q.training(pickup=20)
 
 # old
 # QCM = {Question1: [(choix1, reponse1), ..., (choixN, reponseN)],
