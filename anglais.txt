@@ -14,7 +14,6 @@ acknowledge	reconnaître
 acquainted	connaissance
 across	de l'autre côté
 afford	permettre
-perhaps	peut-être/sans doute
 afford	s'offrir/se permettre
 afloat	à flot
 afore	avant
@@ -28,22 +27,19 @@ alas	Hélas
 all manner of wondrous	toutes sortes de merveilles
 all of sudden	soudainement/tout d'un coup
 all on behalf	tout au nom
-gut	intestin/instinct/tripes
 all people	tout le monde
-get to see	réussir à voir/chance de voir
-record	enregistrement/dossier/enregistrer
 all the people	toutes les personnes
 all's Well That Ends Well	Tout est bien qui finit bien
 along	le long
 aloud	à haute voix
 although	bien que/même si
 amidst	au milieu de
-though	bien que/mais/même si/cependant/pourtant
 among	parmi
 amongst	parmi
 an all-out	un tout-en-un
 an egg yolk	un jaune d'oeuf
 an enigma	une énigme
+an evidence	une évidence
 and soared	et s'envola
 and soared the sky	et s'envola vers le ciel
 and then some	et puis certains
@@ -51,6 +47,8 @@ anger	colère
 anguish	angoisse
 another plot	un autre complot
 antsy	anxieux
+anyway	de toute façon
+appointment	rendez vous
 are you two	êtes-vous deux
 are you two meant	êtes-vous censés être tous les deux
 arise	survenir/surgir
@@ -64,9 +62,7 @@ as we go	comme nous allons/au fur et à mesure
 as well as how it might be wielded	ainsi que la façon dont il pourrait être utilisé
 as wide	aussi large
 aside	de côté/à part
-wicked	malfaisant/mauvais/méchant
 asleep	endormi
-put on a	mettre sur un/mettre un
 aspire	aspirer
 aspiring	aspirant/en herbe
 astonish	étonner
@@ -74,6 +70,7 @@ astray	égaré
 at a stalemate	dans une impasse
 at a time	à la fois
 at last	enfin
+at least	au moins
 at least we got to see	au moins on a pu voir
 at the fact that	au fait que
 at the time	a l'époque
@@ -92,24 +89,15 @@ bartender	barman
 bashful	timide
 bat an eyelid	battre une paupière
 bathed	baigné
-in any case	dans tout les cas
-anyway	de toute façon
-at least	au moins
-expect	attendre/espérer
-course	cours/parcours/parcourir
 bawling	brailler
 be in touch	être en contact
 be my guest	soit mon invité
-it is still daylight	il fait encore jour
 be poised	être prêt
 be smooth sailing	naviguer en douceur
 be up to	être prêt à
 be up to it	être à la hauteur
 beacon	balise/phare
-an evidence	une évidence
-therefore	donc/par conséquant
-appointment	rendez vous
-thereby	ainsi
+bear	ours/porter/supporter/assumer
 bearer	porteur
 beckon	faire signe
 become well versed	bien s'y connaître/se familiariser
@@ -119,7 +107,6 @@ behalf	au nom de
 behaviour	comportement
 behold	voici
 below	ci-dessous
-it's not dark	il ne fait pas nuit
 bemused	perplexe
 bench	banc
 beneath	sous/au-dessous
@@ -210,6 +197,8 @@ conspicuous	visible/remarquable
 contrary to	contrairement à
 cough up	cracher
 could toss	pourrait lancer
+counter	compteur/comptoire/contre/contrer
+course	cours/parcours/parcourir
 covet	convoiter
 crack of smile	sourire en coin/éclat de sourire
 crevice	crevasse/fente/fissure
@@ -291,6 +280,7 @@ even so	malgré toutefois/tout/néanmoins
 every so often	de temps en temps
 evil	mauvais
 executioners	bourreaux
+expect	attendre/espérer
 expel	expulser
 eyelid	paupière
 eyesore	horreur
@@ -374,6 +364,7 @@ get enough	en avoir assez
 get his act together	se ressaisir
 get out	Sortez
 get tighter	se resserrer
+get to see	réussir à voir/chance de voir
 get up	se lever
 get your hopes up	s'emballer
 gig	concert
@@ -393,12 +384,14 @@ got rid of thoses	débarrassé de ceux-là
 gotta	got to/have to
 grab	saisir
 graduate internship	Stage de fin d'études
+grasp	saisir/comprendre
 grasping	saisir
 grave	grave/sérieux
 gray's emotional strength trumped Rufus's.	La force émotionnelle de Gray l'emportait sur celle de Rufus.
 greenhorn	jeunot
 grief	douleur
 grudge	rancune
+gut	intestin/instinct/tripes
 ham	jambon
 handle	manipuler
 handwriting	écriture
@@ -484,7 +477,6 @@ i recall with crystal clarity	je me souviens avec une clarté cristalline
 i switch out	je change
 i want them to stay on it	je veux qu'ils restent dessus
 i would like you to	J'aimerais que tu
-bear	ours/porter/supporter/assumer
 i'll fill you in later	je vous renseignerai plus tard
 i'll handle	je vais gérer
 i'll handle it	je vais m'en occuper
@@ -497,6 +489,7 @@ in a huge crush	dans un énorme béguin
 in a hurry	pressé
 in a place	dans un endroit
 in a place this dark	dans un endroit aussi sombre
+in any case	dans tout les cas
 in charge of collections	en charge des recouvrements
 in days	en jours
 in every way	de toutes les manières
@@ -518,10 +511,12 @@ it flow like wind	ça coule comme le vent
 it grieves me	ça me chagrine
 it had gotten	il était devenu
 it happen to be	il se trouve que
+it is still daylight	il fait encore jour
 it will sputter out	ça va crachoter
 it's a pity	c'est dommage
 it's all hope	tout n'est qu'espoir
 it's been over 10 years	ca fait plus de 10 ans
+it's not dark	il ne fait pas nuit
 it's still clinging	ça colle encore
 it's still clinging to me	ça me colle encore
 jamming	brouillage
@@ -551,12 +546,12 @@ let's get going	allons-y
 let's get this over with	finissons-en avec
 let's go check in	allons vérifier
 let's hang in	accrochons-nous
-counter	compteur/comptoire/contre/contrer
 let's head back	rentrons
 let's head up	dirigeons-nous vers
 let's hop	sautons
 let's hop to it	allons-y
 let's wrap this	terminons ça
+lie in wait	guetter/à l'affût
 life is fleeting	la vie est éphémère
 lifted	lever/soulever
 lighthouse	phare
@@ -681,6 +676,7 @@ past and gone	passé et disparu
 peanut butter	beurre de cacahuète
 pedestrian	piéton
 pedestrian crossing	passage pieton
+perhaps	peut-être/sans doute
 perish	périr
 personal matters	affaires personnelles
 pile up	entasser
@@ -702,9 +698,11 @@ pressured	sous pression
 pretty bare	assez nu
 preventing	empêcher
 proceeding	procéder
+public transport	transports en commun
 pushovers	des jeux d'enfant
 pushy	arrogant
 put it away	ranger
+put on a	mettre sur un/mettre un
 put out	éteindre
 putting off maintenance	remettre à plus tard l'entretien
 putting up	mettre en place
@@ -715,6 +713,7 @@ rashly	imprudemment
 rather unique developments	développements plutôt uniques
 reckon	compter/estimer
 reckoning	compte
+record	enregistrement/dossier/enregistrer
 red-handed	en flagrant délit
 reef	récif
 rejoice	réjouir
@@ -878,6 +877,7 @@ talk you later	te parler plus tard
 tearing up	déchirer
 tearing up town	déchirer la ville
 tedious talk	conversation fastidieuse
+tell me	dites moi/raconte moi
 temper	tempérament
 that blossoms	qui fleurit
 that i do	Ce que je fais
@@ -930,6 +930,8 @@ their envoys	leurs envoyés
 their kin	leurs proches
 their noses at us	leur nez sur nous
 there first thing tomorrow	demain à la première heure
+thereby	ainsi
+therefore	donc/par conséquant
 therefore	donw
 they are nesting	ils nichent
 they are not monitoring us	ils ne nous surveillent pas
@@ -938,6 +940,7 @@ they don't take kindly to questions	ils ne prennent pas gentiment les questions
 they have almost	ils ont presque
 they must have made off	ils ont dû s'enfuir
 they worship	ils vénèrent
+think thought thought	penser
 thinned	aminci
 thinned out	aminci
 thirst	la soif
@@ -945,7 +948,7 @@ this might be	cela pourrait être
 this wouldn't have happened	cela ne serait pas arrivé
 thorough	approfondi
 thorough notes	des notes détaillées
-think thought thought	penser
+though	bien que/mais/même si/cependant/pourtant
 thoughtful	réfléchi
 threatened	menacé
 thrive	s'épanouir/prospérer
@@ -960,7 +963,6 @@ tidy them up	les ranger
 tied up	attaché
 to balls everything up	pour tout bouleverser
 to be led	d'être dirigée/d'être conduit
-lie in wait	guetter/à l'affût
 to be passing by	être de passage
 to behold	a voir
 to channel	pour canaliser
@@ -974,7 +976,6 @@ to gather their kin	rassembler leurs proches
 to get off on the right foot	repartir du bon pied
 to get your story straight	pour mettre votre histoire au clair
 to good use	à bon escient
-grasp	saisir/comprendre
 to make of it	en faire/en penser
 to make up for it	Pour compenser/pour se rattraper 
 to melt you	pour te faire fondre
@@ -983,9 +984,7 @@ to shape up	se mettre en forme
 to sing along	chanter a ses cotés
 to spare	épargner
 to stock up	s'approvisionner
-tell me	dites moi/raconte moi
 to strut	se pavaner
-public transport	transports en commun
 to tears	aux larmes
 to the higher ups	aux plus hauts gradés
 to the will	à la volonté
@@ -1094,6 +1093,7 @@ whuppin	coup de fouet
 why bother putting	pourquoi s'embêter à mettre
 why bother putting them outside	pourquoi s'embêter à les mettre dehors
 why would the likes of a cat	pourquoi les goûts d'un chat
+wicked	malfaisant/mauvais/méchant
 wide selection	large selection
 widens	s'élargit
 wield	manier
