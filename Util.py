@@ -1,5 +1,6 @@
 import os
 import string
+import sys
 from collections.abc import Iterable
 from datetime import timedelta, datetime
 from hashlib import blake2b
@@ -67,6 +68,10 @@ def restrict_num(x: float, _min: float, _max: float):
     if x > _max:
         x = _max
     return x
+
+
+def is_running_under_basic_console():
+    return hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
 
 
 def reverse_dict(d: dict):

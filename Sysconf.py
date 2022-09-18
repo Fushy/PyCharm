@@ -1,5 +1,8 @@
 from screeninfo import get_monitors, Monitor
 
+""" Display Scaling on windows parameters affects monitor resolution,
+set 100% to have a correct resolution or multiply the resolution with a factor to adapt it """
+
 
 def monitor_1080p(x, y):
     return Monitor(
@@ -16,12 +19,13 @@ def screen_rect(x):
     return monitor_1080p((x_start_offset + x) / ratio, x / ratio)
 
 
-MONITORS = get_monitors()
-SCREENS = dict(zip(range(1, len(MONITORS) + 1), sorted(MONITORS, key=lambda m: (abs(m.x), abs(m.y)))))
-FULL_SIZE = [min((monitor.x for monitor in MONITORS)),
-             min((monitor.y for monitor in MONITORS)),
-             max((monitor.x + monitor.width for monitor in MONITORS)),
-             max((monitor.y + monitor.height for monitor in MONITORS))]
+MONITORS: list[Monitor] = get_monitors()
+SCREENS: dict[int | str, Monitor] = dict(
+    zip(range(1, len(MONITORS) + 1), sorted(MONITORS, key=lambda m: (abs(m.x), abs(m.y)))))
+FULL_SIZE: list[int] = [min((monitor.x for monitor in MONITORS)),
+                        min((monitor.y for monitor in MONITORS)),
+                        max((monitor.x + monitor.width for monitor in MONITORS)),
+                        max((monitor.y + monitor.height for monitor in MONITORS))]
 is_4k, is_QHD = False, False
 ratio = 1
 x_start_offset = 0
@@ -49,6 +53,7 @@ for name in SCREENS:
     SCREENS[name].x = SCREENS[name].x / ratio + x_start_offset
     SCREENS[name].y = SCREENS[name].y / ratio
 
-# print(MONITORS)
-# print(FULL_SIZE)
-# print(SCREENS)
+if __name__ == '__main__':
+    print(FULL_SIZE)
+    print("\n".join([str(k) + " " + str(v) for (k, v) in SCREENS.items()]))
+    print(MONITORS)

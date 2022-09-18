@@ -1,5 +1,6 @@
 from termcolor import colored
 
+from Util import is_running_under_basic_console
 from denombrement import permutations_all_size
 
 
@@ -16,10 +17,13 @@ def printc(text: str, color="green", background_color=None, attributes: list[str
     details_txt = ""
     if details:
         details_txt = "[{} {}]".format(color, attributes)
-    print(colored("{} {}".format(text, details_txt),
-                  color,
-                  "on_" + background_color if background_color is not None else None,
-                  attrs=attributes))
+    if not is_running_under_basic_console():
+        print(colored("{} {}".format(text, details_txt),
+                      color,
+                      "on_" + background_color if background_color is not None else None,
+                      attrs=attributes))
+    else:
+        print("{} {}".format(text, details_txt))
 
 
 def print_all_colors():

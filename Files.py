@@ -4,6 +4,8 @@ from typing import Callable, Optional
 
 
 def is_existing(path: str) -> bool:
+    """ Due to concurrency, after an is_existing call, it may be possible that the file doesn't exist,
+    in this case, use a try-catch exception when the file is used """
     return os.path.exists(path)
 
 
@@ -88,8 +90,10 @@ def append(file_name: str, value: str, encoding="utf-8", mode="a+"):
 
 
 def delete(file_name: str):
-    if is_existing(file_name):
+    try:
         os.remove(file_name)
+    except FileNotFoundError:
+        pass
 
 
 def concat_files(dest, *args):

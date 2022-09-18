@@ -72,10 +72,12 @@ def cardinal_arrangement(n: int, k: int) -> int:
     return math.factorial(n) // math.factorial(n - k)
 
 
-def arrangement(E, k):
+def arrangement(E, k=None):
     """ Ensemble d'arrangement de k elements parmi un ensemble E de n elements.
         On tire successivement et sans remise k elements dans un ensemble E de n elements.
         Ensemble d'injections de k elements parmi un ensemble E de n elements. """
+    if k is None:
+        k = len(E)
     return sorted(itertools.permutations(E, k))
 
 
@@ -171,7 +173,7 @@ if __name__ == '__main__':
     print("{} {} {}".format("arrangement", F, 1).ljust(spaces), arrangement(F, 1))
     print("{} {} {}".format("arrangement", F, 2).ljust(spaces), arrangement(F, 2))
     print("{} {} {}".format("arrangement", F, 3).ljust(spaces), arrangement(F, 3))
-    print("{} {} {}".format("arrangement", F, 4).ljust(spaces), arrangement(F, 4))
+    print("{} {}".format("arrangement", F).ljust(spaces), arrangement(F))
 
     print("{} {} {}".format("combinaison", F, 1).ljust(spaces), combinaison(F, 1))
     print("{} {} {}".format("combinaison", F, 2).ljust(spaces), combinaison(F, 2))
