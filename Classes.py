@@ -2,7 +2,7 @@ import math
 import random
 from datetime import datetime
 from time import sleep
-from typing import Callable
+from typing import Callable, Optional
 from typing import Generic, Union
 from typing import TypeVar
 
@@ -60,6 +60,52 @@ class Point:
         for y in range(min(self.y, point.y) + 1, abs(self.y - point.y)):
             points.add(Point(point.y, min(self.y, point.y) + y))
         return points
+
+
+class Rectangle:
+    top_left: Point
+    right_bottom: Point
+    x0: int
+    y0: int
+    x1: int
+    y1: int
+    w: int
+    h: int
+
+    def __init__(self,
+                 x0: Point | int,
+                 y0: Point | int,
+                 x1: Optional[int] = None,
+                 y1: Optional[int] = None,
+                 w=None,
+                 h=None):
+        if type(x0) is Point and type(y0) is Point:
+            self.top_left = x0
+            self.right_bottom = y0
+            self.x0 = self.top_left.x
+            self.y0 = self.top_left.y
+            self.x1 = self.right_bottom.x
+            self.y1 = self.right_bottom.y
+            self.w = self.x1 - self.x0
+            self.h = self.y1 - self.y0
+        elif type(x0) is int and type(y0) is int and w is not None and h is not None:
+            self.top_left = Point(x0, y0)
+            self.right_bottom = Point(x0 + w, y0 + h)
+            self.x0 = x0
+            self.y0 = y0
+            self.x1 = x0 + w
+            self.y1 = y0 + h
+            self.w = w
+            self.h = h
+        elif type(x0) is int and type(y0) is int and type(x1) is int and type(y1) is int:
+            self.top_left = Point(x0, y0)
+            self.right_bottom = Point(x1, y1)
+            self.x0 = x0
+            self.y0 = y0
+            self.x1 = x1
+            self.y1 = y1
+            self.w = x1 - x0
+            self.h = y1 - y0
 
 
 class DatedObj(Generic[T]):

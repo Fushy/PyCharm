@@ -6,21 +6,18 @@ https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
 """
 import _pickle
 import copy
-import inspect
 import pickle
 import sys
 import threading
 import traceback
 from time import sleep
 from typing import Optional, Callable
-from pynput.keyboard import Key, Listener
 
 import cv2 as cv
 import matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-import pyautogui
 import pyqrcode
 import pytesseract
 import pywhatkit
@@ -32,10 +29,8 @@ from screeninfo import Monitor
 
 from Classes import Point, Rectangle
 from Colors import printc
-from Files import delete, is_existing, overwrite
-from Introspection import frameinfo
-from Sysconf import MONITORS
-from Threads import run, loop_run
+from Files import delete, overwrite
+from Threads import loop_run
 from Times import now, elapsed_seconds
 from Util import COMMON_CHARS, restrict_num, string_encoded_to_bytes
 
@@ -75,6 +70,19 @@ def screenshot_monitor(monitor: Monitor, display_scaling=100, dest="out.jpeg"):
     x0, y0, w, h = monitor.x, monitor.y, monitor.width, monitor.height
     w, h = map(lambda x: x * display_scaling / 100, (w, h))
     screenshot_fastest(x0, y0, x0 + w, y0 + h, dest)
+
+
+def screenshot_loop(monitor: Monitor, display_scaling=100):
+    def loop():
+        screenshot_monitor(monitor, display_scaling, "live.jpeg")
+        overwrite("locked_loop", ".")
+        # image = read("live.jpeg")
+        # check_auto = crop(image, 265, 78, 122, 45)
+        # check_auto = filtering_color(check_auto, (125,) * 3, (255,) * 3, set_color_in=None)
+        # save(check_auto, "auto.jpeg")
+        delete("locked_loop")
+
+    loop_run(loop, sleep_after_execution=0.5)
 
 
 def create_with_color(shape: tuple[int, int, int], rgb: tuple[int, int, int] = (0, 0, 0)) -> np.array:
@@ -551,72 +559,9 @@ def image_search(image: np.array, templates: str | list[str] | list[tuple[str, R
     return Point(top_left[0], top_left[1])
 
 
-keys_pressed = {}
-
-
-# def on_press(key):
-#     keys_pressed[key] = True
-#     while keys_pressed[key]:
-#         sleep(0.001)
-#     print('{0} pressed'.format(key))
-
-
-def on_release(key):
-    keys_pressed[key] = False
-    print('{0} release'.format(key))
-
-
-if __name__ == '__main__':
-
-    def aux():
-        overwrite("locked_aux", ".")
-        screenshot_monitor(MONITORS[-1], 150, "out.jpeg")
-        # image = read("out.jpeg")
-        # check_auto = crop(image, 265, 78, 122, 45)
-        # check_auto = filtering_color(check_auto, (125,) * 3, (255,) * 3, set_color_in=None)
-        # save(check_auto, "auto.jpeg")
-        delete("locked_aux")
-
-
-    from pynput import keyboard
-
-
-    def on_press(key):
-        print('Key pressed: ' + str(key))
-
-
-    listener = keyboard.Listener(on_press=on_press)
-    listener.start()
-
-    loop_run(aux, sleep_after_execution=0.5)
-    # display_images("auto.jpeg")
-    save_txt = ""
-    while True:
-        screenshot_monitor(MONITORS[-1], 150, "live.jpeg")
-        screenshot = read("live.jpeg")
-        if image_search(screenshot, [("auto.png", Rectangle(173, 69, w=44 + 10, h=60 + 10)),
-                                     ("talk.png", Rectangle(2548, 1270, w=100, h=400))]):
-            image = read("out.jpeg")
-            # image = crop(image, 675, 1500, 3000, 600)
-            image = crop(image, 400, 1700, 2800, 600)
-            image = filter_pixels_with_intensity(image, rgb_min=(240, 240, 240), rgb_max=(255, 255, 255))
-            image = get_only_white(image)
-            save(image, "txt.jpeg")
-            txt = ocr_image(image)
-            # display_images(image)
-            print(len(txt), len(txt) * 0.01)
-            if save_txt == txt:
-                # sleep(len(txt) * 0.03)
-                print("click")
-                pyautogui.moveTo(x=3750, y=400)
-                pyautogui.click(x=3750, y=400)
-            save_txt = txt
-            sleep(0.1)
-        else:
-            sleep(1)
-
-    # create_qrcode({"ee": 56, (1, 2, 3): "486"})
-    # print(decode_qrcode())
+def _test_funs():
+    create_qrcode({"ee": 56, (1, 2, 3): "486"})
+    print(decode_qrcode())
 
     # image_files = get_files_from_path(get_current_path() + "\\images\\", recursive=True)
     image_files = ["images/words1.jpeg"]
@@ -640,3 +585,7 @@ if __name__ == '__main__':
 
     colored_filter = get_only_colored(image)
     display_images([image, colored_filter, sub(image, colored_filter)])
+
+
+if __name__ == '__main__':
+    _test_funs()
