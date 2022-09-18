@@ -6,17 +6,21 @@ https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
 """
 import _pickle
 import copy
+import inspect
 import pickle
 import sys
 import threading
 import traceback
+from time import sleep
 from typing import Optional, Callable
+from pynput.keyboard import Key, Listener
 
 import cv2 as cv
 import matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pyautogui
 import pyqrcode
 import pytesseract
 import pywhatkit
@@ -24,9 +28,14 @@ import win32con
 import win32gui
 import win32ui
 from pyzbar.pyzbar import decode
+from screeninfo import Monitor
 
+from Classes import Point, Rectangle
 from Colors import printc
-from Files import delete
+from Files import delete, is_existing, overwrite
+from Introspection import frameinfo
+from Sysconf import MONITORS
+from Threads import run, loop_run
 from Times import now, elapsed_seconds
 from Util import COMMON_CHARS, restrict_num, string_encoded_to_bytes
 
@@ -39,22 +48,33 @@ BLUE_ISOLATION = (100, 100, 255)
 pytesseract.pytesseract.tesseract_cmd = r'B:\Programmes\Tesseract-OCR\tesseract.exe'
 
 
-def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.png"):
+def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg"):
+    x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
     w = x1 - x0
     h = y1 - y0
     hwnd = None
-    w_dc = win32gui.GetWindowDC(hwnd)
-    dc_obj = win32ui.CreateDCFromHandle(w_dc)
-    c_dc = dc_obj.CreateCompatibleDC()
-    data_bit_map = win32ui.CreateBitmap()
-    data_bit_map.CreateCompatibleBitmap(dc_obj, w, h)
-    c_dc.SelectObject(data_bit_map)
-    c_dc.BitBlt((0, 0), (w, h), dc_obj, (x0, y0), win32con.SRCCOPY)
-    data_bit_map.SaveBitmapFile(c_dc, dest)
-    dc_obj.DeleteDC()
-    c_dc.DeleteDC()
+    try:
+        w_dc = win32gui.GetWindowDC(hwnd)
+        dc_obj = win32ui.CreateDCFromHandle(w_dc)
+        c_dc = dc_obj.CreateCompatibleDC()
+        data_bit_map = win32ui.CreateBitmap()
+        data_bit_map.CreateCompatibleBitmap(dc_obj, w, h)
+        c_dc.SelectObject(data_bit_map)
+        c_dc.BitBlt((0, 0), (w, h), dc_obj, (x0, y0), win32con.SRCCOPY)
+        data_bit_map.SaveBitmapFile(c_dc, dest)
+        dc_obj.DeleteDC()
+        c_dc.DeleteDC()
+    except win32ui.error:
+        print("err")
+        return screenshot_fastest(x0, y0, x1, y1, dest)
     win32gui.ReleaseDC(hwnd, w_dc)
     win32gui.DeleteObject(data_bit_map.GetHandle())
+
+
+def screenshot_monitor(monitor: Monitor, display_scaling=100, dest="out.jpeg"):
+    x0, y0, w, h = monitor.x, monitor.y, monitor.width, monitor.height
+    w, h = map(lambda x: x * display_scaling / 100, (w, h))
+    screenshot_fastest(x0, y0, x0 + w, y0 + h, dest)
 
 
 def create_with_color(shape: tuple[int, int, int], rgb: tuple[int, int, int] = (0, 0, 0)) -> np.array:
@@ -135,8 +155,8 @@ def filtering_intensity(image: np.array,
 def filtering_color(image: np.array,
                     rgb_min: tuple[int, int, int],
                     rgb_max: tuple[int, int, int],
-                    set_color_in: Optional[tuple[int, int, int]] = None,
-                    set_color_out: Optional[tuple[int, int, int]] = None):
+                    set_color_in: Optional[tuple[int, int, int]] = (255, 255, 255),
+                    set_color_out: Optional[tuple[int, int, int]] = (0, 0, 0)):
     a, b, c = rgb_min
     d, e, f = rgb_max
     filter_in = np.where(
@@ -154,13 +174,13 @@ def filtering_color(image: np.array,
         new_image[filter_in] = set_color_in
     if set_color_out is not None:
         new_image[filter_out] = set_color_out
-    return new_image
+    return cv.cvtColor(new_image, cv.COLOR_BGR2RGB)
 
 
-def filter_pixels(image: np.array,
-                  rgb_min: tuple[int, int, int],
-                  rgb_max: tuple[int, int, int],
-                  set_color: tuple[int, int, int] = (0, 0, 0)) -> np.array:
+def filter_pixels_with_intensity(image: np.array,
+                                 rgb_min: tuple[int, int, int],
+                                 rgb_max: tuple[int, int, int],
+                                 set_color: tuple[int, int, int] = (0, 0, 0)) -> np.array:
     """ All pixel that are in range are not changed, other are set to black """
     return filtering_intensity(image, rgb_min, rgb_max, set_color_out=set_color)
 
@@ -210,14 +230,17 @@ def sub(*args: np.array) -> np.array:
 """########## OCR ############"""
 
 
-def ocr_image(img: np.ndarray,
+def ocr_image(img: np.ndarray | str,
               config: str = r"--oem 3 --psm 6",
+              # config: str = r"--oem 3 --psm 12",
               whitelist_ocr: str = COMMON_CHARS,
               blacklist_ocr: str = "",
               whitelist_filter: str = COMMON_CHARS,
               blacklist_filter: str = "",
-              debug: bool = True) -> tuple[str, np.array]:
+              debug: bool = True) -> str:
     # https://ai-facets.org/tesseract-ocr-best-practices/
+    if type(img) is str:
+        img = read(img)
     config += " -c tessedit_char_whitelist={} -c tessedit_char_blacklist={}".format(whitelist_ocr, blacklist_ocr)
     img_to_str = pytesseract.image_to_string(img, config=config)
     img_to_str = "".join([char for char in img_to_str if char in whitelist_filter and char not in blacklist_filter])
@@ -225,7 +248,7 @@ def ocr_image(img: np.ndarray,
         img_to_str = img_to_str[:-1]
     if debug:
         printc(img_to_str, background_color="black")
-    return img_to_str, img
+    return img_to_str
 
 
 """##### Image viewer #####"""
@@ -305,14 +328,25 @@ def get_black_or_white_or_isolate(image: np.array,
     return image
 
 
+def read(image_path: str, gray=False) -> np.array:
+    try:
+        if gray:
+            return cv.imread(image_path, 0)
+        return cv.cvtColor(cv.imread(image_path), cv.COLOR_BGR2RGB)
+    except cv.error:
+        print("err, image may no exist")
+        sleep(0.2)
+        return read(image_path)
+
+
 def fill_images_array(images: np.array,
                       rgb_min: Optional[tuple[int, int, int]] = None,
                       rgb_max: Optional[tuple[int, int, int]] = None) -> list[np.array]:
     arrays = []
+    EVENT_DICT["arrays"] = []
     for i in range(len(images)):
         image = images[i]
-        # save(image, dest="temp.jpeg")
-        # image = cv.imread("temp.jpeg")
+        image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
         if rgb_min is not None and rgb_max is not None:
             image = get_black_or_white_or_isolate(image, rgb_min, rgb_max)
         arrays.append(image)
@@ -321,27 +355,33 @@ def fill_images_array(images: np.array,
     return arrays
 
 
-def display_images(images: list[np.ndarray] | np.ndarray,
+def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
                    full_screen: bool = False,
                    autorun: float = 0):
     import matplotlib.pyplot as plt
 
     if type(images) is not list:
         images = [images]
-    fill_images_array(images)
+    is_str = type(images[0]) is str
+    if not is_str:
+        fill_images_array(images)
     plt, ax, fig = init_image_viewer(plt, full_screen)
     while not EVENT_DICT["exit_display"]:
+        if is_str:
+            fill_images_array(list(map(read, images)))
         i = EVENT_DICT["i_display_images"]
         display_image = EVENT_DICT["arrays"][i]
         plt.imshow(display_image)
-        if autorun != 0:
-            fig.canvas.start_event_loop(autorun)
-            EVENT_DICT["i_display_images"] = (EVENT_DICT["i_display_images"] + 1) % len(images)
-        else:
-            fig.canvas.start_event_loop(0.2)
-            new_action = EVENT_DICT["i_event"] == EVENT_DICT["next_i_event"]
-            if new_action:
-                EVENT_DICT["next_i_event"] += 1
+        if not is_str:
+            if autorun != 0:
+                fig.canvas.start_event_loop(autorun)
+                EVENT_DICT["i_display_images"] = (EVENT_DICT["i_display_images"] + 1) % len(images)
+            else:
+                fig.canvas.start_event_loop(0.2)
+                new_action = EVENT_DICT["i_event"] == EVENT_DICT["next_i_event"]
+                if new_action:
+                    EVENT_DICT["next_i_event"] += 1
+        fig.canvas.start_event_loop(0.001)
         plt.cla()
     reset_event_vars()
     plt.close()
@@ -388,7 +428,7 @@ def display_images_n_debug(images: list[np.ndarray] | np.ndarray,
                 elif only_white:
                     display_image = get_only_white(display_image)
             if EVENT_DICT["ocr"]:
-                ocr_text, display_image = ocr_image(display_image)
+                ocr_image(display_image)
             EVENT_DICT["arrays"][i] = display_image
             EVENT_DICT["next_i_event"] += 1
         if EVENT_DICT["original_img"]:
@@ -421,7 +461,7 @@ def image_modifier(image,
             rgb_isolation_min = tuple(map(lambda x: int(restrict_num(x - variation, 0, 255)), rgb_isolation_min))
             rgb_isolation_max = tuple(map(lambda x: int(restrict_num(x + variation, 0, 255)), rgb_isolation_max))
         image = get_black_or_white_or_isolate(image, rgb_isolation_min, rgb_isolation_max)
-    image = filter_pixels(image, rgb_min, rgb_max)
+    image = filter_pixels_with_intensity(image, rgb_min, rgb_max)
     return image
 
 
@@ -466,13 +506,121 @@ def decode_qrcode(file_name="out.png"):
     return value
 
 
+def crop(image: np.array, x0: int | Rectangle, y0=None, w=None, h=None):
+    if type(x0) is Rectangle:
+        h = x0.h
+        w = x0.w
+        y0 = x0.y0
+        x0 = x0.x0
+    if w == 0 or h == 0:
+        return image
+    return image[y0:y0 + h, x0:x0 + w]
+
+
+def image_search(image: np.array, templates: str | list[str] | list[tuple[str, Rectangle]], confidence_min=90,
+                 debug=True) -> Optional[Point]:
+    """ https://docs.opencv.org/4.x/d4/dc6/tutorial_py_template_matching.html
+        https://github.com/ClarityCoders/ComputerVision-OpenCV/blob/master/Lesson3-TemplateMatching/PlayGame.py
+     """
+    if len(templates) == 0:
+        return
+    if type(templates) is str:
+        templates = [templates]
+    if type(templates[0]) is str:
+        templates = list(map(lambda x: (x, Rectangle(0, 0, 0, 0)), templates))
+    confidence = 0
+    template = templates[0]
+    for template, crop_size in templates:
+        check_image = crop(image, crop_size)
+        template = read(template)
+        match = cv.matchTemplate(check_image, template, cv.TM_CCOEFF_NORMED)
+        _, confidence, _, top_left = cv.minMaxLoc(match)
+        confidence *= 100
+        if debug:
+            printc(confidence, color="green" if confidence >= confidence_min else "red")
+        if confidence >= confidence_min:
+            break
+    if confidence < confidence_min:
+        return
+    h, w, _ = template.shape
+    top_left = 0, 0
+    bot_right = top_left[0] + w, top_left[1] + h
+    if debug:
+        image_debug = cv.cvtColor(cv.rectangle(image, top_left, bot_right, 0, 5), cv.COLOR_BGR2RGB)
+        save(image_debug, "image_search.jpeg")
+    return Point(top_left[0], top_left[1])
+
+
+keys_pressed = {}
+
+
+# def on_press(key):
+#     keys_pressed[key] = True
+#     while keys_pressed[key]:
+#         sleep(0.001)
+#     print('{0} pressed'.format(key))
+
+
+def on_release(key):
+    keys_pressed[key] = False
+    print('{0} release'.format(key))
+
+
 if __name__ == '__main__':
-    create_qrcode({"ee": 56, (1, 2, 3): "486"})
-    print(decode_qrcode())
+
+    def aux():
+        overwrite("locked_aux", ".")
+        screenshot_monitor(MONITORS[-1], 150, "out.jpeg")
+        # image = read("out.jpeg")
+        # check_auto = crop(image, 265, 78, 122, 45)
+        # check_auto = filtering_color(check_auto, (125,) * 3, (255,) * 3, set_color_in=None)
+        # save(check_auto, "auto.jpeg")
+        delete("locked_aux")
+
+
+    from pynput import keyboard
+
+
+    def on_press(key):
+        print('Key pressed: ' + str(key))
+
+
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
+
+    loop_run(aux, sleep_after_execution=0.5)
+    # display_images("auto.jpeg")
+    save_txt = ""
+    while True:
+        screenshot_monitor(MONITORS[-1], 150, "live.jpeg")
+        screenshot = read("live.jpeg")
+        if image_search(screenshot, [("auto.png", Rectangle(173, 69, w=44 + 10, h=60 + 10)),
+                                     ("talk.png", Rectangle(2548, 1270, w=100, h=400))]):
+            image = read("out.jpeg")
+            # image = crop(image, 675, 1500, 3000, 600)
+            image = crop(image, 400, 1700, 2800, 600)
+            image = filter_pixels_with_intensity(image, rgb_min=(240, 240, 240), rgb_max=(255, 255, 255))
+            image = get_only_white(image)
+            save(image, "txt.jpeg")
+            txt = ocr_image(image)
+            # display_images(image)
+            print(len(txt), len(txt) * 0.01)
+            if save_txt == txt:
+                # sleep(len(txt) * 0.03)
+                print("click")
+                pyautogui.moveTo(x=3750, y=400)
+                pyautogui.click(x=3750, y=400)
+            save_txt = txt
+            sleep(0.1)
+        else:
+            sleep(1)
+
+    # create_qrcode({"ee": 56, (1, 2, 3): "486"})
+    # print(decode_qrcode())
 
     # image_files = get_files_from_path(get_current_path() + "\\images\\", recursive=True)
-    image_files = ["images/spectrum.jpeg"]
-    images = list(map(lambda x: cv.cvtColor(cv.imread(x), cv.COLOR_BGR2RGB), image_files))
+    image_files = ["images/words1.jpeg"]
+    images = list(map(read, image_files))
 
     # images_modified = [fun(image) for image in images for fun in MODIFIERS_FUNCTION]
     # display_images_n_debug(images_modified, ocr=True)
@@ -486,7 +634,7 @@ if __name__ == '__main__':
     ocr_image(result)
 
     # # by intensity
-    high_colors = filter_pixels(image, rgb_min=(240, 240, 240), rgb_max=(255, 255, 255))
+    high_colors = filter_pixels_with_intensity(image, rgb_min=(240, 240, 240), rgb_max=(255, 255, 255))
     display_images(high_colors)
     ocr_image(high_colors)
 
