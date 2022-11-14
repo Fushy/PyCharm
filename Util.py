@@ -1,15 +1,19 @@
 import os
 import string
+import subprocess
 import sys
 from collections.abc import Iterable
 from datetime import timedelta, datetime
 from hashlib import blake2b
 from time import sleep
-from typing import Callable
+from typing import Callable, Container
 
+import sympy
 import pandas as pd
 import pyperclip
 from pandas import DataFrame
+from sympy import symbols, Eq
+from sympy.parsing.sympy_parser import parse_expr
 
 from Times import now
 
@@ -33,6 +37,7 @@ from Times import now
 # pip install termcolor
 # pip install gtts
 # pip install simpleaudio
+# pip install pyinstaller
 # pip install pyperclip
 # pip install mysql-connector-python
 # pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
@@ -42,14 +47,6 @@ from Times import now
 
 # from util_bot import SEED_PATH_1, SEED_PATH_2
 
-# def m(a, b):
-#     pyperclip.copy((a + b) / 2)
-#     return (a + b) / 2
-#
-#
-# def a(a):
-#     pyperclip.copy(a - 270)
-#     return a - 270
 
 COMMON_CHARS = (string.ascii_lowercase
                 + string.ascii_uppercase
@@ -57,9 +54,35 @@ COMMON_CHARS = (string.ascii_lowercase
                 + "\ !#$%&()-@^_`{}~+,.;=[]\n")  # do not change "\ " it disables space character on command line
 
 
+# utils ascii chars https://emojipedia.org/fr/
+# ⬛⬜
+# ♛♕♘♞♖♜♝♗
+
+def solve(equation):
+    """
+    2x => 2*x
+    2^x => Pow(2, x)
+    """
+    assert "=" in equation
+    left, right = map(parse_expr, equation.split("="))
+    eq = Eq(left, right)
+    return sympy.solve(eq)
+
+# solve("Pow(2, x)=2")
+# solve("2^(2*x+1)+2^(x+3)-10=0")
+
+# def subtitute_var(equation):
+#     x = symbols("x")
+#     y = symbols("y")
+#     return expr.subs(x, 2)
+
 def string_encoded_to_bytes(str_encoded_raw: str) -> bytes:
     """ '\x80\x04K\x05.' -> b'\x80\x04K\x05.'"""
     return bytes(bytearray(list(map(ord, str_encoded_raw))))
+
+
+def change_char(text, char, index):
+    return text[:index] + char + text[index + 1:]
 
 
 def restrict_num(x: float, _min: float, _max: float):
@@ -130,11 +153,10 @@ def get_os() -> str:
         raise NotImplementedError(f'Unsupported OS: "{platform.system()}"')
 
 
-def get_first_deeply_value(it: object):
-    obj_val = it
-    while isinstance(obj_val, Iterable):
-        obj_val = obj_val[0]
-    return obj_val
+def get_first_deeply_value(obj: object):
+    while isinstance(obj, Container) and type(obj) is not str:
+        obj = obj[0]
+    return obj
 
 
 def str_to_hashcode(text: str or list[str], len_hashcode=8, seed=1337, whitelist="") -> list[str] or str:
@@ -251,14 +273,24 @@ def repeat_function_binance(fun: Callable, interval_time: timedelta, debug=False
         sleep(interval_time.total_seconds())
 
 
-def action_on_clipboard_update(fun: Callable):
-    old_clipboard = ""
-    while True:
-        clipboard = pyperclip.paste()
-        if clipboard != old_clipboard:
-            fun(clipboard)
-        old_clipboard = clipboard
+def get_clipboard():
+    return pyperclip.paste()
+
+
+def update_clipboard(text):
+    return pyperclip.copy(text)
+
+
+def wait_clipboard_change():
+    clipboard = get_clipboard()
+    while clipboard == get_clipboard():
         sleep(0.5)
+
+
+def action_on_clipboard_update(fun: Callable):
+    while True:
+        wait_clipboard_change()
+        fun()
 
 
 def two_complement_representation(x: int):
@@ -274,6 +306,21 @@ def two_complement_representation_2(x: int):
 def two_complement_representation_3(x: int):
     from ctypes import c_uint8 as unsigned_byte
     return unsigned_byte(x).value
+
+
+def create_exe(filename):
+    cmd = "pyinstaller {} --onefile".format(filename)
+    os.system("cmd /k \"{}\"".format(cmd))
+
+
+def output(*args, log_file=None, end="\n"):
+    concat_args = " ".join([arg for arg in args]) + end
+    if log_file is None:
+        print(concat_args)
+    else:
+        file = open(log_file, "a+")
+        file.write(concat_args)
+        file.close()
 
 # if __name__ == '__main__':
 #     seed = int(str_to_hashcode(file_get_1st_line(SEED_PATH_1) + file_get_1st_line(SEED_PATH_2), whitelist=string.digits))

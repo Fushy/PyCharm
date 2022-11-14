@@ -579,10 +579,14 @@ little chat	petite conversation
 lively	animée
 lively	vif/animé/vivant
 loathe	détester/haïr
+children	enfants
+child	enfant
 loathe me	me déteste
 lone	seul
+lone stand	solitaire
 long way	long chemin
 look down	baisser les yeux
+Leap of faith	the act of believing in or accepting something outside the boundaries of reason
 look down their noses at us	nous regarde de haut
 look for another means	chercher un autre moyen
 looking for	à la recherche de
@@ -591,16 +595,20 @@ loom	métier a tisser/se profiler
 lose out	être perdant
 love at first sight	le coup de foudre
 luggage	bagage
+albeit	quoique/bien que
 lung	poumon
 lure	leurre
 lurk	se cacher
 lying	mensonge
 lying down	allongé
+haystack	botte de foin
 lying over	allongé sur
 made of	fait de
 made one hell	fait un enfer
 made one hell of a mess	fait un sacré gâchis
 make it a habit	en faire une habitude
+needle	aiguille
+endorse it	l'aprouver/le valider
 make up for them	les rattraper
 mankind	humanité/Homme
 many a	beaucoup de

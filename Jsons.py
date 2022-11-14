@@ -14,6 +14,7 @@ from Times import now, elapsed_minutes
 
 T = TypeVar("T")
 E = TypeVar("E")
+json_base = list[dict[T, E]]
 json_T = dict[T, E]
 
 
@@ -23,11 +24,11 @@ def to_correct_json(string) -> str:
     # "\\\\")
 
 
-def text_to_json(json_text: str) -> json_T:
+def text_to_json(json_text: str) -> json_base:
     return json_api.loads(to_correct_json(json_text))
 
 
-def url_to_json(url: str) -> Optional[json_T]:
+def url_to_json(url: str) -> Optional[json_base]:
     html_session = HTMLSession()
     try:
         start = now()
@@ -77,20 +78,22 @@ def is_json(txt):
         return False
 
 
-def json_to_json_ok(dictionaries: json_T,
-                    keys_aim: list[T],
-                    keys_start: list[T] = None,
-                    condition: Callable[[json_T], bool] = None,
-                    doublons=True) -> json_T:
+def json_base_to_json_ok(dictionaries: json_base | dict,
+                         keys_aim: list[T],
+                         keys_path_to_start: list[T] = None,
+                         condition: Callable[[json_T], bool] = None,
+                         doublons=True) -> json_T:
     """
     On remplace les indices de la liste de base en la transformant en un dictionnaire où
     les clefs seront les valeurs associés à la clef donné en paramètre des dictionnaires de la liste.
     Si il y a plusieurs keys, tous les champs doivent avoir le même pattern
     """
     result = {}
-    if keys_start is not None:
-        for key in keys_start:
+    if keys_path_to_start is not None:
+        for key in keys_path_to_start:
             dictionaries = dictionaries[key]
+    if type(dictionaries) is dict:
+        dictionaries = [dictionaries]
     for dictionary in dictionaries:
         key_cursor = dictionary
         for k in keys_aim[:-1]:
@@ -115,7 +118,7 @@ def url_to_json_ok(url: str,
     json = url_to_json(url)
     if json is None:
         return None
-    json_ok = json_to_json_ok(json, keys, keys_start, condition, doublons)
+    json_ok = json_base_to_json_ok(json, keys, keys_start, condition, doublons)
     if len(json_ok) == 0:
         raise ValueError("is not json")
     return json_ok
@@ -126,10 +129,10 @@ def text_to_json_ok(json_text: str,
                     keys_start: list[T] = None,
                     condition: Callable[[json_T], bool] = None,
                     doublons=True) -> json_T:
-    return json_to_json_ok(text_to_json(json_text), keys, keys_start, condition, doublons)
+    return json_base_to_json_ok(text_to_json(json_text), keys, keys_start, condition, doublons)
 
 
 if __name__ == '__main__':
     asset_amount = call_request_api(["https://wax.light-api.net/api"], "account", "wax", "b4nvi.wam")
-    asset_amount = json_to_json_ok(asset_amount, ["currency"], ["balances"])
+    asset_amount = json_base_to_json_ok(asset_amount, ["currency"], ["balances"])
     print(asset_amount)

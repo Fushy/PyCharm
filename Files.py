@@ -1,6 +1,8 @@
-import glob
 import os
+import shutil
 from typing import Callable, Optional
+
+import Introspection
 
 
 def is_existing(path: str) -> bool:
@@ -17,8 +19,13 @@ def is_file(path: str) -> bool:
     return os.path.isfile(path)
 
 
-def get_files_from_path(path: str, _filter: Callable[[str], bool] = None, recursive: bool = False) -> list[str]:
-    files = glob.glob(path + r"\**\*.*", recursive=recursive)
+def get_files_from_path(*paths: str, _filter: Callable[[str], bool] = None, recursive: bool = False) -> list[str]:
+    import glob
+    files = []
+    for path in paths:
+        files += glob.glob(path + r"\*.*")
+        if recursive:
+            files += glob.glob(path + r"\**\*.*", recursive=recursive)
     if _filter is not None:
         files = list(filter(_filter, files))
     return files
@@ -37,6 +44,18 @@ def get_first_line(file_name: str, encoding="utf-8") -> Optional[str]:
             return file.readline()
     except FileNotFoundError:
         return None
+
+
+def get_first_part(file_name):
+    return file_name[:file_name.rfind(os.sep) + 1]
+
+
+def get_last_part(file_name):
+    return file_name[file_name.rfind(os.sep) + 1:file_name.rfind(".")]
+
+
+def get_ext(file_name):
+    return file_name[file_name.rfind(".") + 1:]
 
 
 def get_lines(file_name: str, encoding="utf-8") -> Optional[list[str]]:
@@ -70,6 +89,10 @@ def get_current_abspath():
 def get_current_path():
     return os.getcwd()
 
+def get_project_path():
+    """current file dir - 1 """
+    return Introspection.frameinfo(2)["pathname"]
+
 
 def overwrite(file_name: str, value: str, encoding="utf-8", mode="w"):
     if "b" in mode:
@@ -94,6 +117,10 @@ def delete(file_name: str):
         os.remove(file_name)
     except FileNotFoundError:
         pass
+
+
+def move_to(file_name: str, dest: str):
+    shutil.move(file_name, dest)
 
 
 def concat_files(dest, *args):
@@ -132,9 +159,11 @@ def output(*args, log_file=None, end="\n"):
         append(log_file, concat_args)
 
 
-def p(*args, log_file=None, end="\n"):
-    output(args, log_file, end)
+def is_ascii(text):
+    return all(ord(char) < 128 for char in text)
 
+def run_file(file):
+    os.system('"' + file + '"')
 
 if __name__ == '__main__':
     # pre = "B:\\_Documents\\"

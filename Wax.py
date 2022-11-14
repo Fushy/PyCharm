@@ -3,7 +3,7 @@ from typing import Optional
 
 from Alert import say
 from Database import insert_or_update, get_column_names
-from Jsons import json_to_json_ok, call_request_api
+from Jsons import json_base_to_json_ok, call_request_api
 from Prices import db_get_prices, get_n_update_prices
 from Telegrams import message
 from Times import now
@@ -110,7 +110,7 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
         # if asset_amount is None:
         #     return
         # wax_amount = float(re_float.search(asset_amount["account"]["core_liquid_balance"]).group(1))
-        asset_amount = json_to_json_ok(asset_amount, ["currency"], ["balances"])
+        asset_amount = json_base_to_json_ok(asset_amount, ["currency"], ["balances"])
         asset_amount = {asset: float(infos["amount"]) for (asset, infos) in asset_amount.items()
                         if float(infos["amount"]) > 0 or asset == "WAX"}
         all_asset_amount.update(asset_amount)
@@ -172,7 +172,7 @@ def get_nfts(account: str,
                                                      "owner": account,
                                                      "limit": str(limit),
                                                      })
-    return json_to_json_ok(json, ["name"], ["data"])
+    return json_base_to_json_ok(json, ["name"], ["data"])
     # url = "{}?collection_name=farmersworld&template_id=260676&owner=b4nvi.wam&limit=1000&order=desc&sort=asset_id" \
     # .date_format(WAX_NFT_API_URL_ORDERS, )
 

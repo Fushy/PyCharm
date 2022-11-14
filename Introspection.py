@@ -1,10 +1,11 @@
 import inspect
 import os.path
+import sys
 from inspect import FrameInfo
 from typing import Optional
 
 
-def frameinfo(backtimes=0, debug=False):
+def frameinfo(backtimes=0, debug=False) -> Optional[dict]:
     frame = inspect.currentframe()
     try:
         for _ in range(backtimes):
@@ -43,9 +44,10 @@ def frameinfo(backtimes=0, debug=False):
             "local_args": local_args}
 
 
-def current_infos(backtimes=0):
-    print(frameinfo(backtimes))
-
+def check_frames():
+    for i in range(10):
+        print(i, frameinfo(i+1))
+    return
 
 def current_file():
     return inspect.currentframe().f_code.co_filename
@@ -66,27 +68,33 @@ def current_lines(start_depth=2, end_depth: Optional[int] = None):
     return lst
 
 
-def frameinfo_stack(stack=0, debug=False):
-    """ ne fonctionne pas dans les threads"""
-    frame: FrameInfo = inspect.stack()[stack]
-    pathname = frame.filename
-    sep = os.path.sep
-    if pathname.find(os.path.sep) == -1:
-        sep = "/"
-    if debug:
-        print("Current path:", pathname)
-        print("Current fun:", frame.function)
-        print("Current line:", frame.lineno)
-        print(os.path.sep, pathname.rfind(sep))
-        print(os.path.sep, pathname.rfind("."))
-    filename = pathname[pathname.rindex(sep) + 1:pathname.rindex(".")]
-    if debug:
-        print("Current file:", filename)
-    return {"filename": filename, "pathname": pathname, "function": frame.function, "lineno": frame.lineno}
+# def frameinfo_stack(stack=0, debug=False):
+#     """ ne fonctionne pas dans les threads"""
+#     frame: FrameInfo = inspect.stack()[stack]
+#     pathname = frame.filename
+#     sep = os.path.sep
+#     if pathname.find(os.path.sep) == -1:
+#         sep = "/"
+#     if debug:
+#         print("Current path:", pathname)
+#         print("Current fun:", frame.function)
+#         print("Current line:", frame.lineno)
+#         print(os.path.sep, pathname.rfind(sep))
+#         print(os.path.sep, pathname.rfind("."))
+#     filename = pathname[pathname.rindex(sep) + 1:pathname.rindex(".")]
+#     if debug:
+#         print("Current file:", filename)
+#     return {"filename": filename, "pathname": pathname, "function": frame.function, "lineno": frame.lineno}
+
+def p(*args):
+    text = " ".join([str(arg) for arg in args])
+    print(inspect.stack()[1].lineno, text[:500], file=sys.stderr, flush=True)
+    pass
 
 
 if __name__ == '__main__':
-    print(current_file())
-    print(current_lines())
-    print(current_infos())
-    print(frameinfo_stack())
+    p("blabla")
+    # print(current_file())
+    # print(current_lines())
+    # print(current_infos())
+    # print(frameinfo_stack())

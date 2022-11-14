@@ -1,3 +1,4 @@
+# old
 # import datetime
 # import glob
 # import json as json_api
@@ -327,7 +328,7 @@
 #     return sorted_dict(json_to_improve_dict(CLIENT.get_trade_fee(), key="symbol"),
 #                        key=lambda x: x[1]["makerCommission"])
 #
-#
+
 # def get_all_pair_price(offer=True) -> dict[str, dict[str, str]]:  # 2
 #     """ Retourne les prix actuel de toutes les paires.
 #     >>> get_all_pair_price()

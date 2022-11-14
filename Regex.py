@@ -2,19 +2,15 @@ import re
 from datetime import timedelta
 from typing import Optional
 
-int_regex = r"([-+]?[0-9]+([eE][-+]?[0-9]+)?)"
-float_regex = r"([-+]?[0-9,]*\.?[0-9,]+([eE][-+]?[0-9,]+)?)"
-re_time_hms = r"((([0-9]?[0-9]) *h *)?(([0-9]?[0-9]) *m *)?(([0-9]?[0-9]) *s *)?)"
-re_time_dot = r"((([0-9]?[0-9]) *: *)?(([0-9]?[0-9]) *: *)([0-9]?[0-9]))"
-alphanum_regex = r"([point-zA-Z0-9 +’'|#@_-]+)"
-alpha_regex = r"([point-zA-Z ]+)"
-
-re_int = re.compile(int_regex)
-re_float = re.compile(float_regex)
-re_time_hms = re.compile(re_time_hms)
-re_time_dot = re.compile(re_time_dot)
-re_alphanum = re.compile(alphanum_regex)
-re_alpha = re.compile(alpha_regex)
+re_decimal = re.compile(r"([-+]?[0-9]+)\.([0-9]+)")
+re_int = re.compile(r"([-+]?[0-9](_?[0-9])*)([eE][-+]?[0-9]+)?")
+re_float = re.compile(r"([-+]?[0-9](_?[0-9])*\.?[0-9](_?[0-9])+([eE][-+]?[0-9]+)?)")
+re_time_hms = re.compile(r"((([0-9]?[0-9]) *h *)?(([0-9]?[0-9]) *m *)?(([0-9]?[0-9]) *s *)?)")
+re_time_dot = re.compile(r"((([0-9]?[0-9]) *: *)?(([0-9]?[0-9]) *: *)([0-9]?[0-9]))")
+re_alphanum_char = re.compile(r"([a-zA-Z0-9]+)")
+re_num_char = re.compile(r"([0-9]+)")
+re_alpha_char = re.compile(r"([a-zA-Z]+)")
+re_html_marker = re.compile(r"(<.*?>)")
 
 
 def search_n_get_float(text: str) -> Optional[float]:
