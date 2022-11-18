@@ -89,6 +89,7 @@ def get_current_abspath():
 def get_current_path():
     return os.getcwd()
 
+
 def get_project_path():
     """current file dir - 1 """
     return Introspection.frameinfo(2)["pathname"]
@@ -162,8 +163,14 @@ def output(*args, log_file=None, end="\n"):
 def is_ascii(text):
     return all(ord(char) < 128 for char in text)
 
+
 def run_file(file):
     os.system('"' + file + '"')
+
+
+def run_cmd(cmd):
+    os.system('"' + cmd + '"')
+
 
 if __name__ == '__main__':
     # pre = "B:\\_Documents\\"

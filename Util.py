@@ -1,6 +1,5 @@
 import os
 import string
-import subprocess
 import sys
 from collections.abc import Iterable
 from datetime import timedelta, datetime
@@ -8,42 +7,44 @@ from hashlib import blake2b
 from time import sleep
 from typing import Callable, Container
 
-import sympy
 import pandas as pd
 import pyperclip
+import sympy
 from pandas import DataFrame
-from sympy import symbols, Eq
+from sympy import Eq
 from sympy.parsing.sympy_parser import parse_expr
 
+from Files import run_cmd
 from Times import now
 
-# https://developer.microsoft.com/fr-fr/microsoft-edge/tools/webdriver/
-# https://stackoverflow.com/questions/14684968/how-to-export-virtualenv
-# pip install --upgrade pip
-# pip install --upgrade setuptools
-# pip install --upgrade pip setuptools
-# pip install numpy
-# pip install wheel
-# pip install python-telegram-bot
-# pip install python-telegram-bot --upgrade
-# pip install python-telegram-bot
-# pip install ffmpeg-python
-# pip install pydub
-# pip install selenium
-# pip install msedge-selenium-tools
-# pip install requests-html
-# pip install http-request-randomizer
-# pip install screeninfo
-# pip install termcolor
-# pip install gtts
-# pip install simpleaudio
-# pip install pyinstaller
-# pip install pyperclip
-# pip install mysql-connector-python
-# pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
-# pip install simpleaudio   sinon la lecture avec gtts n'est pas possible https://visualstudio.microsoft.com/visual-cpp-build-tools/
-# if something is wrong
-# https://www.lfd.uci.edu/~gohlke/pythonlibs/
+# # https://developer.microsoft.com/fr-fr/microsoft-edge/tools/webdriver/
+# # https://stackoverflow.com/questions/14684968/how-to-export-virtualenv
+# # pip install --upgrade pip
+# # pip install --upgrade setuptools
+# # pip install --upgrade pip setuptools
+# # pip install --upgrade pip setuptools wheel
+# # pip install numpy
+# # pip install wheel
+# # pip install python-telegram-bot
+# # pip install python-telegram-bot --upgrade
+# # pip install python-telegram-bot
+# # pip install ffmpeg-python
+# # pip install pydub
+# # pip install selenium
+# # pip install msedge-selenium-tools
+# # pip install requests-html
+# # pip install http-request-randomizer
+# # pip install screeninfo
+# # pip install termcolor
+# # pip install gtts
+# # pip install pyinstaller
+# # pip install pyperclip
+# # pip install mysql-connector-python
+# # pip install simpleaudio
+# # pip install gtts  https://ffmpeg.org/download.html#build-windows http://blog.gregzaal.com/how-to-install-ffmpeg-on-windows/
+# # pip install simpleaudio   sinon la lecture avec gtts n'est pas possible (PermissionError: [Errno 13] Permission denied) https://visualstudio.microsoft.com/visual-cpp-build-tools/
+# # if something is wrong
+# # https://www.lfd.uci.edu/~gohlke/pythonlibs/
 
 # from util_bot import SEED_PATH_1, SEED_PATH_2
 
@@ -67,6 +68,7 @@ def solve(equation):
     left, right = map(parse_expr, equation.split("="))
     eq = Eq(left, right)
     return sympy.solve(eq)
+
 
 # solve("Pow(2, x)=2")
 # solve("2^(2*x+1)+2^(x+3)-10=0")
@@ -313,6 +315,24 @@ def create_exe(filename):
     os.system("cmd /k \"{}\"".format(cmd))
 
 
+def export_requirements(path_to_python_exe=None, output="requirements"):
+    path = "--python " + path_to_python_exe + " " if path_to_python_exe is not None else ""
+    cmd = "pip {}freeze > {}".format(path, output)
+    run_cmd(cmd)
+
+
+def install_requirements(path_to_python_exe=None, _input="requirements.txt"):
+    path = "--python " + path_to_python_exe + " " if path_to_python_exe is not None else ""
+    cmd = "pip {}install -r {}".format(path, _input)
+    run_cmd(cmd)
+
+
+def upgrade_requirements(path_to_python_exe=None, _input="requirements.txt"):
+    path = "--python " + path_to_python_exe + " " if path_to_python_exe is not None else ""
+    cmd = "pip {}install -r {} --upgrade".format(path, _input)
+    run_cmd(cmd)
+
+
 def output(*args, log_file=None, end="\n"):
     concat_args = " ".join([arg for arg in args]) + end
     if log_file is None:
@@ -322,17 +342,11 @@ def output(*args, log_file=None, end="\n"):
         file.write(concat_args)
         file.close()
 
-# if __name__ == '__main__':
-#     seed = int(str_to_hashcode(file_get_1st_line(SEED_PATH_1) + file_get_1st_line(SEED_PATH_2), whitelist=string.digits))
-#     a = ["b4nvi.wam",
-#          "pyyfu.wam",
-#          "progk.wam",
-#          "o.gvy.wam",
-#          "xvzwu.wam",
-#          "n11k2.c.wam",
-#          "jd1.2.c.wam",
-#          "g32ke.c.wam",
-#          "e33ke.c.wam",
-#          "oj3.e.c.wam"]
-#     print(a[0], str_to_hashcode(a[0], seed=seed))
-#     print(list(zip(a, str_to_hashcode(a, seed=seed))))
+
+if __name__ == '__main__':
+    # export_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
+    #                     r"B:\_Documents\Pycharm\Util\util_requirements.txt")
+    # install_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
+    #                      r"B:\_Documents\Pycharm\Util\util_requirements.txt")
+    upgrade_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
+                         r"B:\_Documents\Pycharm\Util\util_requirements.txt")

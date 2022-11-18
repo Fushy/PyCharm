@@ -74,7 +74,7 @@ def is_json(txt):
     try:
         json_api.loads(to_correct_json(txt))
         return True
-    except:
+    except ValueError:  # update
         return False
 
 
@@ -85,8 +85,8 @@ def json_base_to_json_ok(dictionaries: json_base | dict,
                          doublons=True) -> json_T:
     """
     On remplace les indices de la liste de base en la transformant en un dictionnaire où
-    les clefs seront les valeurs associés à la clef donné en paramètre des dictionnaires de la liste.
-    Si il y a plusieurs keys, tous les champs doivent avoir le même pattern
+    les clefs seront les valeurs associées à la clef donnée en paramètre des dictionnaires de la liste.
+    S'il y a plusieurs keys, tous les champs doivent avoir le même pattern
     """
     result = {}
     if keys_path_to_start is not None:

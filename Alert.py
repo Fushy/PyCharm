@@ -1,13 +1,9 @@
-import copy
 import os
-import string
 from hashlib import blake2b
 from math import log
 from pathlib import Path
-from random import random
 from time import sleep
 
-from faker import Faker
 from gtts import gTTS
 from pydub import AudioSegment, playback
 
@@ -15,7 +11,6 @@ import Classes
 import Threads
 from Files import is_existing, delete
 from Telegrams import message
-from rng import rng_letter
 
 
 def db_to_float(db, using_amplitude=True):
@@ -202,7 +197,7 @@ def notify_win(msg):
 
 
 if __name__ == '__main__':
-    # say("message", blocking=True)
+    say("message", blocking=True)
     # say("This is a long message !", blocking=True)
     # say("This is a long message !", speed_ratio=1.5, blocking=True)
-    alert("telegram message", after_sleep=0)
+    # alert("telegram message", after_sleep=0)

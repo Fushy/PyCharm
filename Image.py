@@ -1,17 +1,16 @@
 """ import cv2 on Pycharm
-PyCharm -> Settings -> Project -> Python Interpreter -> Gear symbol -> Show all -> folder tree -> +
-select the folder where the opencv package is located (ctrl+click on cv2) -> done
-https://www.delftstack.com/howto/python/python-color-spectrums/
-https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
+Resolve all "Cannot find reference 'xxx' in '__init__.py' under Pycharm":
+    PyCharm -> Settings -> Project -> Python Interpreter -> Python Interpreter: or Gear symbol -> Show all ->
+    tree folder -> +select the folder where the opencv package is located (ctrl+click on cv2) -> done
+    https://www.delftstack.com/howto/python/python-color-spectrums/
+    https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
 """
 import _pickle
 import copy
-import os
 import pickle
 import sys
 import threading
 import traceback
-from random import shuffle
 from time import sleep
 from typing import Optional, Callable, Union
 
@@ -19,26 +18,26 @@ import cv2 as cv
 import matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import mss.tools
+# import mss.tools
+# import pywhatkit
+# from mss import ScreenShotError
 import numpy as np
 import pyqrcode
 import pytesseract
-# import pywhatkit
 import win32con
 import win32gui
 import win32ui
 from matplotlib import image as mpimg
-from mss import ScreenShotError
 from pyzbar.pyzbar import decode
 from screeninfo import Monitor
 
 from Classes import Point, Rectangle
 from Colors import printc
-from Files import delete, overwrite, get_files_from_path, is_ascii, move_to, get_last_part, get_current_path
+from Files import delete, overwrite, get_files_from_path, is_ascii, move_to, get_current_path
+from Threads import exit_n_rerun
 from Threads import loop_run
 from Times import now, elapsed_seconds
 from Util import COMMON_CHARS, restrict_num, string_encoded_to_bytes
-from Threads import exit_n_rerun
 
 input_path = 'input.png'
 output_path = 'out.png'
@@ -79,35 +78,35 @@ def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpe
     # win32gui.DeleteObject(data_bit_map.GetHandle())
 
 
-def screenshot_mss(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg"):
-    x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
-    w = x1 - x0
-    h = y1 - y0
-    with mss.mss() as sct:
-        rect = {"left": x0, "top": y0, "width": w, "height": h}
-    try:
-        im = sct.grab(rect)
-        # mss.tools.to_png(im.rgb, im.size, output=dest)
-    except ScreenShotError:
-        pass
+# def screenshot_mss(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg"):
+#     x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
+#     w = x1 - x0
+#     h = y1 - y0
+#     with mss.mss() as sct:
+#         rect = {"left": x0, "top": y0, "width": w, "height": h}
+#     try:
+#         im = sct.grab(rect)
+#         # mss.tools.to_png(im.rgb, im.size, output=dest)
+#     except ScreenShotError:
+#         pass
 
 
-def screenshot_boxcutter(x0: float, y0: float, x1: float, y1: float, dest="out.png"):
-    assert "jpeg" not in dest
-    x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
-    options = "-c {},{},{},{} {}".format(x0, y0, x1, y1, dest)
-    os.system(r"A:\Programmes\AutoHotkey\Lib\boxcutter\boxcutter.exe " + options)
+# def screenshot_boxcutter(x0: float, y0: float, x1: float, y1: float, dest="out.png"):
+#     assert "jpeg" not in dest
+#     x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
+#     options = "-c {},{},{},{} {}".format(x0, y0, x1, y1, dest)
+#     os.system(r"A:\Programmes\AutoHotkey\Lib\boxcutter\boxcutter.exe " + options)
 
 
-def screenshot_monitor(monitor: Rectangle, display_scaling=100, dest="out.jpeg", delay=0, option="fastest"):
+def screenshot_monitor(monitor: Monitor | Rectangle, display_scaling=100, dest="out.jpeg", delay=0, option="fastest"):
     x0, y0, w, h = monitor.x0, monitor.y0, monitor.w, monitor.h
     w, h = map(lambda x: x * display_scaling / 100, (w, h))
     if option == "fastest":
         screenshot_fastest(x0, y0, x0 + w, y0 + h, dest)
-    elif option == "boxcutter":
-        screenshot_boxcutter(x0, y0, x0 + w, y0 + h, dest)
-    elif option == "mss":
-        screenshot_mss(x0, y0, x0 + w, y0 + h, dest)
+    # elif option == "boxcutter":
+    #     screenshot_boxcutter(x0, y0, x0 + w, y0 + h, dest)
+    # elif option == "mss":
+    #     screenshot_mss(x0, y0, x0 + w, y0 + h, dest)
     sleep(delay)
 
 
@@ -133,6 +132,7 @@ def create_with_color(shape: tuple[int, int, int], rgb: tuple[int, int, int] = (
 """##### Image modifiers #####"""
 
 
+# noinspection PyUnresolvedReferences
 def grayscale(image: np.array) -> np.array:
     return cv.cvtColor(image, cv.COLOR_RGB2GRAY)
 
@@ -419,8 +419,8 @@ def fill_images_array(images: list[np.array] | list[str],
             # image_np = cv.cvtColor(image, cv.COLOR_BGR2RGB)
             # if rgb_min is not None and rgb_max is not None:
             #     image_np = get_black_or_white_or_isolate(image, rgb_min, rgb_max)
-            # EVENT_DICT["arrays"][str(i)] = image_np
-            EVENT_DICT["arrays"][str(i)] = None
+            EVENT_DICT["arrays"][str(i)] = image
+            # EVENT_DICT["arrays"][str(i)] = None
     delete("temp.jpeg")
     return EVENT_DICT["arrays"]
 
@@ -438,11 +438,13 @@ def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
     plt, ax, fig = init_image_viewer(plt, full_screen)
     # plt, ax, fig = init_image_viewer(plt, False)
     while not EVENT_DICT["exit_display"]:
-        i = EVENT_DICT["i_display_images"]
+        i = EVENT_DICT["i_display_images"] % len(images)
         print(i, len(EVENT_DICT["arrays"]), images[i])
-        if EVENT_DICT["arrays"][images[i]] is None:
+        # if EVENT_DICT["arrays"][images[i]] is None:
+        if EVENT_DICT["arrays"][str(i)] is None:
             EVENT_DICT["arrays"][images[i]] = read(images[i], to_rgb=to_rgb)
-        display_image = EVENT_DICT["arrays"][images[i]]
+        # display_image = EVENT_DICT["arrays"][images[i]]
+        display_image = EVENT_DICT["arrays"][str(i)]
         if autorun > 0 and EVENT_DICT["."]:
             plt.cla()
             plt.imshow(display_image)
@@ -592,8 +594,8 @@ def create_qrcode(data: str | object, dest="out", scale=5) -> bool:
         print(traceback.format_exc(), file=sys.stderr)
         printc("The data is too big to be stored through a QRCode", background_color="red")
         return False
-    qrcode.png("{}.png".format(dest), scale=scale)
-    qrcode.svg("{}.svg".format(dest), scale=scale)
+    qrcode.png("images/{}.png".format(dest), scale=scale)
+    qrcode.svg("images/{}.svg".format(dest), scale=scale)
     return True
 
 
@@ -682,18 +684,18 @@ def image_search(image: Union[np.array, Rectangle],
 
 def _test_funs():
     create_qrcode({"ee": 56, (1, 2, 3): "486"})
-    print(decode_qrcode())
+    print(decode_qrcode("images/out.png"))
 
     image_files = ["images/words1.jpeg"]
-    images = list(map(read, image_files))
+    images = list(map(lambda x:read(x, to_rgb=True), image_files))
 
     image = images[0]
     # by color
     white_filter = get_only_white(image)
     yellow_filter = image_modifier(image, rgb_isolation_min=(0xFE, 0xC2, 0x00), variation=20)
     result = add(white_filter, yellow_filter)
-    display_images(result)
-    ocr_image(result)
+    display_images(image)
+    # ocr_image(result)
 
     # # by intensity
     high_colors = filter_pixels_with_intensity(image, rgb_min=(240, 240, 240), rgb_max=(255, 255, 255))

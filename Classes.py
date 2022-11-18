@@ -8,8 +8,6 @@ from typing import Callable, Optional
 from typing import Generic, Union
 from typing import TypeVar
 
-from screeninfo import Monitor
-
 from Times import now
 
 T = TypeVar("T")

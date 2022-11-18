@@ -191,3 +191,18 @@ def get_nft_price(collection_name: Optional[str] = None,
     infos = json["data"][0]
     return round(int(infos["price"]) / (10 ** int(infos["token_precision"])), infos["token_precision"])
 
+
+# if __name__ == '__main__':
+#     seed = int(str_to_hashcode(file_get_1st_line(SEED_PATH_1) + file_get_1st_line(SEED_PATH_2), whitelist=string.digits))
+#     a = ["b4nvi.wam",
+#          "pyyfu.wam",
+#          "progk.wam",
+#          "o.gvy.wam",
+#          "xvzwu.wam",
+#          "n11k2.c.wam",
+#          "jd1.2.c.wam",
+#          "g32ke.c.wam",
+#          "e33ke.c.wam",
+#          "oj3.e.c.wam"]
+#     print(a[0], str_to_hashcode(a[0], seed=seed))
+#     print(list(zip(a, str_to_hashcode(a, seed=seed))))

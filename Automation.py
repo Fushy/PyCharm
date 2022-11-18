@@ -4,7 +4,6 @@ import pyautogui
 import win32gui
 
 from Classes import Point
-from Times import now, elapsed_seconds
 
 
 def click(x: int | Point | None = None, y=None):
