@@ -11,6 +11,7 @@ import pickle
 import sys
 import threading
 import traceback
+from random import shuffle
 from time import sleep
 from typing import Optional, Callable, Union
 
@@ -28,16 +29,16 @@ import win32con
 import win32gui
 import win32ui
 from matplotlib import image as mpimg
+from numpy import ndarray
 from pyzbar.pyzbar import decode
 from screeninfo import Monitor
 
 from Classes import Point, Rectangle
 from Colors import printc
-from Files import delete, overwrite, get_files_from_path, is_ascii, move_to, get_current_path
-from Threads import exit_n_rerun
-from Threads import loop_run
+from Files import delete, overwrite, get_files_from_path, is_ascii, move_to, get_current_path, get_last_part
 from Times import now, elapsed_seconds
 from Util import COMMON_CHARS, restrict_num, string_encoded_to_bytes
+import Threads
 
 input_path = 'input.png'
 output_path = 'out.png'
@@ -72,7 +73,7 @@ def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpe
     except win32ui.error:
         print("err")
         print(traceback.format_exc(), file=sys.stderr)
-        exit_n_rerun()
+        Threads.exit_n_rerun()
         # return screenshot_fastest(x0, y0, x1, y1, dest)
     # win32gui.ReleaseDC(hwnd, w_dc)
     # win32gui.DeleteObject(data_bit_map.GetHandle())
@@ -120,7 +121,7 @@ def screenshot_loop(monitor: Monitor, display_scaling=100):
         # save(check_auto, "auto.jpeg")
         delete("locked_loop")
 
-    loop_run(loop, sleep_after_execution=0.5)
+    Threads.loop_run(loop, sleep_after_execution=0.5)
 
 
 def create_with_color(shape: tuple[int, int, int], rgb: tuple[int, int, int] = (0, 0, 0)) -> np.array:
@@ -425,6 +426,26 @@ def fill_images_array(images: list[np.array] | list[str],
     return EVENT_DICT["arrays"]
 
 
+def retire_black_bar(np_image: ndarray):
+    x0 = None
+    x1 = None
+    for nd_array in np_image:
+        if nd_array.max() == 0:
+            continue
+        i = next(x[0] for x in enumerate(nd_array) if (0, 0, 0) not in x[1])
+        j = next(x[0] for x in enumerate(nd_array[::-1]) if (0, 0, 0) not in x[1])
+        x0 = min(x0 if x0 else i, i)
+        x1 = min(x1 if x1 else i, j)
+    w = np_image.shape[1]
+    new_shape = (np_image.shape[0], w - x0 - x1, np_image.shape[2])
+    image = np.zeros(new_shape, np.uint8)
+    for i in range(len(np_image)):
+        image[i] = np_image[i][x0:w-x1]
+    return image
+
+
+
+
 def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
                    full_screen: bool = False,
                    to_rgb: bool = False,
@@ -436,17 +457,22 @@ def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
     EVENT_DICT["."] = autorun > 0
     fill_images_array(images)
     plt, ax, fig = init_image_viewer(plt, full_screen)
-    # plt, ax, fig = init_image_viewer(plt, False)
     while not EVENT_DICT["exit_display"]:
         i = EVENT_DICT["i_display_images"] % len(images)
         print(i, len(EVENT_DICT["arrays"]), images[i])
-        # if EVENT_DICT["arrays"][images[i]] is None:
-        if EVENT_DICT["arrays"][str(i)] is None:
-            EVENT_DICT["arrays"][images[i]] = read(images[i], to_rgb=to_rgb)
-        # display_image = EVENT_DICT["arrays"][images[i]]
-        display_image = EVENT_DICT["arrays"][str(i)]
+        if str(i) in EVENT_DICT["arrays"]:
+            if EVENT_DICT["arrays"][str(i)] is None:
+                EVENT_DICT["arrays"][str(i)] = read(images[i], to_rgb=to_rgb)
+            display_image = EVENT_DICT["arrays"][str(i)]
+        elif type(images[i]) is str and images[i] in EVENT_DICT["arrays"]:
+            if EVENT_DICT["arrays"][images[i]] is None:
+                EVENT_DICT["arrays"][images[i]] = read(images[i], to_rgb=to_rgb)
+            display_image = EVENT_DICT["arrays"][images[i]]
+        else:
+            display_image = EVENT_DICT["arrays"][str(i)]
         if autorun > 0 and EVENT_DICT["."]:
             plt.cla()
+            # noinspection PyUnboundLocalVariable
             plt.imshow(display_image)
             start = now()
             i_event = EVENT_DICT["i_event"]
@@ -478,14 +504,16 @@ def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
                 pass
         if EVENT_DICT["save"]:
             EVENT_DICT["save"] = False
-            ext = images[i].rfind(".")
-            file_name = "C:\\Users\\Alexis\\Pictures\\Nouveau dossier\\" + images[i][
-                                                                           images[i].rfind("\\") + 1:ext] + "_" + \
-                        images[i][ext:]
+            image_name = images[i]
+            if type(image_name) is not str:
+                file_name = "Images\\out.png"
+            else:
+                ext = images[i].rfind(".")
+                file_name = "C:\\Users\\Alexis\\Pictures\\Nouveau dossier\\" + images[i][
+                                                                               images[i].rfind("\\") + 1:ext] + "_" + \
+                            images[i][ext:]
             plt.savefig(file_name, bbox_inches=0, pad_inches=0.1)
-            # img = read(file_name)
-            # img = remove(img)
-            # save(img, file_name)
+            save(retire_black_bar(read(file_name)), file_name)
     reset_event_vars()
     plt.close()
 
@@ -683,8 +711,8 @@ def image_search(image: Union[np.array, Rectangle],
 
 
 def _test_funs():
-    create_qrcode({"ee": 56, (1, 2, 3): "486"})
-    print(decode_qrcode("images/out.png"))
+    # create_qrcode({"ee": 56, (1, 2, 3): "486"})
+    # print(decode_qrcode("images/out.png"))
 
     image_files = ["images/words1.jpeg"]
     images = list(map(lambda x:read(x, to_rgb=True), image_files))
@@ -708,5 +736,7 @@ def _test_funs():
 
 if __name__ == '__main__':
     _test_funs()
-    image_files = get_files_from_path(get_current_path() + "\\images\\", recursive=True)
+    # image_files = get_files_from_path(get_current_path() + "\\images\\", recursive=True)
+    # display_images(image_files)
+    display_images(["images/out.png"])
     exit()

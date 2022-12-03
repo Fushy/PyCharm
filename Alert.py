@@ -1,4 +1,5 @@
 import os
+import sys
 from hashlib import blake2b
 from math import log
 from pathlib import Path
@@ -8,10 +9,9 @@ from gtts import gTTS
 from pydub import AudioSegment, playback
 
 import Classes
-import Threads
 from Files import is_existing, delete
-from Telegrams import message
-
+import Telegrams
+import Threads
 
 def db_to_float(db, using_amplitude=True):
     """
@@ -44,7 +44,7 @@ def ratio_to_db(ratio, val2=None, using_amplitude=True):
 
 
 def little_sound(duration_seconds=0.4, volume=0.1):
-    sound = say("Hello world !", speed=2, just_create_file=True)
+    sound = say("Hello world !", speed=2, just_create_file=True, debug=False)
     sound = cut_sound(sound, cut_percent=40)
     sound = change_volume(sound, volume)
     sound = change_duration(sound, duration_seconds)
@@ -112,13 +112,16 @@ def change_volume(sound: str | AudioSegment, volume_ratio: float = 0):
 
 
 def play_sound(sound: str | AudioSegment, blocking=False) -> AudioSegment:
+    def aux():
+        playback.play(sound)
+
     try:
         if type(sound) is str:
             sound = AudioSegment.from_mp3(sound)
         if blocking:
-            playback.play(sound)
+            aux()
         else:
-            Threads.run(playback.play(sound))
+            Threads.run(aux)
         return sound
     except FileNotFoundError:
         print(FileNotFoundError)
@@ -130,13 +133,31 @@ def save(sound: AudioSegment, dest: str):
     sound.export(dest, format="mp3")
 
 
-def read(filename: str):
-    return AudioSegment.from_mp3(filename)
+def read(filename: str, extension="mp3"):
+    if extension == "mp3":
+        return AudioSegment.from_mp3(filename)
+    elif extension == "mp4":
+        return AudioSegment.from_file(filename, format="mp4")
+    return AudioSegment.from_file(filename)
+
+
+# def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
+#         volume_ratio: float = 1, just_create_file=False, save_sound=True):
+#     file_call = "python {} \"{}\" {} {} {} {} {} {} {}".format(frameinfo(1)["pathname_complete"], speech,
+#                                                                filename, lang, speed,
+#                                                                blocking,
+#                                                                volume_ratio, just_create_file,
+#                                                                save_sound)
+#     # def aux():
+#     run_file(file_call)
+#     # Threads.run(aux)
 
 
 def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
-        volume_ratio: float = 1, just_create_file=False, save_sound=True) -> AudioSegment:
-    # print("say", speech)
+        volume_ratio: float = 1, just_create_file=False, save_sound=True, debug=True):
+    """ In PyCharm, if endless execution through this call, go to "Edit configuration" and mark "Emulate terminal in output console" """
+    if debug:
+        print("say", speech)
     if filename is None:
         encode = blake2b(digest_size=32)
         # encode = blake2b(digest_size=4)
@@ -149,7 +170,9 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
     if not os.path.exists(pathname):
         Path(pathname).mkdir(parents=True, exist_ok=True)
     filename = pathname + filename + ".mp3"
-    if not is_existing(filename):
+    if is_existing(filename):
+        sound = read(filename, "mp3")
+    else:
         tts = gTTS(text=speech, lang=lang, slow=False)
         tts.save(filename)
         sound = read(filename)
@@ -157,11 +180,9 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
         sound = change_volume(sound, volume_ratio=volume_ratio)
         if save_sound:
             save(sound, filename)
-    else:
-        sound = AudioSegment.from_mp3(filename)
-    if not just_create_file:
-        return play_sound(sound, blocking)
-    return sound
+    if just_create_file:
+        return sound
+    return play_sound(sound, blocking)
 
 
 def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
@@ -180,12 +201,12 @@ def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
 def alert(msg: str, level: int = 1, after_sleep: float = 30):
     debug_change = True
     if level == 1:
-        message(msg)
+        Telegrams.message(msg)
         say(msg)
         sleep(after_sleep)
     elif level == 3:
         while debug_change:
-            message(msg)
+            Telegrams.message(msg)
             say(msg)
             sleep(after_sleep)
 
@@ -197,7 +218,16 @@ def notify_win(msg):
 
 
 if __name__ == '__main__':
-    say("message", blocking=True)
-    # say("This is a long message !", blocking=True)
-    # say("This is a long message !", speed_ratio=1.5, blocking=True)
-    # alert("telegram message", after_sleep=0)
+    print(sys.argv[1:])
+    speech = sys.argv[1]
+    filename = None if sys.argv[2] else sys.argv[2]
+    lang = sys.argv[3]
+    speed = float(sys.argv[4])
+    blocking = False if sys.argv[5] == "False" else sys.argv[5]
+    volume_ratio = float(sys.argv[6])
+    just_create_file = False if sys.argv[7] == "False" else sys.argv[7]
+    save_sound = True if sys.argv[8] == "True" else sys.argv[8]
+    say(speech, filename, lang, speed, blocking, volume_ratio, just_create_file, save_sound)
+    # _say("This is a long message !", blocking=True)
+    # _say("This is a long message !", speed_ratio=1.5, blocking=True)
+    alert("telegram message", after_sleep=0)

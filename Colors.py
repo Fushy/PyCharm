@@ -18,12 +18,14 @@ def printc(text: str, color="green", background_color=None, attributes: list[str
     if details:
         details_txt = "[{} {}]".format(color, attributes)
     if not is_running_under_basic_console():
-        print(colored("{} {}".format(text, details_txt),
+        txt = colored("{} {}".format(text, details_txt),
                       color,
                       "on_" + background_color if background_color is not None else None,
-                      attrs=attributes))
+                      attrs=attributes)
     else:
-        print("{} {}".format(text, details_txt))
+        txt ="{} {}".format(text, details_txt)
+    print(txt)
+
 
 
 def print_all_colors():

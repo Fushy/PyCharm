@@ -5,8 +5,8 @@ from telegram import Update, Bot
 from telegram.error import NetworkError
 from telegram.ext import CallbackContext, Updater, Dispatcher, MessageHandler, Filters, CommandHandler
 
-import Threads
 from Files import get_first_line
+import Threads
 
 USER_IDS = {"ale": 1522961892}
 

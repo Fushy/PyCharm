@@ -1,22 +1,32 @@
-import os
-import subprocess
+import sys
 import threading
+import traceback
 from threading import Thread
 from time import sleep
 from typing import Callable
 
+import Alert
 from Files import is_existing, delete, run_file
 from Introspection import frameinfo
 
 delete("locked")
 
 
-def run(fun: Callable, wait_a_bit: float = 0.1, **kwargs) -> threading:
+def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, **kwargs) -> threading:
     """
     run(playback.play, kwargs={"audio_segment": sound})
     run(playback.play(sound))
     """
-    thread = Thread(target=fun, kwargs=kwargs)
+
+    def aux():
+        try:
+            fun()
+        except Exception as e:
+            print(traceback.format_exc(), file=sys.stderr)
+            print("|", e, "|", file=sys.stderr)
+            Alert.alert(str(fun))
+
+    thread = Thread(target=aux if alert_if_error else fun, kwargs=kwargs)
     thread.start()
     sleep(wait_a_bit)
     return thread
@@ -56,6 +66,7 @@ def exit_n_rerun():
     # file = r"B:\_Documents\Pycharm\Util\test.ahk"
     run_file(file)
     exit()
+
 
 def rerun_if_stop(fun):
     while True:

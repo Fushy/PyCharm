@@ -7,9 +7,10 @@ import pytz
 TIMEDELTA_ZERO = timedelta(seconds=0)
 
 
-def now(utc=False, offset_h=0, offset_m=0, offset_s=0) -> datetime:
+def now(utc=False, offset_h=0, offset_m=0, offset_s=0, with_ms=True) -> datetime:
     offset = timedelta(hours=offset_h, minutes=offset_m, seconds=offset_s)
-    return offset + (datetime.utcnow() if utc else datetime.now())
+    datetime_now = offset + (datetime.utcnow() if utc else datetime.now())
+    return datetime_now if with_ms else datetime_now.replace(microsecond=0)
 
 
 def to_datetime(obj, pattern: str = "%Y/%m/%d %H:%M:%S") -> datetime:

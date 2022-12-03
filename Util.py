@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from datetime import timedelta, datetime
 from hashlib import blake2b
 from time import sleep
-from typing import Callable, Container
+from typing import Callable, Container, Any
 
 import pandas as pd
 import pyperclip
@@ -107,9 +107,11 @@ def init_dataframe(columns) -> DataFrame:
     return pd.DataFrame({}.fromkeys(columns, []))
 
 
-def add_rows_dataframe(df: DataFrame, rows: dict) -> DataFrame:
+def add_rows_dataframe(df: DataFrame, rows: dict[str, list[Any] | Any], bottom=True) -> DataFrame:
     """ slow, add all lines at the same time"""
-    return pd.concat([df, pd.DataFrame(rows)]).drop_duplicates().reset_index(drop=True)
+    rows = {k: [v] if type(v) not in (list, tuple) else v for (k, v) in rows.items()}
+    concat_df = [df, pd.DataFrame(rows)][::1 if bottom else -1]
+    return pd.concat(concat_df).drop_duplicates().reset_index(drop=True)
 
 
 def add_columns_dataframe(df: DataFrame, columns: dict) -> DataFrame:
