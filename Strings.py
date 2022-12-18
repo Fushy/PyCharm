@@ -17,3 +17,6 @@ def get_between_text(text, start: str, end: str) -> str:
 def get_between_text_with_regex(text, start: str, end: str, regex) -> Optional[Match[str]]:
     find_text = get_between_text(text, start, end)
     return regex.search(find_text)
+
+def float_to_spacefloat(n) -> str:
+    return "{:,}".format(n).replace(',', ' ')

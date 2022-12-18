@@ -19,12 +19,13 @@ def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, **kwargs) -
     """
 
     def aux():
+        # noinspection PyBroadException
         try:
             fun()
-        except Exception as e:
+        except Exception:
             print(traceback.format_exc(), file=sys.stderr)
-            print("|", e, "|", file=sys.stderr)
-            Alert.alert(str(fun))
+            print(fun.__name__, file=sys.stderr)
+            Alert.alert(str(fun.__name__), level=3)
 
     thread = Thread(target=aux if alert_if_error else fun, kwargs=kwargs)
     thread.start()

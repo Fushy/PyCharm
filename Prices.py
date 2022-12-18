@@ -6,7 +6,7 @@ from requests.exceptions import ChunkedEncodingError
 from requests_html import HTMLSession
 
 from Colors import printc
-from Database import get_column_names, insert_or_update
+from Database import get_db_column_names, insert_or_update
 from Jsons import url_to_json_ok
 from Regex import re_float
 from Strings import get_beetween_text_with_regex, quote
@@ -16,10 +16,10 @@ from utils import is_iter
 
 def db_update_price(result, devise, gateway):
     connection = sqlite3.connect(r"../Bank.db")
-    columns = get_column_names(connection, "PRICES")
+    columns = get_db_column_names(connection, "PRICES")
     if len(columns) == 0:
         connection = sqlite3.connect(r"Bank.db")
-        columns = get_column_names(connection, "PRICES")
+        columns = get_db_column_names(connection, "PRICES")
     instant = now()
     for asset, price in result.items():
         print("update " + asset)

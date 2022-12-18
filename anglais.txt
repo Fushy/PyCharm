@@ -1,3 +1,14 @@
+Explain what is the MACD Indicator and how to use it efficiently
+Explain with examples how the datetime python library works and how to use it
+Explain differences between Python langage and Go langage. Then, wich one is the fastest in terme of speed and readability
+What do you think about (non recent thing)
+Ecrit moi un article en plusieurs chapitre sur l'or
+Write an acrostic poem about the status of ChatGPT.
+Fait moi un résumé le plus simple et court possible pour chaque chapitre
+
+Correct this to standard English: x
+Translate this from English to French: x
+
 'd	would/should/could/did
 's grasp	la poigne/l'emprise
 For me	is to express its effect on you or it's benefit for you, whether it's good or bad/expresses ideal suitability of the object for your use
@@ -11,6 +22,7 @@ abhor	abhorrer/détester/horreur
 accounts	compte/comptabilité
 accustom	habituer/accoutumer
 acknowledge	reconnaître
+Christmas gift	cadeau de noel
 acquaint	familiariser
 across	de l'autre côté
 afford	permettre
@@ -598,6 +610,7 @@ luggage	bagage
 albeit	quoique/bien que
 lung	poumon
 lure	leurre
+underlying	sous-jacent
 lurk	se cacher
 lying	mensonge
 lying down	allongé

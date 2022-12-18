@@ -42,6 +42,7 @@ def get_timer_as_timedelta(timer: str) -> Optional[timedelta]:
 
 
 if __name__ == '__main__':
+    print(search_n_get_float("ezr d1.548s srze"))
     print(re_time_hms.search("01h 02m 03s").groups())
     print(re_time_hms.search("01h 03s").groups())
     print(re_time_hms.search("01m 03s").groups())
