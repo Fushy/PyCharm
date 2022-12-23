@@ -78,6 +78,20 @@ def solve(equation):
 #     y = symbols("y")
 #     return expr.subs(x, 2)
 
+def format_float(value, precision):
+    return None if value is None else "{:.{}f}".format(value, precision)
+
+
+def get_min(a, b, default_value=None):
+    default_value = default_value or float('-inf')
+    return min(a or default_value, b or default_value)
+
+
+def get_max(a, b, default_value=None):
+    default_value = default_value or float('inf')
+    return max(a or default_value, b or default_value)
+
+
 def string_encoded_to_bytes(str_encoded_raw: str) -> bytes:
     """ '\x80\x04K\x05.' -> b'\x80\x04K\x05.'"""
     return bytes(bytearray(list(map(ord, str_encoded_raw))))

@@ -168,7 +168,8 @@ def print_model_infos(model: Model):
     list(map(print, (database, table_name, primary_key, fields)))
 
 
-def fill_rows(model, columns_order: list[str], values: list[list[object]] | list[object], debug=True, raise_if_exist=False):
+def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[object]] | list[object], debug=True,
+              raise_if_exist=False):
     """ columns_order's names have to be the field name and not the column name. |columns_order|=|values| """
     if type(values[0]) != list:
         values = [values]
@@ -202,5 +203,6 @@ def column_order_copy_past_into_code(model, columns_order):
                 break
     print(n)
 
-def get_fields_name_fields_value(model) -> dict:
+
+def get_dict_fields_name_n_value(model) -> dict:
     return model.__dict__["__data__"]

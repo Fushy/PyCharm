@@ -1,10 +1,11 @@
 Explain what is the MACD Indicator and how to use it efficiently
 Explain with examples how the datetime python library works and how to use it
-Explain differences between Python langage and Go langage. Then, wich one is the fastest in terme of speed and readability
+Explain me what is 
 What do you think about (non recent thing)
 Ecrit moi un article en plusieurs chapitre sur l'or
 Write an acrostic poem about the status of ChatGPT.
 Fait moi un résumé le plus simple et court possible pour chaque chapitre
+Soit une {phrase}, tu dois me renvoyer {la négation de la phrase}. Répond avec "Prêt !"
 
 Correct this to standard English: x
 Translate this from English to French: x
