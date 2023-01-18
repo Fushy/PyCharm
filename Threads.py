@@ -12,7 +12,7 @@ from Introspection import frameinfo
 delete("locked")
 
 
-def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, **kwargs) -> threading:
+def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, print_if_error=True, **kwargs) -> threading:
     """
     run(playback.play, kwargs={"audio_segment": sound})
     run(playback.play(sound))
@@ -23,11 +23,13 @@ def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, **kwargs) -
         try:
             fun()
         except Exception:
-            print(traceback.format_exc(), file=sys.stderr)
-            print(fun.__name__, file=sys.stderr)
-            Alert.alert(str(fun.__name__), level=3)
+            if print_if_error:
+                print(traceback.format_exc(), file=sys.stderr)
+                print(fun.__name__, file=sys.stderr)
+            if alert_if_error:
+                Alert.alert(str(fun.__name__), level=3)
 
-    thread = Thread(target=aux if alert_if_error else fun, kwargs=kwargs)
+    thread = Thread(target=aux, kwargs=kwargs)
     thread.start()
     sleep(wait_a_bit)
     return thread

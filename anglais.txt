@@ -17,11 +17,30 @@ To me	is to express opinion/expresses your opinion of perfection in the object.
 a friend of mine's	un de mes amis
 a hold of	une prise de
 a screw loose	une case en moins
+tin	étain
+shed tears	verser des larmes/pleurer
+deity	divinité
+cross it out	rayez-le
+sew	coudre
+went sour	a mal tourné
+pan	poêle
+tear down	démolir/détruire
+geezer	mec/viellard
+a good for nothing	un bon a rien
+sinful	coupage/pécheur
+stab	poignarder/planter
+entrust	confier
+dreadful	terrible/épouvantable
+hideous	hideux/affreux
 a while yet	un certain temps encore/encore un moment
 a whole bunch	tout un tas
 abhor	abhorrer/détester/horreur
 accounts	compte/comptabilité
 accustom	habituer/accoutumer
+strive	aspirer/s'éfforcer/lutter
+handover	transfert
+hindrance	obstacle/entrave/frein
+worthy of notice	digne d'attention
 acknowledge	reconnaître
 Christmas gift	cadeau de noel
 acquaint	familiariser
@@ -137,6 +156,8 @@ bloodstain	tâche de sang
 bloom	fleur/fleurir
 blow them up	les faire exploser
 blown	soufflé
+hard boiled	dur à cuire
+boil	bouillir
 boiling	ébullition
 boldness	audace
 bonds	obligations
@@ -415,9 +436,12 @@ greenhorn	jeunot
 grief	douleur
 grudge	rancune
 gut	intestin/instinct/tripes
+snot	morve
 ham	jambon
 handle	manipuler
 handwriting	écriture
+hanging	suspendu
+hang pendre
 hang around	traîner
 hang in	accrocher dans
 hang in a balance	est en équilibre
@@ -885,9 +909,15 @@ steer clear	evitez
 stepped up	intensifié
 stick around	rester dans les parages
 stifling	étouffant
+clumsy	maladroit
 stir	remuer
+shrimp	crevette
+hatch	trappe
+siblings	freres et soeurs
+assumption	supposition/hypothèse
 stirring up	remuant
 stirring up trouble	semer le trouble
+evenly	uniformément/également
 stock goods	marchandises en stock
 stopwatch	chronomètre
 straight away	tout de suite
@@ -1098,6 +1128,7 @@ ward	quartier/pupille/service (hopitale)
 warehouse	entrepôt
 was but	n'était que
 watchman	gardien/veilleur/guetteur
+add up to	ajouter à
 watermelon	pasteque
 we are off to	nous partons pour
 we have been through	nous avons traversé
@@ -1108,6 +1139,7 @@ we pile up	on empile
 we planned	nous avons prévu
 we will lose out	nous allons y perdre
 we wouldn't	nous ne ferions pas
+dwell	habiter/demeurer
 weak-willed	faible de volonté
 wearing	porter
 were sights to behold	étaient des sites à voir
@@ -1128,6 +1160,9 @@ whether	si/que/qu'il s'agisse
 whether the trees	si les arbres
 whether to go	s'il faut aller
 which is why	c'est pourquoi
+drowsy	somnolent
+the bride	la mariée
+bustling	animé/vif/vivant
 which leads to	qui mène à
 whirl	tourbillon/tourbilloner
 whistling	sifflant
@@ -1137,10 +1172,12 @@ who can't get to	qui ne peut pas se rendre
 who can't get to work	qui ne peut pas se rendre au travail
 who can't get to work up	qui ne peut pas se mettre au travail
 who can't get to work up top	qui ne peut pas travailler en haut
+blend	mélange
 who's not as strong as whom ?	qui n'est pas aussi fort que qui ?
 whole	tout/ensemble/totality/entier/complet-
 whuppin	coup de fouet
 why bother putting	pourquoi s'embêter à mettre
+custody	garde/détention
 why bother putting them outside	pourquoi s'embêter à les mettre dehors
 why would the likes of a cat	pourquoi les goûts d'un chat
 wicked	malfaisant/mauvais/méchant
@@ -1148,13 +1185,22 @@ wide selection	large selection
 widens	s'élargit
 widespread	généralité/répendu
 wield	manier
+hoodlum	voyou
+draw	dessiner/attirer/tirer
+come off	se détacher
+curtain	rideau
 wielder	porteur
+clad	habillé
+cuffed	menotté
+handcuffs	menott
 wild mountain fruit	fruits sauvages des montagnes
 wilderness	région sauvage
+cunning	rusé
 will	volonté
 willing	prêt
 wind currents	courants de vent
 windborne	porté par le vent
+will be pleased	se fera un plaisir
 windwail	gémissement
 winery	vignoble
 wink	clin d'oeil

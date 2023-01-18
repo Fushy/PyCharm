@@ -83,12 +83,12 @@ def format_float(value, precision):
 
 
 def get_min(a, b, default_value=None):
-    default_value = default_value or float('-inf')
+    default_value = default_value or float('inf')
     return min(a or default_value, b or default_value)
 
 
 def get_max(a, b, default_value=None):
-    default_value = default_value or float('inf')
+    default_value = default_value or float('-inf')
     return max(a or default_value, b or default_value)
 
 

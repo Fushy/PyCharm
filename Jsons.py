@@ -1,5 +1,6 @@
 import json
 import json as json_api
+import re
 import socket
 from time import sleep
 from typing import TypeVar, Callable, Optional
@@ -19,7 +20,9 @@ json_T = dict[T, E]
 
 
 def to_correct_json(string) -> str:
-    return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"")
+    json_string = str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("\n", "").replace("\\", "")
+    json_string = re.sub(r"(?<=[{,])(.*?):('?)(.*?)('?)(((?<='),)|},{|})", r""""\1":"\3"\5""", json_string)
+    return json_string
     # return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"").replace("\\",
     # "\\\\")
 

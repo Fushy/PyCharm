@@ -1,11 +1,17 @@
+import inspect
 import os
+import re
 import sys
 import traceback
+from collections import defaultdict
+from random import shuffle
 from time import sleep
 from typing import Callable, Optional, Iterable
 
+from playhouse.sqlite_ext import JSONField
 from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
+from peewee import Model, CharField, FloatField, SqliteDatabase
 from selenium.common.exceptions import SessionNotCreatedException, InvalidSessionIdException, TimeoutException, \
     WebDriverException, InvalidArgumentException, NoSuchWindowException, StaleElementReferenceException, \
     MoveTargetOutOfBoundsException, ElementNotInteractableException, ElementClickInterceptedException
@@ -17,9 +23,12 @@ from urllib3.exceptions import NewConnectionError, MaxRetryError
 import Alert
 import Classes
 from Colors import printc
+from Database import fill_rows, add_missing_columns_to_db, get_column_name, get_columns_name_model
 from Enum import FIRST
 from Files import get_first_line
 from Introspection import current_lines, frameinfo
+from Jsons import json_base_to_json_ok
+from Regex import re_float
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text, get_element_class
 from Sysconf import screen_rect, SCREENS
 from Times import now, elapsed_seconds
@@ -259,16 +268,18 @@ class Browser:
                 self.windows_url.append("")
         self.windows_url[window_num - 1] = url
 
-    def new_page(self, url, window_num=None, tries=0):
+    def new_page(self, url, window_num=None, tries=0, debug=False):
         try:
             if tries >= 5:
                 return False
             if window_num is None:
                 window_num = self.get_current_window_num()
-            self.print(("new_page", url, window_num, tries), False)
+            if debug:
+                self.print(("new_page", url, window_num, tries), False)
             self.goto(window_num)
             self.driver.get(url)
-            print("\t", "loaded new_page", self)
+            if debug:
+                print("\t", "loaded new_page", self)
             self.update_windows_url()
         except InvalidSessionIdException as err:
             print("\terror new_page InvalidSessionIdException", str(err))
@@ -775,10 +786,44 @@ class Browser:
                 return False
         return True
 
+# def scrap_google_search():
+#     countries = [(country.name.split(",")[0] if "," in country.name else country.name) for country in
+#                  pycountry.countries]
+#     # countries = ["Liberia"]
+#     shuffle(countries)
+#     wanted_values = ["capital", "population", "area", "timezones"]
+#     for country in countries:
+#         for values in wanted_values:
+#             url = "https://www.google.com/search?q=" + values + " of " + country
+#             browser.new_page(url, debug=False)
+#             a = browser.get_element("/html/body/div[3]/div[3]/span/div/div/div/div[3]/div[1]/button[2]/div",
+#                                     debug=False)
+#             if a is not None:
+#                 a.click()
+#             result = browser.get_text("", "HwtpBd", browser.driver.find_element_by_class_name, debug=False)
+#             if result is None or len(result) <= 3:
+#                 result = browser.get_text("", "ayqGOc", browser.driver.find_element_by_class_name, debug=False)
+#             if result is None or len(result) <= 3:
+#                 result = browser.get_element("vk_gy", browser.driver.find_element_by_class_name, debug=False)
+#                 if result is not None:
+#                     result = result.find_elements_by_tag_name("div")[1].text
+#                     result = result[result.find("\""):].replace("\"", "")
+#             if result is not None:
+#                 is_date_present = re.compile(r"[(][0-9]{4}[)]").search(result)
+#                 if is_date_present:
+#                     result = result.replace(is_date_present.group(), "")
+#                 result = result.replace(" ", "").replace(" ", "")
+#                 is_float_present = re_float.search(result)
+#                 if is_float_present:
+#                     is_float_present = is_float_present.group().replace(",", ".")
+#                     result = float(is_float_present) * (1000000 if "million" in result else 1)
+#                 countries_dict[country][values] = result
+#             print(country, "-", result)
+#     input("end")
 
 if __name__ == '__main__':
-    s = screen_rect(1000)
+    # s = screen_rect(1000)
     browser = Browser()
-    # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
+    # # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
     browser.new_page('https://www.expressvpn.com/what-is-my-ip')
-    input()
+
