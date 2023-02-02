@@ -158,31 +158,31 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
     """ In PyCharm, if endless execution through this call, go to "Edit configuration" and mark "Emulate terminal in output console" """
     if debug:
         print("say", speech)
-    if filename is None:
-        encode = blake2b(digest_size=32)
-        # encode = blake2b(digest_size=4)
-        encode.update(bytes(speech.encode('utf-8')))
-        encode.update(bytes(lang.encode('utf-8')))
-        encode.update(bytes(str(speed).encode('utf-8')))
-        encode.update(bytes(str(volume_ratio).encode('utf-8')))
-        filename = encode.hexdigest()
-    pathname = "{}{}Sounds{}mp3{}".format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep)
-    if not os.path.exists(pathname):
-        Path(pathname).mkdir(parents=True, exist_ok=True)
-    filename = pathname + filename + ".mp3"
-    if is_existing(filename):
-        sound = read(filename, "mp3")
-    else:
-        tts = gTTS(text=speech, lang=lang, slow=False)
-        tts.save(filename)
-        sound = read(filename)
-        sound = speedup(sound, speed_ratio=speed)
-        sound = change_volume(sound, volume_ratio=volume_ratio)
-        if save_sound:
-            save(sound, filename)
-    if just_create_file:
-        return sound
-    return play_sound(sound, blocking)
+    # if filename is None:
+    #     encode = blake2b(digest_size=32)
+    #     # encode = blake2b(digest_size=4)
+    #     encode.update(bytes(speech.encode('utf-8')))
+    #     encode.update(bytes(lang.encode('utf-8')))
+    #     encode.update(bytes(str(speed).encode('utf-8')))
+    #     encode.update(bytes(str(volume_ratio).encode('utf-8')))
+    #     filename = encode.hexdigest()
+    # pathname = "{}{}Sounds{}mp3{}".format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep)
+    # if not os.path.exists(pathname):
+    #     Path(pathname).mkdir(parents=True, exist_ok=True)
+    # filename = pathname + filename + ".mp3"
+    # if is_existing(filename):
+    #     sound = read(filename, "mp3")
+    # else:
+    #     tts = gTTS(text=speech, lang=lang, slow=False)
+    #     tts.save(filename)
+    #     sound = read(filename)
+    #     sound = speedup(sound, speed_ratio=speed)
+    #     sound = change_volume(sound, volume_ratio=volume_ratio)
+    #     if save_sound:
+    #         save(sound, filename)
+    # if just_create_file:
+    #     return sound
+    # return play_sound(sound, blocking)
 
 
 def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
@@ -198,9 +198,11 @@ def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
         Threads.run(fun)
 
 
-def alert(msg: str, level: int = 1, after_sleep: float = 30):
+def alert(msg: str, level: int = 0, after_sleep: float = 30):
     debug_change = True
-    if level == 1:
+    if level == 0:
+        Threads.run(lambda: Telegrams.message(msg))
+    elif level == 1:
         Telegrams.message(msg)
         say(msg)
         sleep(after_sleep)

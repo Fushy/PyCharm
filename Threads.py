@@ -7,12 +7,13 @@ from typing import Callable
 
 import Alert
 from Files import is_existing, delete, run_file
-from Introspection import frameinfo
+from Introspection import check_frames, frameinfo
 
 delete("locked")
 
 
-def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, print_if_error=True, **kwargs) -> threading:
+def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, print_if_error=True, name=None, **kwargs) \
+        -> threading:
     """
     run(playback.play, kwargs={"audio_segment": sound})
     run(playback.play(sound))
@@ -30,6 +31,7 @@ def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, print_if_er
                 Alert.alert(str(fun.__name__), level=3)
 
     thread = Thread(target=aux, kwargs=kwargs)
+    thread.name = name if name else fun.__name__
     thread.start()
     sleep(wait_a_bit)
     return thread

@@ -23,7 +23,7 @@ from urllib3.exceptions import NewConnectionError, MaxRetryError
 import Alert
 import Classes
 from Colors import printc
-from Database import fill_rows, add_missing_columns_to_db, get_column_name, get_columns_name_model
+from Database import fill_rows, add_missing_columns_to_db, get_table_name, get_columns_name_model
 from Enum import FIRST
 from Files import get_first_line
 from Introspection import current_lines, frameinfo
@@ -823,7 +823,8 @@ class Browser:
 
 if __name__ == '__main__':
     # s = screen_rect(1000)
-    browser = Browser()
+    browser = Browser(profile=r"B:\_Documents\Profile")
     # # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
-    browser.new_page('https://www.expressvpn.com/what-is-my-ip')
+    # browser.new_page('https://www.expressvpn.com/what-is-my-ip')
+    browser.new_page('https://fr.tradingview.com/chart/dOWkigGU/?symbol=BINANCE%3ABTCBUSD')
 

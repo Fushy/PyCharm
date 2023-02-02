@@ -125,7 +125,8 @@ def add_rows_dataframe(df: DataFrame, rows: dict[str, list[Any] | Any], bottom=T
     """ slow, add all lines at the same time"""
     rows = {k: [v] if type(v) not in (list, tuple) else v for (k, v) in rows.items()}
     concat_df = [df, pd.DataFrame(rows)][::1 if bottom else -1]
-    return pd.concat(concat_df).drop_duplicates().reset_index(drop=True)
+    # return pd.concat(concat_df).drop_duplicates().reset_index(drop=True)
+    return pd.concat(concat_df).reset_index(drop=True)
 
 
 def add_columns_dataframe(df: DataFrame, columns: dict) -> DataFrame:

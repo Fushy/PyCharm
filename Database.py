@@ -98,6 +98,14 @@ def add_column(connection, table_name, column_name, data_type, debug=False):
     except OperationalError:
         pass
 
+def remove_column(connection, table_name, column_name, debug=False):
+    try:
+        if debug:
+            print(r"ALTER TABLE {} DROP COLUMN {}".format(table_name, column_name))
+        connection.execute("ALTER TABLE {} DROP COLUMN {}".format(table_name, column_name))
+    except OperationalError:
+        pass
+
 
 def insert_or_update(connection, table_name, values, columns,
                      primary_keys: list = None, primary_key_values: list = None,
@@ -151,13 +159,13 @@ def get_database(model: Model):
 
 
 # noinspection PyProtectedMember
-def get_column_name(model: Type[Model]):
+def get_table_name(model: Type[Model]):
     return model._meta.table_name
 
 
 def get_columns_name_db(model: Type[Model]):
     return [tuples[1] for tuples in
-            get_database(model).cursor().execute("PRAGMA table_info({})".format(get_column_name(model)))]
+            get_database(model).cursor().execute("PRAGMA table_info({})".format(get_table_name(model)))]
 
 
 def get_columns_name_model(model: Type[Model]):
