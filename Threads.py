@@ -12,17 +12,18 @@ from Introspection import check_frames, frameinfo
 delete("locked")
 
 
-def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, print_if_error=True, name=None, **kwargs) \
+def run(fun: Callable, arguments: dict = {}, wait_a_bit: float = 0.0, alert_if_error=True, print_if_error=True,
+        name=None) \
         -> threading:
     """
-    run(playback.play, kwargs={"audio_segment": sound})
+    run(playback.play, arguments={"audio_segment": sound})
     run(playback.play(sound))
     """
 
     def aux():
         # noinspection PyBroadException
         try:
-            fun()
+            fun(**arguments)
         except Exception:
             if print_if_error:
                 print(traceback.format_exc(), file=sys.stderr)
@@ -30,7 +31,7 @@ def run(fun: Callable, wait_a_bit: float = 0.0, alert_if_error=True, print_if_er
             if alert_if_error:
                 Alert.alert(str(fun.__name__), level=3)
 
-    thread = Thread(target=aux, kwargs=kwargs)
+    thread = Thread(target=aux)
     thread.name = name if name else fun.__name__
     thread.start()
     sleep(wait_a_bit)

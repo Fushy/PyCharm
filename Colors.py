@@ -1,11 +1,9 @@
-from time import sleep
 from typing import Iterable
 
-from colorama import init, Fore, Style, Back
+from colorama import Back, Fore, Style, init
+from seaborn import crayons
 from termcolor import colored
 
-from Threads import run
-from Times import now, elapsed_seconds
 from Util import is_running_under_basic_console
 from denombrement import permutations_all_size
 
@@ -33,7 +31,7 @@ def printt(text: str, color="green", background_color=None, attributes: Iterable
     print(txt)
 
 
-def printc(text: str, color="green", background_color=None, attributes: Iterable[str] = ["NORMAL"]):
+def printco(text: str, color="green", background_color=None, attributes: Iterable[str] = ["NORMAL"]):
     """ It works on PyCharm but bug after 250 use with the option "Emulate terminal in output control"
         color & background_color: red, green, yellow, blue, magenta, cyan, white, black
         attributes: bold, dark, underline, blink, reverse, concealed
@@ -41,7 +39,17 @@ def printc(text: str, color="green", background_color=None, attributes: Iterable
     """
     init()
     style = getattr(Fore, color.upper()) if color != "" else ""
-    if background_color is not None:
+    if background_color:
+        style += getattr(Back, background_color.upper())
+    if attributes:
+        " ".join([getattr(Style, attribute.upper()) for attribute in attributes])
+    print("{}{}{}".format(style, text, Style.RESET_ALL))
+
+
+def printc(text: str, color="green", background_color=None, attributes: Iterable[str] = ["NORMAL"]):
+    init()
+    style = getattr(Fore, color.upper()) if color != "" else ""
+    if background_color:
         style += getattr(Back, background_color.upper())
     if attributes:
         " ".join([getattr(Style, attribute.upper()) for attribute in attributes])
@@ -57,9 +65,9 @@ def print_all_colors_colorama():
             printc("Hello, World! color={} attributes={}".format(c, attribute), color=c, attributes=[attribute])
             printc("Hello, World! color={} background=black attributes={}".format(c, attribute),
                    color=c, background_color="black", attributes=[attribute])
-            # for background in colors:
-            #     printc("Hello, World! color={} background={} attributes={}".format(c, background, attribute),
-            #            color=c, background_color=background, attributes=[attribute])
+            for background in colors:
+                printc("Hello, World! color={} background={} attributes={}".format(c, background, attribute),
+                       color=c, background_color=background, attributes=[attribute])
 
 
 def print_all_colors_termcolor():
@@ -80,10 +88,14 @@ def print_all_colors_termcolor():
                 #            attributes=perms)
 
 
+def printcr(text: str, color="green"):
+    import crayons
+    # from crayons import *  # NOQA
+    print(getattr(crayons, color.lower())(text))
+
+
 if __name__ == '__main__':
+    printcr("eee", "white")
     # while True:
-    print_all_colors_colorama()
-    # print_all_colors_termcolor()
-    # printc("Hello, World!", color="black", background_color="blue", attributes=["dim"])
-    # printc("Hello, World!", color="black")
-    # input()
+    #     printc("Hello, World! color={} attributes={}", color="red")
+    #     # print_all_colors_colorama()

@@ -9,7 +9,8 @@ from gtts import gTTS
 from pydub import AudioSegment, playback
 
 import Classes
-from Files import is_existing, delete
+from Files import is_existing, delete, run_file
+from Introspection import check_frames, frameinfo
 import Telegrams
 import Threads
 
@@ -154,35 +155,41 @@ def read(filename: str, extension="mp3"):
 
 
 def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
-        volume_ratio: float = 1, just_create_file=False, save_sound=True, debug=True):
-    """ In PyCharm, if endless execution through this call, go to "Edit configuration" and mark "Emulate terminal in output console" """
+        volume_ratio: float = 0.5, just_create_file=False, save_sound=True, other_process=False, debug=True):
+    """ TODO bug quand il y a des read input, faire la manipulation ci-dessous ou executer ce fichier en lui envoyant les arguments
+    In PyCharm, if endless execution through this call, go to "Edit configuration" and mark "Emulate terminal in output console" """
     if debug:
         print("say", speech)
-    # if filename is None:
-    #     encode = blake2b(digest_size=32)
-    #     # encode = blake2b(digest_size=4)
-    #     encode.update(bytes(speech.encode('utf-8')))
-    #     encode.update(bytes(lang.encode('utf-8')))
-    #     encode.update(bytes(str(speed).encode('utf-8')))
-    #     encode.update(bytes(str(volume_ratio).encode('utf-8')))
-    #     filename = encode.hexdigest()
-    # pathname = "{}{}Sounds{}mp3{}".format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep)
-    # if not os.path.exists(pathname):
-    #     Path(pathname).mkdir(parents=True, exist_ok=True)
-    # filename = pathname + filename + ".mp3"
-    # if is_existing(filename):
-    #     sound = read(filename, "mp3")
-    # else:
-    #     tts = gTTS(text=speech, lang=lang, slow=False)
-    #     tts.save(filename)
-    #     sound = read(filename)
-    #     sound = speedup(sound, speed_ratio=speed)
-    #     sound = change_volume(sound, volume_ratio=volume_ratio)
-    #     if save_sound:
-    #         save(sound, filename)
-    # if just_create_file:
-    #     return sound
-    # return play_sound(sound, blocking)
+    if other_process:
+        fi = frameinfo(1)
+        # print(".", fi["pathname"] + r"alert.cmd " + " ".join(map(str, list(fi["local_args"].items())[:10])))
+        Threads.run(run_file, {"file": fi["pathname"] + r"alert.cmd " + " ".join(map(str, list(fi["local_args"].values())[:10]))})
+        return
+    if filename is None:
+        encode = blake2b(digest_size=32)
+        # encode = blake2b(digest_size=4)
+        encode.update(bytes(speech.encode('utf-8')))
+        encode.update(bytes(lang.encode('utf-8')))
+        encode.update(bytes(str(speed).encode('utf-8')))
+        encode.update(bytes(str(volume_ratio).encode('utf-8')))
+        filename = encode.hexdigest()
+    pathname = "{}{}Sounds{}mp3{}".format(os.getcwd(), os.path.sep, os.path.sep, os.path.sep)
+    if not os.path.exists(pathname):
+        Path(pathname).mkdir(parents=True, exist_ok=True)
+    filename = pathname + filename + ".mp3"
+    if is_existing(filename):
+        sound = read(filename, "mp3")
+    else:
+        tts = gTTS(text=speech, lang=lang, slow=False)
+        tts.save(filename)
+        sound = read(filename)
+        sound = speedup(sound, speed_ratio=speed)
+        sound = change_volume(sound, volume_ratio=volume_ratio)
+        if save_sound:
+            save(sound, filename)
+    if just_create_file:
+        return sound
+    return play_sound(sound, blocking)
 
 
 def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
@@ -220,16 +227,22 @@ def notify_win(msg):
 
 
 if __name__ == '__main__':
-    print(sys.argv[1:])
-    speech = sys.argv[1]
-    filename = None if sys.argv[2] else sys.argv[2]
-    lang = sys.argv[3]
-    speed = float(sys.argv[4])
-    blocking = False if sys.argv[5] == "False" else sys.argv[5]
-    volume_ratio = float(sys.argv[6])
-    just_create_file = False if sys.argv[7] == "False" else sys.argv[7]
-    save_sound = True if sys.argv[8] == "True" else sys.argv[8]
-    say(speech, filename, lang, speed, blocking, volume_ratio, just_create_file, save_sound)
+    # speech None en 1 False 1 False True False True
+    if len(sys.argv) > 1:
+        args = sys.argv[-9:]
+        speech = " ".join(sys.argv[1:-9])
+        print(sys.argv, args, speech)
+        filename = None if args[0] else args[0]
+        lang = args[1]
+        speed = float(args[2])
+        blocking = False if args[3] == "False" else args[3]
+        volume_ratio = float(args[4])
+        just_create_file = False if args[5] == "False" else args[5]
+        save_sound = True if args[6] == "True" else args[6]
+        say(speech, filename, lang, speed, blocking, volume_ratio, just_create_file, save_sound, False, False)
+    else:
+        # print("b", sys.argv)
+        say("speech")
     # _say("This is a long message !", blocking=True)
     # _say("This is a long message !", speed_ratio=1.5, blocking=True)
-    alert("telegram message", after_sleep=0)
+    # alert("telegram message", after_sleep=0)
