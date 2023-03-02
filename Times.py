@@ -58,6 +58,7 @@ def timeit_trivial(fun: Callable, *args, n=100):
     print(fun.__name__, execution_time, "ms")
     return execution_time
 
+
 def timeit(fun: Callable, *args) -> float:
     """ Estimate an execution time of a function as milliseconds
     Repeat at least 10 times the function to memoize it into the cache then
@@ -90,6 +91,7 @@ def timeit(fun: Callable, *args) -> float:
     print(fun.__name__, execution_time, "ms", len(times_estimate) * repeat_call_min, "called")
     return execution_time
 
+
 def time_it(func):
     def wrapper(*args, **kwargs):
         start = time.perf_counter()
@@ -97,6 +99,7 @@ def time_it(func):
         end = time.perf_counter()
         print(f"{func.__name__} took {end - start:.6f} seconds")
         return result
+
     return wrapper
 
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import shutil
 from typing import Callable, Optional
@@ -36,6 +37,10 @@ def get_current_files(_filter: Callable[[str], bool] = None, recursive: bool = F
     files = get_files_from_path(cwd, _filter=_filter, recursive=recursive)
     # print("Files in %r: %s" % (cwd, files))
     return files
+
+
+def get_last_modified_datetime(file):
+    return datetime.fromtimestamp(os.path.getmtime(file))
 
 
 def get_first_line(file_name: str, encoding="utf-8") -> Optional[str]:
@@ -116,7 +121,7 @@ def append(file_name: str, value: str, encoding="utf-8", mode="a+"):
 def delete(file_name: str):
     try:
         os.remove(file_name)
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError):
         pass
 
 

@@ -134,8 +134,16 @@ def text_to_json_ok(json_text: str,
                     doublons=True) -> json_T:
     return json_base_to_json_ok(text_to_json(json_text), keys, keys_start, condition, doublons)
 
+def obj_to_json(obj: object) -> json_T:
+    return json.dumps(obj)
+
+def json_to_obj(js: json_T) -> object:
+    return json.loads(js)
+
 
 if __name__ == '__main__':
-    asset_amount = call_request_api(["https://wax.light-api.net/api"], "account", "wax", "b4nvi.wam")
-    asset_amount = json_base_to_json_ok(asset_amount, ["currency"], ["balances"])
-    print(asset_amount)
+    # asset_amount = call_request_api(["https://wax.light-api.net/api"], "account", "wax", "b4nvi.wam")
+    # asset_amount = json_base_to_json_ok(asset_amount, ["currency"], ["balances"])
+    # print(asset_amount)
+    print(obj_to_json((dict(zip(("a", "b", "c"), (1, 2, 3))))))
+

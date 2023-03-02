@@ -1,4 +1,5 @@
 from collections import defaultdict
+from time import sleep
 from typing import Callable
 
 from pynput.keyboard import KeyCode, Listener, Key
@@ -20,12 +21,15 @@ Ctrl = {"": Key.ctrl_l,
         "v": "'\\x16'",
         "alt+a": 65,
         "alt+v": 86,
-}
+        "alt+h": 72,
+        "alt+j": 74,
+        }
 
 
 def on_release(key: KeyCode):
     global _debug
-    PYNPUT_DICT["keys_pressed"][key] = False
+    key_v = key_value(key)
+    PYNPUT_DICT["keys_pressed"][key_v] = False
     if _debug:
         try:
             if key.char is None:
@@ -36,28 +40,35 @@ def on_release(key: KeyCode):
                 print("Key released: vk |{}|".format(key.vk), end=" ")
             except AttributeError:
                 print(key, "|no char no vk| released", end=" ")
+        print(list(PYNPUT_DICT["keys_pressed"].items()))
         print()
 
 
-def on_press(key: KeyCode):
-    """ NumpadDot par defaut qui control le flux du thread """
+def on_press(key: KeyCode, debug=None):
+    """ NumpadDot par defaut qui control le flux du thread
+        Quand on parse les keys, toujours mettre les key.vk en fin de if statement """
     global _debug
-    if key in PYNPUT_DICT["keys_pressed"] and PYNPUT_DICT["keys_pressed"][key]:
+    if debug is not None:
+        _debug = debug
+    key_v = key_value(key)
+    if key_v in PYNPUT_DICT["keys_pressed"] and PYNPUT_DICT["keys_pressed"][key_v]:
         return
-    PYNPUT_DICT["keys_pressed"][key] = True
+    PYNPUT_DICT["keys_pressed"][key_v] = True
     try:
-        first_value(key, debug=True)
         # if key == Key.pause:
         if key.vk == NumpadDot:
             PYNPUT_DICT["run"] = not PYNPUT_DICT["run"]
     except AttributeError:
         pass
+    if _debug:
+        print(list(PYNPUT_DICT["keys_pressed"].items()))
 
 
 def on_press_skeleton(key: KeyCode):
-    if key in PYNPUT_DICT["keys_pressed"] and PYNPUT_DICT["keys_pressed"][key]:
+    key_v = key_value(key)
+    if key_v in PYNPUT_DICT["keys_pressed"] and PYNPUT_DICT["keys_pressed"][key_v]:
         return
-    PYNPUT_DICT["keys_pressed"][key] = True
+    PYNPUT_DICT["keys_pressed"][key_v] = True
 
 
 def launch_keyboard_listener(press: Callable = on_press, release: Callable = on_release, debug=False, blocking=False):
@@ -68,6 +79,7 @@ def launch_keyboard_listener(press: Callable = on_press, release: Callable = on_
     if blocking:
         listener.join()
 
+
 def eq(key: KeyCode, value: KeyCode | str | int):
     try:
         if key == value or key.char == value or key.vk == value:
@@ -76,7 +88,8 @@ def eq(key: KeyCode, value: KeyCode | str | int):
         pass
     return False
 
-def first_value(key: KeyCode, debug=False) -> str | int | KeyCode:
+
+def key_value(key: KeyCode, debug=False) -> str | int | KeyCode:
     try:
         if key.char is None:
             raise AttributeError
@@ -95,4 +108,8 @@ def first_value(key: KeyCode, debug=False) -> str | int | KeyCode:
 
 
 if __name__ == '__main__':
-    launch_keyboard_listener(debug=True, blocking=True)
+    print("start")
+    # launch_keyboard_listener(debug=True, blocking=True)
+    launch_keyboard_listener(debug=True, blocking=False)
+    while True:
+        sleep(0.1)

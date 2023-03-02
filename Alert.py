@@ -135,11 +135,14 @@ def save(sound: AudioSegment, dest: str):
 
 
 def read(filename: str, extension="mp3"):
-    if extension == "mp3":
-        return AudioSegment.from_mp3(filename)
-    elif extension == "mp4":
-        return AudioSegment.from_file(filename, format="mp4")
-    return AudioSegment.from_file(filename)
+    try:
+        if extension == "mp3":
+            return AudioSegment.from_mp3(filename)
+        elif extension == "mp4":
+            return AudioSegment.from_file(filename, format="mp4")
+        return AudioSegment.from_file(filename)
+    except pydub.exceptions.CouldntDecodeError:
+        return None
 
 
 # def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
@@ -231,7 +234,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         args = sys.argv[-9:]
         speech = " ".join(sys.argv[1:-9])
-        print(sys.argv, args, speech)
+        # print(sys.argv, args, speech)
         filename = None if args[0] else args[0]
         lang = args[1]
         speed = float(args[2])

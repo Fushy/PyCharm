@@ -1,7 +1,6 @@
 from typing import Iterable
 
 from colorama import Back, Fore, Style, init
-from seaborn import crayons
 from termcolor import colored
 
 from Util import is_running_under_basic_console

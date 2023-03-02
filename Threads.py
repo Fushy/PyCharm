@@ -78,3 +78,7 @@ def rerun_if_stop(fun):
     while True:
         thread = run(fun)
         thread.join()
+
+
+def get_current_thread():
+    return threading.current_thread()
