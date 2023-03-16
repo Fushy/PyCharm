@@ -29,7 +29,7 @@ def run(fun: Callable, arguments: dict = {}, wait_a_bit: float = 0.0, alert_if_e
                 print(traceback.format_exc(), file=sys.stderr)
                 print(fun.__name__, file=sys.stderr)
             if alert_if_error:
-                Alert.alert(str(fun.__name__), level=3)
+                Alert.alert(str(fun.__name__) + "\n\n" + traceback.format_exc(), level=3)
 
     thread = Thread(target=aux)
     thread.name = name if name else fun.__name__

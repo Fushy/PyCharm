@@ -128,6 +128,7 @@ def add_rows_dataframe(df: DataFrame, rows: dict[str, list | tuple], bottom=True
     # return pd.concat(concat_df).drop_duplicates().reset_index(drop=True)
     return pd.concat(concat_df).reset_index(drop=True)
 
+# todo add dataframe
 
 def add_columns_dataframe(df: DataFrame, columns: dict) -> DataFrame:
     """ slow, add all lines at the same time"""

@@ -8,6 +8,7 @@ from typing import Type
 
 import mysql.connector
 from mysql.connector import MySQLConnection
+import pandas as pd
 from peewee import Model, IntegrityError, FloatField, IntegerField, CharField, DateTimeField
 from playhouse.migrate import migrate, SchemaMigrator
 from playhouse.sqlite_ext import JSONField
@@ -191,10 +192,13 @@ def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[ob
     columns_order = [column for column in columns_order if column in db_columns]
     rows = [dict(zip(columns_order,
                      [value[i] for i in range(len(value)) if i not in indexes_to_ignore])) for value in values]
-    # try:
-    q = model.insert_many(rows)
-    q.execute()
-    # except IntegrityError:
+    try:
+        q = model.insert_many(rows)
+        q.execute()
+    except Exception as e:
+        print(traceback.format_exc())
+        sleep(1)
+        return fill_rows(model, columns_order, values, debug, raise_if_exist)
     #     if raise_if_exist:
     #         traceback.format_exc()
     #         raise IntegrityError
@@ -251,3 +255,6 @@ def column_order_copy_past_into_code(model, columns_order):
 
 def get_dict_fields_name_n_value(model) -> dict:
     return model.__dict__["__data__"]
+
+def get_dataframe(model):
+    return pd.DataFrame(list(model.select().dicts()))

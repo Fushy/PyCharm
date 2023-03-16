@@ -47,7 +47,7 @@ def message(msg: str, to: str = None):
         bot.send_message(chat_id=id_to, text=msg)
     except NetworkError:
         sleep(5)
-        return message(msg, to)
+    #     return message(msg, to)
     updater.start_polling()
 
     def aux():
