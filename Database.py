@@ -99,6 +99,7 @@ def add_column(connection, table_name, column_name, data_type, debug=False):
     except OperationalError:
         pass
 
+
 def remove_column(connection, table_name, column_name, debug=False):
     try:
         if debug:
@@ -193,9 +194,9 @@ def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[ob
     rows = [dict(zip(columns_order,
                      [value[i] for i in range(len(value)) if i not in indexes_to_ignore])) for value in values]
     try:
-        q = model.insert_many(rows)
+        q = model.insert_many(rows)  # q = model.select().where(model.executed == 0)
         q.execute()
-    except Exception as e:
+    except Exception as e:  # todo peewee.OperationalError: database is locked
         print(traceback.format_exc())
         sleep(1)
         return fill_rows(model, columns_order, values, debug, raise_if_exist)
@@ -225,6 +226,7 @@ def type_to_field(val: object):
     else:
         raise TypeError(str(python_type) + " is not defined")
 
+
 def add_missing_columns_to_db(model, columns, columns_type=[str | list], debug=True):
     """ Update the Model code after adding columns """
     database = get_database(model)
@@ -239,6 +241,7 @@ def add_missing_columns_to_db(model, columns, columns_type=[str | list], debug=T
         migrate(migrator.add_column(column_name, column, type_to_field(column_type)))
     if debug:
         run_cmd("python -m pwiz -e sqlite {}".format(get_database(model)))
+
 
 def column_order_copy_past_into_code(model, columns_order):
     model_code_lines = list(inspect.getsource(model).replace("    ", "").split("\n"))
@@ -255,6 +258,7 @@ def column_order_copy_past_into_code(model, columns_order):
 
 def get_dict_fields_name_n_value(model) -> dict:
     return model.__dict__["__data__"]
+
 
 def get_dataframe(model):
     return pd.DataFrame(list(model.select().dicts()))

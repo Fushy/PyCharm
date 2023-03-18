@@ -44,6 +44,8 @@ def frameinfo(backtimes=0, debug=False) -> Optional[dict]:
             "function_name": function_name,
             "local_args": local_args}
 
+def print_line(extra=""):
+    print(frameinfo(2)["line"], ":", extra)
 
 def check_frames():
     for i in range(10):
