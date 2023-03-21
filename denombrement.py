@@ -23,14 +23,15 @@ def cardinal_p_uplets(n: int, p: int) -> int:
     return n ** p
 
 
-def p_uplets(E, p=None) -> list[tuple]:
+def p_uplets(E, p=None, duplicate=True) -> list[tuple]:
     if p is None:
         return p_uplets(E, len(E))
     elif p == 0:
         return [()]
-    return sorted([(e,) + p_uplet
-                   for e in E
-                   for p_uplet in p_uplets(E, p - 1)])
+    uplets = sorted([(e,) + p_uplet
+                     for e in E
+                     for p_uplet in p_uplets(E, p - 1)])
+    return uplets if not duplicate else sorted(set(uplets))
 
 
 def cardinal_applications_E_dans_F(cardinal_E: int, cardinal_F: int) -> int:
@@ -189,3 +190,4 @@ if __name__ == '__main__':
     print("{} {}".format("classes_equivalences", F).ljust(spaces), classes_equivalences(F))
     print("{} {}".format("first_element_of_each_classes_equivalences", F).ljust(spaces),
           first_element_of_each_equivalences_classes(F))
+
