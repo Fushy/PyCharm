@@ -197,7 +197,7 @@ def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[ob
         q = model.insert_many(rows)  # q = model.select().where(model.executed == 0)
         q.execute()
     except Exception as e:  # todo peewee.OperationalError: database is locked
-        print(traceback.format_exc())
+        print("database may be locked", traceback.format_exc(), "sleep(1) & retry function")
         sleep(1)
         return fill_rows(model, columns_order, values, debug, raise_if_exist)
     #     if raise_if_exist:

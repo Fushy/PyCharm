@@ -58,6 +58,20 @@ def timeit_trivial(fun: Callable, *args, n=100):
     print(fun.__name__, execution_time, "ms")
     return execution_time
 
+def nearest_quarter_time(time=None, offset_minute=0):
+    time = time or now()
+    time = to_datetime(time)
+    time += timedelta(minutes=offset_minute)
+    minute = time.minute
+    if minute < 15:
+        minute = 15
+    elif minute < 45:
+        minute = 45
+    else:
+        minute = 15
+        time += timedelta(hours=1)
+    return time.replace(minute=minute)
+
 
 def timeit(fun: Callable, *args) -> float:
     """ Estimate an execution time of a function as milliseconds
@@ -119,3 +133,4 @@ def search_tz(city: str) -> pytz:
 # def test(browser, xpath):
 #     # test 102.495 ms 25 times
 #     return browser.get_text("", xpath)
+
