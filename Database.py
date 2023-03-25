@@ -154,10 +154,19 @@ def insert_or_update(connection, table_name, values, columns,
 def default_naming_convention_table(model: Model):
     return model.__name__.upper()
 
+# todo Model Type[Model], replace table model or db connection
 
 # noinspection PyProtectedMember
 def get_database(model: Model):
     return model._meta.database
+
+# noinspection PyProtectedMember
+def get_all_models(model: Model):
+    return model.get_models()
+
+# noinspection PyProtectedMember
+def get_all_tables(model: Model):
+    return model.get_tables()
 
 
 # noinspection PyProtectedMember
@@ -165,9 +174,11 @@ def get_table_name(model: Type[Model]):
     return model._meta.table_name
 
 
-def get_columns_name_db(model: Type[Model]):
-    return [tuples[1] for tuples in
-            get_database(model).cursor().execute("PRAGMA table_info({})".format(get_table_name(model)))]
+def get_columns_name_db(connection, model: Type[Model]):
+    query = "select * from {} LIMIT 0;".format(get_table_name(model).lower())
+    cursor = connection.cursor()
+    cursor.execute(query)
+    return [desc[0] for desc in cursor.description]
 
 
 def get_columns_name_model(model: Type[Model]):
@@ -198,6 +209,8 @@ def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[ob
         q.execute()
     except Exception as e:  # todo peewee.OperationalError: database is locked
         print("database may be locked", traceback.format_exc(), "sleep(1) & retry function")
+        if "order_id" in rows:
+            rows["order_id"] += 0.1
         sleep(1)
         return fill_rows(model, columns_order, values, debug, raise_if_exist)
     #     if raise_if_exist:
