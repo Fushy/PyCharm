@@ -9,7 +9,7 @@ from typing import Type
 import mysql.connector
 from mysql.connector import MySQLConnection
 import pandas as pd
-from peewee import Model, IntegrityError, FloatField, IntegerField, CharField, DateTimeField
+from peewee import Model, IntegrityError, FloatField, IntegerField, CharField, DateTimeField, PostgresqlDatabase
 from playhouse.migrate import migrate, SchemaMigrator
 from playhouse.sqlite_ext import JSONField
 
@@ -152,7 +152,8 @@ def insert_or_update(connection, table_name, values, columns,
 
 
 def default_naming_convention_table(model: Model):
-    return model.__name__.upper()
+    return model.__name__.lower()
+
 
 # todo Model Type[Model], replace table model or db connection
 
@@ -160,9 +161,11 @@ def default_naming_convention_table(model: Model):
 def get_database(model: Model):
     return model._meta.database
 
+
 # noinspection PyProtectedMember
 def get_all_models(model: Model):
     return model.get_models()
+
 
 # noinspection PyProtectedMember
 def get_all_tables(model: Model):
@@ -195,8 +198,9 @@ def print_model_infos(model: Model):
 
 
 def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[object]] | list[object], debug=True,
-              raise_if_exist=False):
-    """ columns_order's names have to be the field name and not the column name. |columns_order|=|values| """
+              raise_if_exist=False):  #
+    """ columns_order's names have to be the field name and not the column name. |columns_order|=|values|
+    faire bien attention aux types, un cas ou un int/float pk id diffère de la variable et de l'input db, transformation en char pour résoudre le pb"""
     if type(values[0]) != list:
         values = [values]
     db_columns = get_columns_name_model(model)
@@ -205,14 +209,17 @@ def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[ob
     rows = [dict(zip(columns_order,
                      [value[i] for i in range(len(value)) if i not in indexes_to_ignore])) for value in values]
     try:
-        q = model.insert_many(rows)  # q = model.select().where(model.executed == 0)
+        print("input", rows[0]["order_id"])
+        q = model.insert_many(rows)
         q.execute()
     except Exception as e:  # todo peewee.OperationalError: database is locked
         print("database may be locked", traceback.format_exc(), "sleep(1) & retry function")
-        if "order_id" in rows:
-            rows["order_id"] += 0.1
+        # if "order_id" in rows[0]:
+        #     rows[0]["order_id"] += 0.1
+        DB = PostgresqlDatabase("Trading", user="postgres", password="ale")
+        DB.connect()
         sleep(1)
-        return fill_rows(model, columns_order, values, debug, raise_if_exist)
+        return fill_rows(model, columns_order, list(rows[0].values()), debug, raise_if_exist)
     #     if raise_if_exist:
     #         traceback.format_exc()
     #         raise IntegrityError

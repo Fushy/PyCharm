@@ -1,18 +1,20 @@
-import os
-import sys
 from hashlib import blake2b
 from math import log
+import os
 from pathlib import Path
+import sys
 from time import sleep
 
 from gtts import gTTS
 from pydub import AudioSegment, playback
 
 import Classes
-from Files import is_existing, delete, run_file
-from Introspection import check_frames, frameinfo
+from Files import delete, is_existing, run_file
+from Introspection import frameinfo
 import Telegrams
 import Threads
+from Times import elapsed_seconds, now
+
 
 def db_to_float(db, using_amplitude=True):
     """
@@ -229,7 +231,35 @@ def notify_win(msg):
     # toaster.show_toast(msg, threaded=True)
 
 
+_PINGS = {}
+
+
+def ping(name=None):
+    if name is None:
+        name = frameinfo(2)["function_name"]
+    _PINGS[name] = now()
+
+
+def ping_listener():
+    while True:
+        for function_name, last_ping in _PINGS.items():
+            if elapsed_seconds(last_ping) > 60:
+                Telegrams.message(function_name + " stopped")
+                sleep(5)
+        sleep(1)
+        # print(_PINGS)
+
+
+def ping_test():
+    start = now()
+    while elapsed_seconds(start) < 10:
+        sleep(1)
+        ping()
+
+
 if __name__ == '__main__':
+    # run(ping_test)
+    # run(ping_listener)
     # speech None en 1 False 1 False True False True
     if len(sys.argv) > 1:
         args = sys.argv[-9:]

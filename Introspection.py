@@ -71,6 +71,8 @@ def current_lines(start_depth=2, end_depth: Optional[int] = None):
         return lst
     return lst
 
+def get_current_function_name():
+    return inspect.currentframe().f_back.f_code.co_name
 
 # def frameinfo_stack(stack=0, debug=False):
 #     """ ne fonctionne pas dans les threads"""
