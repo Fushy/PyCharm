@@ -1,10 +1,13 @@
+from typing import Iterable
+
+from colorama import Back, Fore, Style, init
 from termcolor import colored
 
 from Util import is_running_under_basic_console
 from denombrement import permutations_all_size
 
 
-def printc(text: str, color="green", background_color=None, attributes: list[str] = None, details=False):
+def printt(text: str, color="green", background_color=None, attributes: Iterable[str] = None, details=False):
     """ It works on PyCharm
         color & background_color: red, green, yellow, blue, magenta, cyan, white, black
         attributes: bold, dark, underline, blink, reverse, concealed
@@ -18,23 +21,65 @@ def printc(text: str, color="green", background_color=None, attributes: list[str
     if details:
         details_txt = "[{} {}]".format(color, attributes)
     if not is_running_under_basic_console():
-        print(colored("{} {}".format(text, details_txt),
+        txt = colored("{} {}".format(text, details_txt),
                       color,
                       "on_" + background_color if background_color is not None else None,
-                      attrs=attributes))
+                      attrs=attributes)
     else:
-        print("{} {}".format(text, details_txt))
+        txt = "{} {}".format(text, details_txt)
+    print(txt)
 
 
-def print_all_colors():
-    colors = ["red", "green", "yellow", "blue", "magenta", "cyan", "white"]
+def printco(text: str, color="green", background_color=None, attributes: Iterable[str] = ["NORMAL"]):
+    """ It works on PyCharm but bug after 250 use with the option "Emulate terminal in output control"
+        color & background_color: red, green, yellow, blue, magenta, cyan, white, black
+        attributes: bold, dark, underline, blink, reverse, concealed
+        pycharm attributes: bold, underline, reverse
+    """
+    init()
+    style = getattr(Fore, color.upper()) if color != "" else ""
+    if background_color:
+        style += getattr(Back, background_color.upper())
+    if attributes:
+        " ".join([getattr(Style, attribute.upper()) for attribute in attributes])
+    print("{}{}{}".format(style, text, Style.RESET_ALL))
+
+
+def printc(text: str, color="green", background_color=None, attributes: Iterable[str] = ["NORMAL"]):
+    init()
+    style = getattr(Fore, color.upper()) if color != "" else ""
+    if background_color:
+        style += getattr(Back, background_color.upper())
+    if attributes:
+        " ".join([getattr(Style, attribute.upper()) for attribute in attributes])
+    print("{}{}{}".format(style, text, Style.RESET_ALL))
+
+
+def print_all_colors_colorama():
+    init()
+    colors = ["RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN", "WHITE", "BLACK", ""]
+    attributes = ["NORMAL", "BRIGHT", "DIM"]
+    for attribute in attributes:
+        for c in colors:
+            printc("Hello, World! color={} attributes={}".format(c, attribute), color=c, attributes=[attribute])
+            printc("Hello, World! color={} background=black attributes={}".format(c, attribute),
+                   color=c, background_color="black", attributes=[attribute])
+            for background in colors:
+                printc("Hello, World! color={} background={} attributes={}".format(c, background, attribute),
+                       color=c, background_color=background, attributes=[attribute])
+
+
+def print_all_colors_termcolor():
+    colors = ["red", "green", "yellow", "blue", "magenta", "cyan", "white", ""]
     # attributes = ["bold", "underline", "reverse"]
     attributes = ["bold", "underline"]
     for perms_same_len in permutations_all_size(attributes):
         for perms in perms_same_len:
+            perms = tuple(perms)
             for c in colors:
-                printc("Hello, World! attributes={} color={}".format(list(perms), c), color=c, attributes=perms)
-                printc("Hello, World! attributes={} color={}".format(list(perms + ("reverse",)), c), color=c, attributes=perms + ("reverse",))
+                printt("Hello, World! attributes={} color={}".format(perms, c), color=c, attributes=perms)
+                printt("Hello, World! attributes={} color={}".format(perms + ("reverse",), c), color=c,
+                       attributes=perms + ("reverse",))
                 # for cc in colors:
                 #     printc("Hello, World! perms={} color={} background_color={}".format(perms, cc, c),
                 #            color=cc,
@@ -42,5 +87,14 @@ def print_all_colors():
                 #            attributes=perms)
 
 
+def printcr(text: str, color="green"):
+    import crayons
+    # from crayons import *  # NOQA
+    print(getattr(crayons, color.lower())(text))
+
+
 if __name__ == '__main__':
-    print_all_colors()
+    printcr("eee", "white")
+    # while True:
+    #     printc("Hello, World! color={} attributes={}", color="red")
+    #     # print_all_colors_colorama()

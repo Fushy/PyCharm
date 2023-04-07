@@ -14,21 +14,21 @@
 # from binance.exceptions import BinanceAPIException
 #
 # from new.Config import WEIGHT
-# from new.Global import CLIENT
+# from new.Global import LOCAL
 # from new.Util import util_launch_web, util_is_iterable, binance_timestamp_to_datetime
 #
 # T = TypeVar("T")
 # E = TypeVar("E")
 #
 #
-# def get_candles(pair: str, start_time: datetime.datetime, interval=CLIENT.KLINE_INTERVAL_1MINUTE, sleep_time=0,
+# def get_candles(pair: str, start_time: datetime.datetime, interval=LOCAL.KLINE_INTERVAL_1MINUTE, sleep_time=0,
 #                 looking: str = "Close") -> \
 #         list[Optional[float]]:  # 1
 #     WEIGHT.put(1)
 #     while WEIGHT.sum_update() >= 1000:
 #         sleep(1)
-#     # return_value = CLIENT.get_historical_klines(pair, interval, int(start_time.timestamp() * 1000))[0]
-#     plot_datas = CLIENT.get_klines(symbol=pair, interval=interval, limit=500,
+#     # return_value = LOCAL.get_historical_klines(pair, interval, int(start_time.timestamp() * 1000))[0]
+#     plot_datas = LOCAL.get_klines(symbol=pair, interval=interval, limit=500,
 #                                      startTime=int(start_time.timestamp() * 1000))
 #     if sleep_time > 0:
 #         time.sleep(sleep_time)
@@ -42,13 +42,13 @@
 #     return None
 #
 #
-# def test(pair: str, start_time: datetime.datetime, interval=CLIENT.KLINE_INTERVAL_1MINUTE, sleep_time=0) -> Optional[
+# def test(pair: str, start_time: datetime.datetime, interval=LOCAL.KLINE_INTERVAL_1MINUTE, sleep_time=0) -> Optional[
 #     float]:  # 1
 #     WEIGHT.put(1)
 #     while WEIGHT.sum_update() >= 1000:
 #         sleep(1)
-#     # return_value = CLIENT.get_historical_klines(pair, interval, int(start_time.timestamp() * 1000))[0]
-#     return_value = CLIENT.get_klines(symbol=pair, interval=interval, limit=1000,
+#     # return_value = LOCAL.get_historical_klines(pair, interval, int(start_time.timestamp() * 1000))[0]
+#     return_value = LOCAL.get_klines(symbol=pair, interval=interval, limit=1000,
 #                                      startTime=int(start_time.timestamp() * 1000))
 #     time.sleep(sleep_time)
 #     if len(return_value) > 0:
@@ -63,8 +63,8 @@
 # def complete_sell_order_pairs(pairs: Iterable[str], devise="USDT"):  # 5
 #     """ A tester """
 #     assets = list(map(lambda x: x.replace(devise, ""), pairs))
-#     pair_prices: dict[str, dict[str, str]] = get_all_pair_price(CLIENT)
-#     assets_infos = json_to_improve_dict(CLIENT.get_account()["balances"], key="asset")
+#     pair_prices: dict[str, dict[str, str]] = get_all_pair_price(LOCAL)
+#     assets_infos = json_to_improve_dict(LOCAL.get_account()["balances"], key="asset")
 #     for asset in assets:
 #         pair = asset + devise
 #         cash = asset_cash_estimation_free \
@@ -80,13 +80,13 @@
 #                 try:
 #                     print("sell_limit", asset, coins, sell_order)
 #                     sleep(1)
-#                     order = CLIENT.order_limit_sell(symbol=pair, quantity=coins, price=sell_order)
+#                     order = LOCAL.order_limit_sell(symbol=pair, quantity=coins, price=sell_order)
 #                     print("\nOK. order = ", order)
 #                 except BinanceAPIException as binanceError:
 #                     print("Message Error", binanceError.message, pair)
 #                     coins = float_stepsize(coins - step_size, step_size)
 #                     print("sell_limit_step", asset, coins, sell_order)
-#                     order = CLIENT.order_limit_sell(symbol=pair, quantity=coins, price=sell_order)
+#                     order = LOCAL.order_limit_sell(symbol=pair, quantity=coins, price=sell_order)
 #                     print("\nOK.order = ", order)
 #
 #
@@ -104,9 +104,9 @@
 #         if pair in all_open_orders:
 #             if order_side is not None:
 #                 if all_open_orders[pair]["side"] == order_side:
-#                     CLIENT.cancel_order(symbol=pair, orderId=all_open_orders[pair]["orderId"])
+#                     LOCAL.cancel_order(symbol=pair, orderId=all_open_orders[pair]["orderId"])
 #             else:
-#                 CLIENT.cancel_order(symbol=pair, orderId=all_open_orders[pair]["orderId"])
+#                 LOCAL.cancel_order(symbol=pair, orderId=all_open_orders[pair]["orderId"])
 #
 #
 #
@@ -119,7 +119,7 @@
 #     """
 #     if account is None:
 #         WEIGHT.put(10)
-#         account = json_to_improve_dict(CLIENT.get_account()["balances"], key="asset")
+#         account = json_to_improve_dict(LOCAL.get_account()["balances"], key="asset")
 #     return float_stepsize(account[currency]["free"], precision)
 #
 #
@@ -130,7 +130,7 @@
 #     """
 #     WEIGHT.put(1)
 #     return float(
-#         json_to_improve_dict(CLIENT.get_symbol_info(pair)["filters"], key="filterType")["LOT_SIZE"]["stepSize"])
+#         json_to_improve_dict(LOCAL.get_symbol_info(pair)["filters"], key="filterType")["LOT_SIZE"]["stepSize"])
 #
 #
 #
@@ -142,7 +142,7 @@
 #     """
 #     if account is None:
 #         WEIGHT.put(10)
-#         account = json_to_improve_dict(CLIENT.get_account()["balances"], key="asset")
+#         account = json_to_improve_dict(LOCAL.get_account()["balances"], key="asset")
 #     return account
 #
 #
@@ -159,7 +159,7 @@
 #                           assets_infos=None) -> float:  # 0, 10
 #     if assets_infos is None:
 #         WEIGHT.put(10)
-#         assets_infos = json_to_improve_dict(CLIENT.get_account()["balances"], key="asset")
+#         assets_infos = json_to_improve_dict(LOCAL.get_account()["balances"], key="asset")
 #     asset_infos = assets_infos[asset_from]
 #     cash_estimation = float(asset_infos["free"]) + float(asset_infos["locked"])
 #     if asset_from == asset_to:
@@ -178,7 +178,7 @@
 #                                assets_infos=None) -> float:  # 0, 10
 #     if assets_infos is None:
 #         WEIGHT.put(10)
-#         assets_infos = json_to_improve_dict(CLIENT.get_account()["balances"], key="asset")
+#         assets_infos = json_to_improve_dict(LOCAL.get_account()["balances"], key="asset")
 #     asset_infos = assets_infos[asset_from]
 #     cash_estimation = float(asset_infos["free"])
 #     if asset_from == asset_to:
@@ -227,7 +227,7 @@
 #     print("in")
 #     if assets_infos is None:
 #         WEIGHT.put(10)
-#         assets_infos = json_to_improve_dict(CLIENT.get_account()["balances"], key="asset")
+#         assets_infos = json_to_improve_dict(LOCAL.get_account()["balances"], key="asset")
 #     if pair_prices is None:
 #         WEIGHT.put(2)
 #         pair_prices = get_all_pair_price(offer)
@@ -295,7 +295,7 @@
 #     {"354.69000000":{"clientOrderId":"ios_301e60dd0a804b279819e30bbe771b97","cummulativeQuoteQty":875.90380200,"executedQty":2.46970000,"icebergQty":0.00000000,"isWorking":"True","orderId":"2493901119","orderListId":-1,"origQty":2.46970000,"origQuoteOrderQty":0.00000000,"price":354.69000000,"side":"BUY","status":"FILLED","stopPrice":0.00000000,"symbol":"BNBUSDT","time":"1624004384120","timeInForce":"GTC","type":"LIMIT","updateTime":"1624004384120"}, "471.97930000":{"clientOrderId":"ios_da658e11b4f04bbb8d43f28188cff965","cummulativeQuoteQty":32.09459240,"executedQty":0.06800000,"icebergQty":0.00000000,"isWorking":"True","orderId":"1942052560","orderListId":-1,"origQty":0.06800000,"origQuoteOrderQty":0.00000000,"price":471.97930000,"side":"BUY","status":"FILLED","stopPrice":0.00000000,"symbol":"BNBUSDT","time":"1618781984342","timeInForce":"GTC","type":"LIMIT","updateTime":"1618781999309"}, ... }
 #     """
 #     WEIGHT.put(10)
-#     return sorted_dict(json_to_improve_dict(CLIENT.get_all_orders(symbol=pair), key="price"),
+#     return sorted_dict(json_to_improve_dict(LOCAL.get_all_orders(symbol=pair), key="price"),
 #                        key=lambda x: 1 / x[1]["time"])
 #
 #
@@ -305,17 +305,17 @@
 #     {"354.69000000":{"clientOrderId":"ios_301e60dd0a804b279819e30bbe771b97","cummulativeQuoteQty":875.90380200,"executedQty":2.46970000,"icebergQty":0.00000000,"isWorking":"True","orderId":"2493901119","orderListId":-1,"origQty":2.46970000,"origQuoteOrderQty":0.00000000,"price":354.69000000,"side":"BUY","status":"FILLED","stopPrice":0.00000000,"symbol":"BNBUSDT","time":"1624004384120","timeInForce":"GTC","type":"LIMIT","updateTime":"1624004384120"}, "471.97930000":{"clientOrderId":"ios_da658e11b4f04bbb8d43f28188cff965","cummulativeQuoteQty":32.09459240,"executedQty":0.06800000,"icebergQty":0.00000000,"isWorking":"True","orderId":"1942052560","orderListId":-1,"origQty":0.06800000,"origQuoteOrderQty":0.00000000,"price":471.97930000,"side":"BUY","status":"FILLED","stopPrice":0.00000000,"symbol":"BNBUSDT","time":"1618781984342","timeInForce":"GTC","type":"LIMIT","updateTime":"1618781999309"}, ... }
 #     """
 #     WEIGHT.put(10)
-#     return json_to_improve_dict(CLIENT.get_all_orders(symbol=pair), key="price")
+#     return json_to_improve_dict(LOCAL.get_all_orders(symbol=pair), key="price")
 #
 #
 # def all_open_orders_pairs():  # 40
 #     WEIGHT.put(40)
-#     return json_to_improve_dict(CLIENT.get_open_orders(), key="symbol")
+#     return json_to_improve_dict(LOCAL.get_open_orders(), key="symbol")
 #
 #
 # def all_open_orders_pair(pair: str):  # 3
 #     WEIGHT.put(3)
-#     return json_to_improve_dict(CLIENT.get_open_orders(pair), key="symbol")
+#     return json_to_improve_dict(LOCAL.get_open_orders(pair), key="symbol")
 #
 #
 # def sort_fee_pair() -> str:  # 1
@@ -324,8 +324,8 @@
 #     {"1INCHBUSD":{"makerCommission":"0","symbol":"1INCHBUSD","takerCommission":0.001},"AAVEBUSD":{"makerCommission":"0","symbol":"AAVEBUSD","takerCommission":0.001}, ... }
 #     """
 #     WEIGHT.put(1)
-#     # return sorted_dict(json_to_improve_dict(CLIENT.get_trade_fee(), key="symbol")["tradeFee"], key=lambda x: x[1]["taker"])
-#     return sorted_dict(json_to_improve_dict(CLIENT.get_trade_fee(), key="symbol"),
+#     # return sorted_dict(json_to_improve_dict(LOCAL.get_trade_fee(), key="symbol")["tradeFee"], key=lambda x: x[1]["taker"])
+#     return sorted_dict(json_to_improve_dict(LOCAL.get_trade_fee(), key="symbol"),
 #                        key=lambda x: x[1]["makerCommission"])
 #
 
@@ -338,16 +338,16 @@
 #     """
 #     WEIGHT.put(2)
 #     if offer:
-#         return json_to_improve_dict(CLIENT.get_orderbook_ticker(), key="symbol")
+#         return json_to_improve_dict(LOCAL.get_orderbook_ticker(), key="symbol")
 #     else:
-#         return json_to_improve_dict(CLIENT.get_symbol_ticker(), key="symbol")
+#         return json_to_improve_dict(LOCAL.get_symbol_ticker(), key="symbol")
 #
 #
 # def get_all_pair_price_alive() -> dict[str, dict[str, str]]:  # 2
 #     """ Retourne les prix actuel de toutes les paires actif sur le marché de Binance. """
 #     WEIGHT.put(2)
 #     return {asset[0]: asset[1] for asset in
-#             json_to_improve_dict(CLIENT.get_orderbook_ticker(), key="symbol").items() if
+#             json_to_improve_dict(LOCAL.get_orderbook_ticker(), key="symbol").items() if
 #             asset[1]["bidPrice"] != "0.00000000" and asset[1]["bidQty"] != "0.00000000"}
 #
 #
@@ -355,7 +355,7 @@
 #     """ Retourne les prix actuel de toutes les paires morte de Binance. """
 #     WEIGHT.put(2)
 #     return {asset[0]: asset[1] for asset in
-#             json_to_improve_dict(CLIENT.get_orderbook_ticker(), key="symbol").items() if
+#             json_to_improve_dict(LOCAL.get_orderbook_ticker(), key="symbol").items() if
 #             asset[1]["bidPrice"] == "0.00000000" and asset[1]["bidQty"] == "0.00000000"}
 #
 #
@@ -365,7 +365,7 @@
 #     ['1INCHBTC', '1INCHBUSD', ...]
 #     """
 #     WEIGHT.put(2)
-#     return sorted(get_all_pair_price(CLIENT).keys())
+#     return sorted(get_all_pair_price(LOCAL).keys())
 #
 #
 # def get_all_pair_name_alive() -> list[str]:  # 2
@@ -383,7 +383,7 @@
 #     ['1INCH', '1INCHDOWN', ...]
 #     """
 #     WEIGHT.put(10)
-#     return sorted(json_to_improve_dict(CLIENT.get_account()["balances"], key="asset").keys())
+#     return sorted(json_to_improve_dict(LOCAL.get_account()["balances"], key="asset").keys())
 #
 #
 # def get_all_assets_name_alive() -> list[str]:  # 12
@@ -476,7 +476,7 @@
 #
 #
 # def all_open_orders() -> dict:  # 40
-#     orders = json_to_improve_dict(CLIENT.get_open_orders(), key="symbol")
+#     orders = json_to_improve_dict(LOCAL.get_open_orders(), key="symbol")
 #     for order in orders:
 #         orders[order]["time"] = binance_timestamp_to_datetime(int(orders[order]["time"]))
 #         orders[order]["updateTime"] = binance_timestamp_to_datetime(int(orders[order]["updateTime"]))

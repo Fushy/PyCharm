@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta
 from typing import Callable
 
@@ -7,9 +8,10 @@ import pytz
 TIMEDELTA_ZERO = timedelta(seconds=0)
 
 
-def now(utc=False, offset_h=0, offset_m=0, offset_s=0) -> datetime:
+def now(utc=False, offset_h=0, offset_m=0, offset_s=0, with_ms=True) -> datetime:
     offset = timedelta(hours=offset_h, minutes=offset_m, seconds=offset_s)
-    return offset + (datetime.utcnow() if utc else datetime.now())
+    datetime_now = offset + (datetime.utcnow() if utc else datetime.now())
+    return datetime_now if with_ms else datetime_now.replace(microsecond=0)
 
 
 def to_datetime(obj, pattern: str = "%Y/%m/%d %H:%M:%S") -> datetime:
@@ -56,6 +58,20 @@ def timeit_trivial(fun: Callable, *args, n=100):
     print(fun.__name__, execution_time, "ms")
     return execution_time
 
+def nearest_quarter_time(time=None, offset_minute=0):
+    time = time or now()
+    time = to_datetime(time)
+    time += timedelta(minutes=offset_minute)
+    minute = time.minute
+    if minute < 15:
+        minute = 15
+    elif minute < 45:
+        minute = 45
+    else:
+        minute = 15
+        time += timedelta(hours=1)
+    return time.replace(minute=minute)
+
 
 def timeit(fun: Callable, *args) -> float:
     """ Estimate an execution time of a function as milliseconds
@@ -90,6 +106,17 @@ def timeit(fun: Callable, *args) -> float:
     return execution_time
 
 
+def time_it(func):
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"{func.__name__} took {end - start:.6f} seconds")
+        return result
+
+    return wrapper
+
+
 def search_tz(city: str) -> pytz:
     """ Cherche une ville dans pytz.all_timezones et retourne sa timezone. """
     return pytz.timezone(list(name for name in pytz.all_timezones if city.capitalize() in name)[0])
@@ -106,3 +133,4 @@ def search_tz(city: str) -> pytz:
 # def test(browser, xpath):
 #     # test 102.495 ms 25 times
 #     return browser.get_text("", xpath)
+

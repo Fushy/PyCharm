@@ -1,21 +1,19 @@
-import copy
-import os
-import string
 from hashlib import blake2b
 from math import log
+import os
 from pathlib import Path
-from random import random
+import sys
 from time import sleep
 
-from faker import Faker
 from gtts import gTTS
 from pydub import AudioSegment, playback
 
 import Classes
+from Files import delete, is_existing, run_file
+from Introspection import frameinfo
+import Telegrams
 import Threads
-from Files import is_existing, delete
-from Telegrams import message
-from rng import rng_letter
+from Times import elapsed_seconds, now
 
 
 def db_to_float(db, using_amplitude=True):
@@ -49,7 +47,7 @@ def ratio_to_db(ratio, val2=None, using_amplitude=True):
 
 
 def little_sound(duration_seconds=0.4, volume=0.1):
-    sound = say("Hello world !", speed=2, just_create_file=True)
+    sound = say("Hello world !", speed=2, just_create_file=True, debug=False)
     sound = cut_sound(sound, cut_percent=40)
     sound = change_volume(sound, volume)
     sound = change_duration(sound, duration_seconds)
@@ -117,13 +115,16 @@ def change_volume(sound: str | AudioSegment, volume_ratio: float = 0):
 
 
 def play_sound(sound: str | AudioSegment, blocking=False) -> AudioSegment:
+    def aux():
+        playback.play(sound)
+
     try:
         if type(sound) is str:
             sound = AudioSegment.from_mp3(sound)
         if blocking:
-            playback.play(sound)
+            aux()
         else:
-            Threads.run(playback.play(sound))
+            Threads.run(aux)
         return sound
     except FileNotFoundError:
         print(FileNotFoundError)
@@ -135,13 +136,40 @@ def save(sound: AudioSegment, dest: str):
     sound.export(dest, format="mp3")
 
 
-def read(filename: str):
-    return AudioSegment.from_mp3(filename)
+def read(filename: str, extension="mp3"):
+    try:
+        if extension == "mp3":
+            return AudioSegment.from_mp3(filename)
+        elif extension == "mp4":
+            return AudioSegment.from_file(filename, format="mp4")
+        return AudioSegment.from_file(filename)
+    except pydub.exceptions.CouldntDecodeError:
+        return None
+
+
+# def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
+#         volume_ratio: float = 1, just_create_file=False, save_sound=True):
+#     file_call = "python {} \"{}\" {} {} {} {} {} {} {}".format(frameinfo(1)["pathname_complete"], speech,
+#                                                                filename, lang, speed,
+#                                                                blocking,
+#                                                                volume_ratio, just_create_file,
+#                                                                save_sound)
+#     # def aux():
+#     run_file(file_call)
+#     # Threads.run(aux)
 
 
 def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
-        volume_ratio: float = 1, just_create_file=False, save_sound=True) -> AudioSegment:
-    # print("say", speech)
+        volume_ratio: float = 0.5, just_create_file=False, save_sound=True, other_process=False, debug=True):
+    """ TODO bug quand il y a des read input, faire la manipulation ci-dessous ou executer ce fichier en lui envoyant les arguments
+    In PyCharm, if endless execution through this call, go to "Edit configuration" and mark "Emulate terminal in output console" """
+    if debug:
+        print("say", speech)
+    if other_process:
+        fi = frameinfo(1)
+        # print(".", fi["pathname"] + r"alert.cmd " + " ".join(map(str, list(fi["local_args"].items())[:10])))
+        Threads.run(run_file, {"file": fi["pathname"] + r"alert.cmd " + " ".join(map(str, list(fi["local_args"].values())[:10]))})
+        return
     if filename is None:
         encode = blake2b(digest_size=32)
         # encode = blake2b(digest_size=4)
@@ -154,7 +182,9 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
     if not os.path.exists(pathname):
         Path(pathname).mkdir(parents=True, exist_ok=True)
     filename = pathname + filename + ".mp3"
-    if not is_existing(filename):
+    if is_existing(filename):
+        sound = read(filename, "mp3")
+    else:
         tts = gTTS(text=speech, lang=lang, slow=False)
         tts.save(filename)
         sound = read(filename)
@@ -162,11 +192,9 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
         sound = change_volume(sound, volume_ratio=volume_ratio)
         if save_sound:
             save(sound, filename)
-    else:
-        sound = AudioSegment.from_mp3(filename)
-    if not just_create_file:
-        return play_sound(sound, blocking)
-    return sound
+    if just_create_file:
+        return sound
+    return play_sound(sound, blocking)
 
 
 def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
@@ -182,15 +210,17 @@ def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
         Threads.run(fun)
 
 
-def alert(msg: str, level: int = 1, after_sleep: float = 30):
+def alert(msg: str, level: int = 0, after_sleep: float = 30):
     debug_change = True
-    if level == 1:
-        message(msg)
+    if level == 0:
+        Threads.run(lambda: Telegrams.message(msg))
+    elif level == 1:
+        Telegrams.message(msg)
         say(msg)
         sleep(after_sleep)
     elif level == 3:
         while debug_change:
-            message(msg)
+            Telegrams.message(msg)
             say(msg)
             sleep(after_sleep)
 
@@ -201,8 +231,51 @@ def notify_win(msg):
     # toaster.show_toast(msg, threaded=True)
 
 
+_PINGS = {}
+
+
+def ping(name=None):
+    if name is None:
+        name = frameinfo(2)["function_name"]
+    _PINGS[name] = now()
+
+
+def ping_listener():
+    while True:
+        for function_name, last_ping in _PINGS.items():
+            if elapsed_seconds(last_ping) > 60:
+                Telegrams.message(function_name + " stopped")
+                sleep(5)
+        sleep(1)
+        # print(_PINGS)
+
+
+def ping_test():
+    start = now()
+    while elapsed_seconds(start) < 10:
+        sleep(1)
+        ping()
+
+
 if __name__ == '__main__':
-    # say("message", blocking=True)
-    # say("This is a long message !", blocking=True)
-    # say("This is a long message !", speed_ratio=1.5, blocking=True)
-    alert("telegram message", after_sleep=0)
+    # run(ping_test)
+    # run(ping_listener)
+    # speech None en 1 False 1 False True False True
+    if len(sys.argv) > 1:
+        args = sys.argv[-9:]
+        speech = " ".join(sys.argv[1:-9])
+        # print(sys.argv, args, speech)
+        filename = None if args[0] else args[0]
+        lang = args[1]
+        speed = float(args[2])
+        blocking = False if args[3] == "False" else args[3]
+        volume_ratio = float(args[4])
+        just_create_file = False if args[5] == "False" else args[5]
+        save_sound = True if args[6] == "True" else args[6]
+        say(speech, filename, lang, speed, blocking, volume_ratio, just_create_file, save_sound, False, False)
+    else:
+        # print("b", sys.argv)
+        say("speech")
+    # _say("This is a long message !", blocking=True)
+    # _say("This is a long message !", speed_ratio=1.5, blocking=True)
+    # alert("telegram message", after_sleep=0)

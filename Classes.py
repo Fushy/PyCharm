@@ -7,10 +7,8 @@ from time import sleep
 from typing import Callable, Optional
 from typing import Generic, Union
 from typing import TypeVar
-
-from screeninfo import Monitor
-
 from Times import now
+import Util
 
 T = TypeVar("T")
 
@@ -267,8 +265,18 @@ class Rectangle:
         y1 = self.y1 + point.y
         return Rectangle(x0, y0, x1, y1)
 
+    def move_x0y0_corner(self, point: Point):
+        x0 = self.x0 + point.x
+        y0 = self.y0 + point.y
+        return Rectangle(x0, y0, self.x1, self.y1)
 
-import Util
+    def move_x1y1_corner(self, point: Point):
+        x1 = self.x1 + point.x
+        y1 = self.y1 + point.y
+        return Rectangle(self.x0, self.y0, x1, y1)
+
+    def move_corners(self, n):
+        return self.move_x0y0_corner(Point(-n, -n)).move_x1y1_corner(Point(n, n))
 
 
 class DatedObj(Generic[T]):

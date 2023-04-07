@@ -1,14 +1,16 @@
 import sys
 import threading
-from typing import Optional, Callable
 
 import keyboard
 import matplotlib
 import matplotlib.dates
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Cursor
 
-from Times import now, elapsed_seconds
+from Times import elapsed_seconds, now
 
+colors = {"blue": 'b', "green": 'g', "red": 'r', "cyan": 'c', "magenta": 'm', "yellow": 'y', "black": 'k', "white": 'w'}
+colors_order = "bk"
 
 class CursorPlt(object):
     def __init__(self, ax):
@@ -60,10 +62,11 @@ def wait_key_press(i):
     return i, is_looping
 
 
-def init_gui(plt, axis_color, fig=None, fullscreen=True, title="", date_format=None) -> plt:
+def init_gui(plt, axis_color, fig=None, fullscreen=True, title="", date_format=None, qt=True, n_subplots=1) -> plt:
     curve_color = "#0F1623"
+    # plt.figure(facecolor="black")
     plt.rcParams['figure.figsize'] = (16, 8)
-    plt.rcParams["keymap.zoom"].append("point")
+    plt.rcParams["keymap.zoom"].append("a")
     plt.rcParams["keymap.back"].append("²")
     if "left" in plt.rcParams["keymap.back"]:
         plt.rcParams["keymap.back"].remove("left")
@@ -72,32 +75,45 @@ def init_gui(plt, axis_color, fig=None, fullscreen=True, title="", date_format=N
     plt.rcParams['axes.facecolor'] = curve_color
     plt.rcParams['axes.titley'] = 1.0
     plt.rcParams['axes.titlepad'] = -85
-    if threading.current_thread() == threading.main_thread():
+
+    # # matplotlib.use("module://backend_interagg")
+    if qt and threading.current_thread() == threading.main_thread():
         # print(matplotlib.get_backend())
         matplotlib.use("Qt5agg")
-    # matplotlib.use("module://backend_interagg")
+
+    fig, axs = plt.subplots(n_subplots)
+    if n_subplots == 1:
+        axs = [axs]
+    # ax = plt.gca()
+    for i in range(len(fig.axes)):
+        ax = axs[i]
+        # plt.tight_layout(pad=3, w_pad=0, h_pad=0)
+        ax.yaxis.set_label_position("right")
+        ax.yaxis.tick_right()
+        ax.spines['bottom'].set_color(axis_color)
+        ax.spines['top'].set_color(axis_color)
+        ax.spines['right'].set_color(axis_color)
+        ax.spines['left'].set_color(axis_color)
+        ax.tick_params(axis='x', colors=axis_color)
+        ax.tick_params(axis='y', colors=axis_color)
+        if date_format is not None:
+            if date_format == "":
+                date_format = '%Y-%m-%d %Hh%mm'
+            ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter(date_format))
+        # plt.setp(ax.get_xticklabels(), rotation=-20, fontsize=10)
+        # ax.set_xticks(np.arange(0, 100, 10))
+        plt.connect('motion_notify_event', Cursor(ax, color="black", linewidth=0.5))
+
     if fig is None:
         fig: plt.figure = plt.figure()
-        if fullscreen:
-            fig.canvas.manager.full_screen_toggle()
+    if fullscreen:
+        fig.canvas.manager.full_screen_toggle()
     fig.patch.set_facecolor(curve_color)
     fig.canvas.mpl_connect('button_press_event', exit_event)
     # plotting(axis_color, plt, x, y)
-    ax = plt.gca()
-    plt.tight_layout(pad=3, w_pad=0, h_pad=0)
-    ax.yaxis.set_label_position("right")
-    ax.yaxis.tick_right()
-    ax.spines['bottom'].set_color(axis_color)
-    ax.spines['top'].set_color(axis_color)
-    ax.spines['right'].set_color(axis_color)
-    ax.spines['left'].set_color(axis_color)
-    ax.tick_params(axis='x', colors=axis_color)
-    ax.tick_params(axis='y', colors=axis_color)
-    if date_format is not None:
-        if date_format == "":
-            date_format = '%Y-%m-%d %Hh%mm'
-        ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter(date_format))
-    plt.setp(ax.get_xticklabels(), rotation=-20)
+
+    # plt.xticks(range(100))
+    # plt.setp(ax.get_xticklabels(), rotation=-20, fontsize=1)
     fig.suptitle(title)
-    fig.tight_layout()
-    return plt, ax, fig
+    # fig.tight_layout()
+    return plt, axs, fig

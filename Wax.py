@@ -2,7 +2,7 @@ import sqlite3
 from typing import Optional
 
 from Alert import say
-from Database import insert_or_update, get_column_names
+from Database import insert_or_update, get_columns_name_db
 from Jsons import json_base_to_json_ok, call_request_api
 from Prices import db_get_prices, get_n_update_prices
 from Telegrams import message
@@ -117,7 +117,7 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
         account_assets_amount[account_name] = asset_amount
     # all_asset_amount = call_request_api("get_tokens", {"account": account_name})
     connection = sqlite3.connect(r"../Bank.db")
-    columns = get_column_names(connection, "PRICES")
+    columns = get_columns_name_db(connection, "PRICES")
     if len(columns) == 0:
         connection = sqlite3.connect(r"Bank.db")
     instant = now()
@@ -140,7 +140,7 @@ def get_tokens(account_names: str | list[str], tokens=None, update=True):
                 continue
             dol = round(prices[asset] * amount, 2)
             dol = -1 if dol < 0 else dol
-            columns = get_column_names(connection, "WALLETS")
+            columns = get_columns_name_db(connection, "WALLETS")
             values = [dol, asset, amount, account_name, "WAXBLOCKS", instant]
             insert_or_update(
                 connection, "WALLETS", values, columns,
@@ -191,3 +191,18 @@ def get_nft_price(collection_name: Optional[str] = None,
     infos = json["data"][0]
     return round(int(infos["price"]) / (10 ** int(infos["token_precision"])), infos["token_precision"])
 
+
+# if __name__ == '__main__':
+#     seed = int(str_to_hashcode(file_get_1st_line(SEED_PATH_1) + file_get_1st_line(SEED_PATH_2), whitelist=string.digits))
+#     a = ["b4nvi.wam",
+#          "pyyfu.wam",
+#          "progk.wam",
+#          "o.gvy.wam",
+#          "xvzwu.wam",
+#          "n11k2.c.wam",
+#          "jd1.2.c.wam",
+#          "g32ke.c.wam",
+#          "e33ke.c.wam",
+#          "oj3.e.c.wam"]
+#     print(a[0], str_to_hashcode(a[0], seed=seed))
+#     print(list(zip(a, str_to_hashcode(a, seed=seed))))

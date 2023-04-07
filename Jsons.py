@@ -1,5 +1,6 @@
 import json
 import json as json_api
+import re
 import socket
 from time import sleep
 from typing import TypeVar, Callable, Optional
@@ -19,7 +20,9 @@ json_T = dict[T, E]
 
 
 def to_correct_json(string) -> str:
-    return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"")
+    json_string = str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("\n", "").replace("\\", "")
+    json_string = re.sub(r"(?<=[{,])(.*?):('?)(.*?)('?)(((?<='),)|},{|})", r""""\1":"\3"\5""", json_string)
+    return json_string
     # return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"").replace("\\",
     # "\\\\")
 
@@ -74,7 +77,7 @@ def is_json(txt):
     try:
         json_api.loads(to_correct_json(txt))
         return True
-    except:
+    except ValueError:  # update
         return False
 
 
@@ -85,8 +88,8 @@ def json_base_to_json_ok(dictionaries: json_base | dict,
                          doublons=True) -> json_T:
     """
     On remplace les indices de la liste de base en la transformant en un dictionnaire où
-    les clefs seront les valeurs associés à la clef donné en paramètre des dictionnaires de la liste.
-    Si il y a plusieurs keys, tous les champs doivent avoir le même pattern
+    les clefs seront les valeurs associées à la clef donnée en paramètre des dictionnaires de la liste.
+    S'il y a plusieurs keys, tous les champs doivent avoir le même pattern
     """
     result = {}
     if keys_path_to_start is not None:
@@ -131,8 +134,16 @@ def text_to_json_ok(json_text: str,
                     doublons=True) -> json_T:
     return json_base_to_json_ok(text_to_json(json_text), keys, keys_start, condition, doublons)
 
+def obj_to_json(obj: object) -> json_T:
+    return json.dumps(obj)
+
+def json_to_obj(js: json_T) -> object:
+    return json.loads(js)
+
 
 if __name__ == '__main__':
-    asset_amount = call_request_api(["https://wax.light-api.net/api"], "account", "wax", "b4nvi.wam")
-    asset_amount = json_base_to_json_ok(asset_amount, ["currency"], ["balances"])
-    print(asset_amount)
+    # asset_amount = call_request_api(["https://wax.light-api.net/api"], "account", "wax", "b4nvi.wam")
+    # asset_amount = json_base_to_json_ok(asset_amount, ["currency"], ["balances"])
+    # print(asset_amount)
+    print(obj_to_json((dict(zip(("a", "b", "c"), (1, 2, 3))))))
+

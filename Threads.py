@@ -1,22 +1,38 @@
-import os
-import subprocess
+import sys
 import threading
+import traceback
 from threading import Thread
 from time import sleep
 from typing import Callable
 
+import Alert
 from Files import is_existing, delete, run_file
-from Introspection import frameinfo
+from Introspection import check_frames, frameinfo
 
 delete("locked")
 
 
-def run(fun: Callable, wait_a_bit: float = 0.1, **kwargs) -> threading:
+def run(fun: Callable, arguments: dict = {}, wait_a_bit: float = 0.0, alert_if_error=True, print_if_error=True,
+        name=None) \
+        -> threading:
     """
-    run(playback.play, kwargs={"audio_segment": sound})
+    run(playback.play, arguments={"audio_segment": sound})
     run(playback.play(sound))
     """
-    thread = Thread(target=fun, kwargs=kwargs)
+
+    def aux():
+        # noinspection PyBroadException
+        try:
+            fun(**arguments)
+        except Exception:
+            if print_if_error:
+                print(traceback.format_exc(), file=sys.stderr)
+                print(fun.__name__, file=sys.stderr)
+            if alert_if_error:
+                Alert.alert(str(fun.__name__) + "\n\n" + traceback.format_exc(), level=3)
+
+    thread = Thread(target=aux)
+    thread.name = name if name else fun.__name__
     thread.start()
     sleep(wait_a_bit)
     return thread
@@ -57,7 +73,12 @@ def exit_n_rerun():
     run_file(file)
     exit()
 
+
 def rerun_if_stop(fun):
     while True:
         thread = run(fun)
         thread.join()
+
+
+def get_current_thread():
+    return threading.current_thread()

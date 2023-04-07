@@ -1,17 +1,18 @@
 """ import cv2 on Pycharm
-PyCharm -> Settings -> Project -> Python Interpreter -> Gear symbol -> Show all -> folder tree -> +
-select the folder where the opencv package is located (ctrl+click on cv2) -> done
-https://www.delftstack.com/howto/python/python-color-spectrums/
-https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
+Resolve all "Cannot find reference 'xxx' in '__init__.py' under Pycharm":
+    (ctrl+click on cv2 copy the path into your clipboard)
+    PyCharm -> Settings -> Project -> Python Interpreter -> Python Interpreter: or Gear symbol -> Show all ->
+    tree folder -> +select the folder where the opencv package is located (ctrl+click on cv2) -> done
+    https://www.delftstack.com/howto/python/python-color-spectrums/
+    https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
 """
 import _pickle
 import copy
-import os
 import pickle
 import sys
 import threading
 import traceback
-from random import shuffle
+from random import randint
 from time import sleep
 from typing import Optional, Callable, Union
 
@@ -19,26 +20,26 @@ import cv2 as cv
 import matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import mss.tools
+# import mss.tools
+# import pywhatkit
+# from mss import ScreenShotError
 import numpy as np
 import pyqrcode
 import pytesseract
-# import pywhatkit
 import win32con
 import win32gui
 import win32ui
 from matplotlib import image as mpimg
-from mss import ScreenShotError
+from numpy import ndarray
 from pyzbar.pyzbar import decode
 from screeninfo import Monitor
 
+import Threads
 from Classes import Point, Rectangle
 from Colors import printc
-from Files import delete, overwrite, get_files_from_path, is_ascii, move_to, get_last_part, get_current_path
-from Threads import loop_run
+from Files import delete, is_existing, overwrite, is_ascii, move_to
 from Times import now, elapsed_seconds
 from Util import COMMON_CHARS, restrict_num, string_encoded_to_bytes
-from Threads import exit_n_rerun
 
 input_path = 'input.png'
 output_path = 'out.png'
@@ -48,11 +49,15 @@ EVENT_DICT = {}
 RED_ISOLATION = (255, 100, 100)
 GREEN_ISOLATION = (100, 255, 100)
 BLUE_ISOLATION = (100, 100, 255)
+LOCKER = False
 
 pytesseract.pytesseract.tesseract_cmd = r'B:\Programmes\Tesseract-OCR\tesseract.exe'
 
 
-def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg"):
+def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg", save_it=False) -> ndarray:
+    global LOCKER
+    while LOCKER:
+        sleep(0.01)
     x0_, y0_, x1_, y1_ = map(int, (x0, y0, x1, y1))
     w = x1_ - x0_
     h = y1_ - y0_
@@ -65,50 +70,63 @@ def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpe
         data_bit_map.CreateCompatibleBitmap(dc_obj, w, h)
         c_dc.SelectObject(data_bit_map)
         c_dc.BitBlt((0, 0), (w, h), dc_obj, (x0_, y0_), win32con.SRCCOPY)
-        data_bit_map.SaveBitmapFile(c_dc, dest)
+        signed_ints_array = data_bit_map.GetBitmapBits(True)
+        img = np.fromstring(signed_ints_array, dtype='uint8')
+        img.shape = (h, w, 4)
+        img = cv.cvtColor(img, cv.COLOR_BGRA2BGR)
+        if save_it:
+            data_bit_map.SaveBitmapFile(c_dc, dest)
         dc_obj.DeleteDC()
         c_dc.DeleteDC()
-        # raise win32ui.error
-        return
+        win32gui.ReleaseDC(hwnd, w_dc)
+        win32gui.DeleteObject(data_bit_map.GetHandle())
+        LOCKER = False
+        return img
     except win32ui.error:
-        print("err")
-        print(traceback.format_exc(), file=sys.stderr)
-        exit_n_rerun()
-        # return screenshot_fastest(x0, y0, x1, y1, dest)
-    # win32gui.ReleaseDC(hwnd, w_dc)
-    # win32gui.DeleteObject(data_bit_map.GetHandle())
+        # print("err", file=sys.stderr)
+        # print(traceback.format_exc(), file=sys.stderr)
+        sleep(0.1)
+        # Threads.exit_n_rerun()
+        return screenshot_fastest(x0, y0, x1, y1, dest, save_it)
+    # Threads.run(aux)
 
 
-def screenshot_mss(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg"):
-    x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
-    w = x1 - x0
-    h = y1 - y0
-    with mss.mss() as sct:
-        rect = {"left": x0, "top": y0, "width": w, "height": h}
-    try:
-        im = sct.grab(rect)
-        # mss.tools.to_png(im.rgb, im.size, output=dest)
-    except ScreenShotError:
-        pass
+# def screenshot_mss(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg"):
+#     x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
+#     w = x1 - x0
+#     h = y1 - y0
+#     with mss.mss() as sct:
+#         rect = {"left": x0, "top": y0, "width": w, "height": h}
+#     try:
+#         im = sct.grab(rect)
+#         # mss.tools.to_png(im.rgb, im.size, output=dest)
+#     except ScreenShotError:
+#         pass
 
 
-def screenshot_boxcutter(x0: float, y0: float, x1: float, y1: float, dest="out.png"):
-    assert "jpeg" not in dest
-    x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
-    options = "-c {},{},{},{} {}".format(x0, y0, x1, y1, dest)
-    os.system(r"A:\Programmes\AutoHotkey\Lib\boxcutter\boxcutter.exe " + options)
+# def screenshot_boxcutter(x0: float, y0: float, x1: float, y1: float, dest="out.png"):
+#     assert "jpeg" not in dest
+#     x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
+#     options = "-c {},{},{},{} {}".format(x0, y0, x1, y1, dest)
+#     os.system(r"A:\Programmes\AutoHotkey\Lib\boxcutter\boxcutter.exe " + options)
 
 
-def screenshot_monitor(monitor: Rectangle, display_scaling=100, dest="out.jpeg", delay=0, option="fastest"):
+def screenshot_monitor(monitor: Monitor | Rectangle, display_scaling=100, dest="out.jpeg", delay=0,
+                       option="fastest", get_it=False) -> ndarray:
     x0, y0, w, h = monitor.x0, monitor.y0, monitor.w, monitor.h
     w, h = map(lambda x: x * display_scaling / 100, (w, h))
+    screenshot = None
     if option == "fastest":
-        screenshot_fastest(x0, y0, x0 + w, y0 + h, dest)
-    elif option == "boxcutter":
-        screenshot_boxcutter(x0, y0, x0 + w, y0 + h, dest)
-    elif option == "mss":
-        screenshot_mss(x0, y0, x0 + w, y0 + h, dest)
+        screenshot = screenshot_fastest(x0, y0, x0 + w, y0 + h, dest, save_it=not get_it)
+    # elif option == "boxcutter":
+    #     screenshot_boxcutter(x0, y0, x0 + w, y0 + h, dest)
+    # elif option == "mss":
+    #     screenshot_mss(x0, y0, x0 + w, y0 + h, dest)
     sleep(delay)
+    # if get_it:
+        # image = read(dest)
+        # return screenshot_monitor(monitor, display_scaling, dest, delay, option, get_it) if image is None else image
+    return screenshot
 
 
 def screenshot_loop(monitor: Monitor, display_scaling=100):
@@ -121,7 +139,7 @@ def screenshot_loop(monitor: Monitor, display_scaling=100):
         # save(check_auto, "auto.jpeg")
         delete("locked_loop")
 
-    loop_run(loop, sleep_after_execution=0.5)
+    Threads.loop_run(loop, sleep_after_execution=0.5)
 
 
 def create_with_color(shape: tuple[int, int, int], rgb: tuple[int, int, int] = (0, 0, 0)) -> np.array:
@@ -133,6 +151,7 @@ def create_with_color(shape: tuple[int, int, int], rgb: tuple[int, int, int] = (
 """##### Image modifiers #####"""
 
 
+# noinspection PyUnresolvedReferences
 def grayscale(image: np.array) -> np.array:
     return cv.cvtColor(image, cv.COLOR_RGB2GRAY)
 
@@ -235,6 +254,12 @@ def filter_pixels_with_intensity(image: np.array,
 def create_mask(image: np.array, rgb_min: tuple[int, int, int], rgb_max: tuple[int, int, int]) -> np.array:
     """ All pixel that are in range are set to white, other are set to black """
     return filtering_intensity(image, rgb_min, rgb_max, set_color_in=(255, 255, 255), set_color_out=(0, 0, 0))
+
+
+def get_only_color(pixel, image: np.array, rgb_variation=(5, 5, 5)) -> np.array:
+    rgb_isolation_min = tuple(max(0, pixel[i] - rgb_variation[i]) for i in range(len(pixel)))
+    rgb_isolation_max = tuple(min(255, pixel[i] + rgb_variation[i]) for i in range(len(pixel)))
+    return isolate_img(image, rgb_isolation_min, rgb_isolation_max)
 
 
 def get_only_white(image: np.array, variation: int = 25) -> np.array:
@@ -402,9 +427,8 @@ def read(image_path: str, gray=False, to_rgb=False) -> np.array:
         return cv.imread(image_path)
         # return mpimg.imread(image_path)
     except cv.error:
-        print("err, image may no exist")
-        sleep(0.2)
-        return read(image_path)
+        # print("err, image may no exist", image_path)
+        return None
 
 
 def fill_images_array(images: list[np.array] | list[str],
@@ -419,10 +443,27 @@ def fill_images_array(images: list[np.array] | list[str],
             # image_np = cv.cvtColor(image, cv.COLOR_BGR2RGB)
             # if rgb_min is not None and rgb_max is not None:
             #     image_np = get_black_or_white_or_isolate(image, rgb_min, rgb_max)
-            # EVENT_DICT["arrays"][str(i)] = image_np
-            EVENT_DICT["arrays"][str(i)] = None
-    delete("temp.jpeg")
+            EVENT_DICT["arrays"][str(i)] = image
+            # EVENT_DICT["arrays"][str(i)] = None
     return EVENT_DICT["arrays"]
+
+
+def retire_black_bar(np_image: ndarray):
+    x0 = None
+    x1 = None
+    for nd_array in np_image:
+        if nd_array.max() == 0:
+            continue
+        i = next(x[0] for x in enumerate(nd_array) if (0, 0, 0) not in x[1])
+        j = next(x[0] for x in enumerate(nd_array[::-1]) if (0, 0, 0) not in x[1])
+        x0 = min(x0 if x0 else i, i)
+        x1 = min(x1 if x1 else i, j)
+    w = np_image.shape[1]
+    new_shape = (np_image.shape[0], w - x0 - x1, np_image.shape[2])
+    image = np.zeros(new_shape, np.uint8)
+    for i in range(len(np_image)):
+        image[i] = np_image[i][x0:w - x1]
+    return image
 
 
 def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
@@ -436,15 +477,22 @@ def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
     EVENT_DICT["."] = autorun > 0
     fill_images_array(images)
     plt, ax, fig = init_image_viewer(plt, full_screen)
-    # plt, ax, fig = init_image_viewer(plt, False)
     while not EVENT_DICT["exit_display"]:
-        i = EVENT_DICT["i_display_images"]
+        i = EVENT_DICT["i_display_images"] % len(images)
         print(i, len(EVENT_DICT["arrays"]), images[i])
-        if EVENT_DICT["arrays"][images[i]] is None:
-            EVENT_DICT["arrays"][images[i]] = read(images[i], to_rgb=to_rgb)
-        display_image = EVENT_DICT["arrays"][images[i]]
+        if str(i) in EVENT_DICT["arrays"]:
+            if EVENT_DICT["arrays"][str(i)] is None:
+                EVENT_DICT["arrays"][str(i)] = read(images[i], to_rgb=to_rgb)
+            display_image = EVENT_DICT["arrays"][str(i)]
+        elif type(images[i]) is str and images[i] in EVENT_DICT["arrays"]:
+            if EVENT_DICT["arrays"][images[i]] is None:
+                EVENT_DICT["arrays"][images[i]] = read(images[i], to_rgb=to_rgb)
+            display_image = EVENT_DICT["arrays"][images[i]]
+        else:
+            display_image = EVENT_DICT["arrays"][str(i)]
         if autorun > 0 and EVENT_DICT["."]:
             plt.cla()
+            # noinspection PyUnboundLocalVariable
             plt.imshow(display_image)
             start = now()
             i_event = EVENT_DICT["i_event"]
@@ -476,14 +524,16 @@ def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
                 pass
         if EVENT_DICT["save"]:
             EVENT_DICT["save"] = False
-            ext = images[i].rfind(".")
-            file_name = "C:\\Users\\Alexis\\Pictures\\Nouveau dossier\\" + images[i][
-                                                                           images[i].rfind("\\") + 1:ext] + "_" + \
-                        images[i][ext:]
+            image_name = images[i]
+            if type(image_name) is not str:
+                file_name = "Images\\out.png"
+            else:
+                ext = images[i].rfind(".")
+                file_name = "C:\\Users\\Alexis\\Pictures\\Nouveau dossier\\" + images[i][
+                                                                               images[i].rfind("\\") + 1:ext] + "_" + \
+                            images[i][ext:]
             plt.savefig(file_name, bbox_inches=0, pad_inches=0.1)
-            # img = read(file_name)
-            # img = remove(img)
-            # save(img, file_name)
+            save(retire_black_bar(read(file_name)), file_name)
     reset_event_vars()
     plt.close()
 
@@ -592,8 +642,8 @@ def create_qrcode(data: str | object, dest="out", scale=5) -> bool:
         print(traceback.format_exc(), file=sys.stderr)
         printc("The data is too big to be stored through a QRCode", background_color="red")
         return False
-    qrcode.png("{}.png".format(dest), scale=scale)
-    qrcode.svg("{}.svg".format(dest), scale=scale)
+    qrcode.png("images/{}.png".format(dest), scale=scale)
+    qrcode.svg("images/{}.svg".format(dest), scale=scale)
     return True
 
 
@@ -626,8 +676,8 @@ def crop(image: np.array, x0: int | Rectangle, y0=None, w=None, h=None):
     return img[y0:y0 + h, x0:x0 + w]
 
 
-def rectangle(image: np.array, p0: tuple[int, int] | Point, p1: tuple[int, int] | Point, color=(0, 0, 255),
-              thickness=1):
+def draw_rectangle(image: np.array, p0: tuple[int, int] | Point, p1: tuple[int, int] | Point, color=(0, 0, 255),
+                   thickness=1):
     """ cv.rectangle is side effect, encapsulate to cancel the effect """
     return_image = copy.deepcopy(image)
     return cv.rectangle(return_image, p0, p1, color, thickness)
@@ -637,43 +687,69 @@ def image_search(image: Union[np.array, Rectangle],
                  templates: str | list[str] | list[tuple[str, Rectangle]],
                  confidence_min=90,
                  image_origin_on_screen=Point(0, 0),
-                 display_scaling=100,
-                 debug=True) -> tuple[None, None] | tuple[Point, str]:
+                 display_scaling=100, delay=0, error_if_not_existing=False,
+                 debug=True, pixel_mode=()) -> tuple[None, None] | tuple[Point, str]:
     """ https://docs.opencv.org/4.x/d4/dc6/tutorial_py_template_matching.html
         https://github.com/ClarityCoders/ComputerVision-OpenCV/blob/master/Lesson3-TemplateMatching/PlayGame.py
      """
     assert len(templates) != 0
+    temp_name = "temp_image_search_%s.png" % str(randint(0, 100))
     if type(templates) is str:
         templates = [templates]
     if type(templates[0]) is str:
         templates = list(map(lambda x: (x, Rectangle(0, 0, 0, 0)), templates))
     base_top_left = None
-    if type(image) is not np.array:
+    capture_image = image
+    top_left = (0, 0)
+    if type(image) is Rectangle:
         base_top_left = image
-        move_origin = image.move_origin(image_origin_on_screen)
-        screenshot_monitor(move_origin, display_scaling, "temp.jpeg")
+        capture_pixels = image.move_origin(image_origin_on_screen)
+        if not pixel_mode:
+            capture_pixels = capture_pixels.move_corners(1)
+        # capture_image = None
+        # while capture_image is None:
+        capture_image = screenshot_monitor(capture_pixels, display_scaling, temp_name, delay=delay, get_it=True)
+            # sleep(0.2) if capture_image is None else ""
         # image_origin_on_screen = image_origin_on_screen.top_left
-        image = read("temp.jpeg")
     confidence = 0
-    for i, (template_np, crop_size) in enumerate(templates):
-        check_image = crop(image, crop_size)
-        template_np = read(template_np)
-        match = cv.matchTemplate(check_image, template_np, cv.TM_CCOEFF_NORMED)
-        a, confidence, b, top_left = cv.minMaxLoc(match)
-        confidence = round(confidence * 100, 3)
-        if debug:
-            printc("{} {}".format(confidence, templates[i][0]),
-                   color="green" if confidence >= confidence_min else "red")
-        if confidence >= confidence_min:
-            break
-    if confidence < confidence_min:
+    pixels_unfounded = 1
+    for i, (folder_image, crop_size) in enumerate(templates):
+        if not is_existing(folder_image):
+            return None, None
+        capture_image = crop(capture_image, crop_size)
+        folder_image = read(folder_image)
+        # display_images(capture_image)
+        if pixel_mode:
+            pixels_unfounded = np.count_nonzero(np.all(get_only_color(folder_image[0][0],
+                                                                      capture_image, pixel_mode[i]) == [0, 0, 0],
+                                                       axis=-1))
+            if debug:
+                printc("{} {}".format(pixels_unfounded, templates[i][0]),
+                       color="green" if pixels_unfounded == 0 else "red")
+            if pixels_unfounded == 0:
+                break
+        else:
+            save(capture_image, dest="capture_image_temp.jpeg")
+            save(folder_image, dest="folder_image_temp.jpeg")
+            match = cv.matchTemplate(capture_image, folder_image, cv.TM_CCOEFF_NORMED)
+            _, confidence, _, top_left = cv.minMaxLoc(match)
+            confidence = round(confidence * 100, 3)
+            if debug:
+                printc("{} {}".format(confidence, templates[i][0]),
+                       color="green" if confidence >= confidence_min else "red")
+            if confidence >= confidence_min:
+                break
+    # if is_existing(temp_name):
+    #     delete(temp_name)
+    if (not pixel_mode and confidence < confidence_min) or (pixel_mode and pixels_unfounded > 0):
         return None, None
-    h, w, _ = template_np.shape
-    hh, ww, _ = image.shape
+    # display_images(image)
+    h, w, _ = folder_image.shape
+    hh, ww, _ = capture_image.shape
     uncrop_top_left = tuple(crop_size.top_left + Point(top_left))
-    uncrop_bot_right = tuple(Point(uncrop_top_left[0] + w, uncrop_top_left[1] + h))
+    uncrop_bot_right = tuple(Point(uncrop_top_left[0] + w + 1, uncrop_top_left[1] + h + 1))
     if debug:
-        image_debug = rectangle(image, uncrop_top_left, uncrop_bot_right)
+        image_debug = draw_rectangle(capture_image, uncrop_top_left, uncrop_bot_right)
         save(image_debug, "image_search_debug.jpeg")
     if base_top_left:
         uncrop_top_left = Point(uncrop_top_left) + base_top_left.top_left
@@ -681,19 +757,19 @@ def image_search(image: Union[np.array, Rectangle],
 
 
 def _test_funs():
-    create_qrcode({"ee": 56, (1, 2, 3): "486"})
-    print(decode_qrcode())
+    # create_qrcode({"ee": 56, (1, 2, 3): "486"})
+    # print(decode_qrcode("images/out.png"))
 
     image_files = ["images/words1.jpeg"]
-    images = list(map(read, image_files))
+    images = list(map(lambda x: read(x, to_rgb=True), image_files))
 
     image = images[0]
     # by color
     white_filter = get_only_white(image)
     yellow_filter = image_modifier(image, rgb_isolation_min=(0xFE, 0xC2, 0x00), variation=20)
     result = add(white_filter, yellow_filter)
-    display_images(result)
-    ocr_image(result)
+    display_images(image)
+    # ocr_image(result)
 
     # # by intensity
     high_colors = filter_pixels_with_intensity(image, rgb_min=(240, 240, 240), rgb_max=(255, 255, 255))
@@ -706,5 +782,7 @@ def _test_funs():
 
 if __name__ == '__main__':
     _test_funs()
-    image_files = get_files_from_path(get_current_path() + "\\images\\", recursive=True)
+    # image_files = get_files_from_path(get_current_path() + "\\images\\", recursive=True)
+    # display_images(image_files)
+    display_images(["images/out.png"])
     exit()

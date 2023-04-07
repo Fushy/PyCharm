@@ -1,7 +1,6 @@
 import inspect
 import os.path
 import sys
-from inspect import FrameInfo
 from typing import Optional
 
 
@@ -18,6 +17,7 @@ def frameinfo(backtimes=0, debug=False) -> Optional[dict]:
     # fun_name = frame.f_code.co_name
     local_args = frame.f_locals
     line = frame.f_lineno
+    function_name = frame.f_code.co_name
     sep = os.path.sep
     if pathname.find(os.path.sep) == -1:
         sep = "/"
@@ -41,16 +41,20 @@ def frameinfo(backtimes=0, debug=False) -> Optional[dict]:
             "line": line,
             "pathname": pathname,
             "pathname_complete": pathname_complete,
+            "function_name": function_name,
             "local_args": local_args}
 
+def print_line(extra=""):
+    print(frameinfo(2)["line"], ":", extra)
 
 def check_frames():
     for i in range(10):
-        print(i, frameinfo(i+1))
+        print(i, frameinfo(i + 1))
     return
 
-def current_file():
-    return inspect.currentframe().f_code.co_filename
+
+# def current_file():
+#     return inspect.currentframe().f_code.co_filename
 
 
 def current_lines(start_depth=2, end_depth: Optional[int] = None):
@@ -67,6 +71,8 @@ def current_lines(start_depth=2, end_depth: Optional[int] = None):
         return lst
     return lst
 
+def get_current_function_name():
+    return inspect.currentframe().f_back.f_code.co_name
 
 # def frameinfo_stack(stack=0, debug=False):
 #     """ ne fonctionne pas dans les threads"""
@@ -91,10 +97,8 @@ def p(*args):
     print(inspect.stack()[1].lineno, text[:500], file=sys.stderr, flush=True)
     pass
 
-
 if __name__ == '__main__':
-    p("blabla")
     # print(current_file())
     # print(current_lines())
     # print(current_infos())
-    # print(frameinfo_stack())
+    print(check_frames())

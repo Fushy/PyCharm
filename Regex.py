@@ -1,10 +1,11 @@
 import re
 from datetime import timedelta
-from typing import Optional
+from typing import Callable, Optional
 
 re_decimal = re.compile(r"([-+]?[0-9]+)\.([0-9]+)")
 re_int = re.compile(r"([-+]?[0-9](_?[0-9])*)([eE][-+]?[0-9]+)?")
-re_float = re.compile(r"([-+]?[0-9](_?[0-9])*\.?[0-9](_?[0-9])+([eE][-+]?[0-9]+)?)")
+# re_float = re.compile(r"([-+]?[0-9](_?[0-9])*\.?[0-9](_?[0-9])+([eE][-+]?[0-9]+)?)")
+re_float = re.compile(r"([-+]?[0-9]([_, .]?[0-9])*([_, .]?[0-9])+([eE][-+]?[0-9]+)?)")
 re_time_hms = re.compile(r"((([0-9]?[0-9]) *h *)?(([0-9]?[0-9]) *m *)?(([0-9]?[0-9]) *s *)?)")
 re_time_dot = re.compile(r"((([0-9]?[0-9]) *: *)?(([0-9]?[0-9]) *: *)([0-9]?[0-9]))")
 re_alphanum_char = re.compile(r"([a-zA-Z0-9]+)")
@@ -14,11 +15,19 @@ re_html_marker = re.compile(r"(<.*?>)")
 
 
 def search_n_get_float(text: str) -> Optional[float]:
+    return search_n_get(text, re_float, 1, float, ",")
+
+
+def search_n_get(text: str, reg, occurence=1, cast: Callable = None, replace="") -> Optional[float]:
     if text is None:
         return None
-    float_find = re_float.search(text)
-    if float_find is not None:
-        return float(re_float.search(text).group(1).replace(",", ""))
+    if cast is None:
+        cast = lambda x: x
+    search = re_float.search(text)
+    if search is not None:
+        value = reg.search(text).group(occurence)
+        value = value if not replace else value.replace(",", "")
+        return cast(value)
 
 
 def get_timer(timer: str) -> Optional[list[Optional[float]]]:
@@ -42,17 +51,19 @@ def get_timer_as_timedelta(timer: str) -> Optional[timedelta]:
 
 
 if __name__ == '__main__':
-    print(re_time_hms.search("01h 02m 03s").groups())
-    print(re_time_hms.search("01h 03s").groups())
-    print(re_time_hms.search("01m 03s").groups())
-    print(re_time_hms.search("01h 03s").groups())
-    print(re_time_hms.search("01:02m03s").groups())
-    print(get_timer("01h 02m 03s"))
-    print(get_timer("01h 03s"))
-    print(get_timer("01m 03s"))
-    print(get_timer("01h 03s"))
-    print(get_timer("3s"))
-    print(get_timer("01:02:03"))
-    print(get_timer("01 : 02 : 03"))
-    print(get_timer("01 : 03"))
-    print(get_timer_as_timedelta("01 : 03"))
+    # print(re_float("bl21413.90"))
+    print(search_n_get_float("bl21413.90"))
+    # print(re_time_hms.search("01h 02m 03s").groups())
+    # print(re_time_hms.search("01h 03s").groups())
+    # print(re_time_hms.search("01m 03s").groups())
+    # print(re_time_hms.search("01h 03s").groups())
+    # print(re_time_hms.search("01:02m03s").groups())
+    # print(get_timer("01h 02m 03s"))
+    # print(get_timer("01h 03s"))
+    # print(get_timer("01m 03s"))
+    # print(get_timer("01h 03s"))
+    # print(get_timer("3s"))
+    # print(get_timer("01:02:03"))
+    # print(get_timer("01 : 02 : 03"))
+    # print(get_timer("01 : 03"))
+    # print(get_timer_as_timedelta("01 : 03"))
