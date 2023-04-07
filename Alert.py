@@ -247,7 +247,7 @@ def ping_listener():
                 Telegrams.message(function_name + " stopped")
                 sleep(5)
         sleep(1)
-        # print(_PINGS)
+        # print(_PINGS)z
 
 
 def ping_test():
