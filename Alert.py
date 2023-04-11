@@ -243,7 +243,7 @@ def ping(name=None):
 def ping_listener():
     while True:
         for function_name, last_ping in _PINGS.items():
-            if elapsed_seconds(last_ping) > 60:
+            if elapsed_seconds(last_ping) > 120:
                 Telegrams.message(function_name + " stopped")
                 sleep(5)
         sleep(1)
