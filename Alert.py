@@ -6,9 +6,11 @@ import sys
 from time import sleep
 
 from gtts import gTTS
+from peewee import CharField, CompositeKey, DateTimeField, Model, MySQLDatabase, Proxy, SqliteDatabase
 from pydub import AudioSegment, playback
 
 import Classes
+from Database import get_database
 from Files import delete, is_existing, run_file
 from Introspection import frameinfo
 import Telegrams
@@ -137,6 +139,7 @@ def save(sound: AudioSegment, dest: str):
 
 
 def read(filename: str, extension="mp3"):
+    import pydub
     try:
         if extension == "mp3":
             return AudioSegment.from_mp3(filename)
@@ -256,6 +259,30 @@ def ping_test():
     while elapsed_seconds(start) < 10:
         sleep(1)
         ping()
+
+
+db_proxy = Proxy()
+
+
+class AliveProcess(Model):
+    name = CharField()
+    last_ping = DateTimeField()
+
+    class Meta:
+        database = db_proxy
+        table_function = lambda model: "alive_process"
+        primary_key = CompositeKey("name")
+
+    @staticmethod
+    def init_db(db):
+        db_proxy.initialize(db)
+        db.create_tables([AliveProcess])
+
+
+def ping_is_alive(name):
+    assert db_proxy.obj is not None, "PING_IS_ALIVE DATABASE IS NOT INITIALIZED"
+    AliveProcess.insert(name=name, last_ping=now()).on_conflict(
+        conflict_target=[AliveProcess.name], update={AliveProcess.last_ping: now()}).execute()
 
 
 if __name__ == '__main__':
