@@ -1,29 +1,41 @@
 from asyncio import sleep
+import ctypes
 import os
 
 import pyautogui
+import win32con
 import win32gui
 
 from Classes import Point
+from Files import is_file_exist
 
 
-def launch_ahk_text(text, base=None, file_name="temp.ahk"):
-    base = """
-            if not A_IsAdmin
-              Run *RunAs "%A_ScriptFullPath%"
-            if not A_IsAdmin
-              ExitApp
-            CoordMode, Pixel, Screen
-            CoordMode, Mouse, Screen
-            CoordMode, ToolTip, Screen
-            SetTitleMatchMode, 1
-            SetBatchLines, -1
-            DetectHiddenWindows, On
-            SetKeyDelay, 50
-            """ if base is None else base
+def launch_ahk_text(text, base=None, file_name="temp.ahk", encoding="utf8", reset_file=True):
+    """ AutoHotkey.exe as administrator"""
+    if is_file_exist(file_name) and not reset_file:
+        os.system(file_name)
+        return
+    if base is None:
+        base = """
+                if not A_IsAdmin
+                  Run *RunAs "%A_ScriptFullPath%"
+                if not A_IsAdmin
+                  ExitApp
+                CoordMode, Pixel, Screen
+                CoordMode, Mouse, Screen
+                CoordMode, ToolTip, Screen
+                SetTitleMatchMode, 1
+                SetBatchLines, -1
+                SetKeyDelay, 10
+                DetectHiddenWindows, On
+                """
     ahk_text = base + text
-    with open(file_name, 'w', encoding="utf-8") as f:
-        f.write(ahk_text)
+    try:
+        with open(file_name, 'w', encoding=encoding) as f:
+            f.write(ahk_text)
+    except PermissionError:
+        sleep(0.1)
+        return launch_ahk_text(text, base, file_name, encoding, reset_file)
     os.system(file_name)
 
 
@@ -84,7 +96,18 @@ def click_n_rewind(x: int | Point | None, y=None):
     mouse_move(save_pos)
 
 
-def send(keys: list | str, press_time=0.1, ahk=False):
+def first_alpha_index(s):
+    is_in = """!+"#"""
+    start = False
+    for i in range(len(s)):
+        if not start and s[i] not in is_in:
+            start = True
+        elif start and s[i] not in is_in:
+            return i - 1
+    return 0
+
+
+def send(keys: list | str, press_time=0, ahk=False):
     # https://pyautogui.readthedocs.io/en/latest/keyboard.html#keyboard-keys
     if not ahk:
         for key in keys:
@@ -95,13 +118,16 @@ def send(keys: list | str, press_time=0.1, ahk=False):
                 sleep(press_time)
                 pyautogui.keyUp(key)
     elif ahk:
-        for key in keys:
-            launch_ahk_text("""
-            SendMessage, 0x0102, {}, 0x01f0010f,,A ; Char
-            SendMessage, 0x0100, {}, 0x01f0010f,,A ; Down
-            sleep, {}
-            SendMessage, 0x0101, {}, 0x01f0010f,,A ; Up""".format(ord(key), ord(key), press_time, ord(key)))
-
+        # for key in keys:
+        #     launch_ahk_text("""
+        #     SendMessage, 0x0102, {}, 0x01f0010f,,A ; Char
+        #     SendMessage, 0x0100, {}, 0x01f0010f,,A ; Down
+        #     sleep, {}
+        #     SendMessage, 0x0101, {}, 0x01f0010f,,A ; Up""".format(ord(key), ord(key), press_time, ord(key)))
+        i = first_alpha_index(keys) + 1
+        modifiers = keys[:i]
+        keys = keys[i:]
+        launch_ahk_text("""sendevent, {}[[{}]]""".format(modifiers, keys).replace("[[", "{").replace("]]", "}"), base="")
 
 
 def mouse_get_pos() -> Point:

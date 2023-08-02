@@ -30,7 +30,11 @@ a good for nothing	un bon a rien
 sinful	coupage/pécheur
 stab	poignarder/planter
 entrust	confier
+delve	creuser
+blurry	flou
+fine-tuned	peaufiné
 dreadful	terrible/épouvantable
+resemble	ressembler
 hideous	hideux/affreux
 a while yet	un certain temps encore/encore un moment
 a whole bunch	tout un tas
@@ -38,19 +42,31 @@ abhor	abhorrer/détester/horreur
 accounts	compte/comptabilité
 accustom	habituer/accoutumer
 strive	aspirer/s'éfforcer/lutter
+bulk	en gros
+ça ne serait pas plutôt	it wouldn't rather be
+the bulk	l'essentiel
 handover	transfert
+fire hydrant	bouche d'incendie
 hindrance	obstacle/entrave/frein
 worthy of notice	digne d'attention
+streamline	rationaliser
 acknowledge	reconnaître
 Christmas gift	cadeau de noel
 acquaint	familiariser
 across	de l'autre côté
-afford	permettre
+assess	évaluer/estimer
+for assessing	pour évaluer
 afford	s'offrir/se permettre
+pertains	se rapporte
 afloat	à flot
 afore	avant
+are divided up	sont réparties
+hold out	résistant
+in what ways	used when the available options or possibilities are not predefined or known
+in which ways	used when the available options or possibilities are already known or limited
 aforementioned	susmentionné
 agonizing	angoissant
+per se	en soi
 ahead	avant/devant/en avant/en avance
 airborne	aéroporté
 akin	proche
@@ -372,13 +388,18 @@ fooling me	me tromper
 for I	car je
 for all i care	pour tout ce qui m'importe
 for naught	pour rien
+widest possible	plus vaste possible
 for parts	pour pièces
+conveyor belt	tapis roulant
+tapis	carpet
 for starters	pour commencer/pour les debutants
 for the sake of	Pour l'amour de
 forbidden	interdit/défendu
 force of will	force de volonté
 foreboding	pressentiment
 foreign	étranger
+bead	perle
+you are grounded	tu es puni
 foremost	avant toute chose
 foresee	prévoir
 formal	formel/officiel
@@ -480,7 +501,7 @@ hedgehog	hérisson
 heed	tenir compte/écouter
 helping hand	Coup de main
 helpless look	regard impuissant
-hence	Par conséquent
+hence	Par conséquent/ainsi
 hidden	caché
 hill	colline
 hinder	entraver
@@ -787,6 +808,7 @@ red-handed	en flagrant délit
 reef	récif
 rejoice	réjouir
 reminiscent	rappelant
+tackling	s'attaquer
 repel	repel
 resort	station/recourir/
 resurgence	réapparition
@@ -803,15 +825,25 @@ rise rose rosen	augmenter/s'élever
 roof	toit
 rope	corde
 rot down there	pourrir là-bas
+You hypothesize that	Vous faites l'hypothèse que
 rotten egg	œuf pourri
 rotten egg smell	odeur d'œuf pourri
 rough	rude/brutal
 rough	rugueux/rude
+in which case	dans quel cas
+overfitting	sur-ajustement
+come in handy	être utile
 roughing him	le brutaliser
+make up for	compenser
+make up for lost time	rattraper le temps perdu
 roughing him up	le malmener
+happenstance	hasard/hasardeux
 ruckus	chahut
+rattraper son retard	catch up
 run along now	courir maintenant
 run amok	se déchaîner
+flawed	défectueux
+boils down to	se résume à
 run down	délabré/vétuste/descendre/dénigrer
 rustle up	se débrouiller pour trouver
 safe and sound	sain et sauf
@@ -941,17 +973,29 @@ sunbeam	rayon de soleil
 suppliers	fournisseurs
 supplies	Provisions/fournitures
 surely	sûrement/certainement
+inhabitant	habitant
 sustainer	soutien
+end to end	de bout en bout
 swan	cygne
+albeit	quoique
 sweat	sueur/transpiration/transpirer/suer
 swell swoll	gonflé
+feature	caractéristiques
+the sparsity	la rareté/something being sparse, scarce, or not densely populated
+convey	transmettre
 swiftly	rapidement
-tackle	s'attaquer à
+tackle	s'attaquer à/aborder
+eager	désireux
+Sparse	Clairsemé
 take a gander	jetez un coup d'oeil
+bootstrap	amorcer
 take a stroll down	faire une promenade
+ominous	sinistre
 take over	reprendre
+thriving	prospère
+prosperous	prospère
 taken over	repris
-talk you later	te parler plus tard
+profitable	rentable
 tearing up	déchirer
 tearing up town	déchirer la ville
 tedious talk	conversation fastidieuse
@@ -1158,26 +1202,42 @@ where is he	où est-il
 whereas	tandis que
 whether	si/que/qu'il s'agisse
 whether the trees	si les arbres
+widely	largement
 whether to go	s'il faut aller
 which is why	c'est pourquoi
+emphasize	souligner
 drowsy	somnolent
 the bride	la mariée
+their mind has made up	leur décision est prise
 bustling	animé/vif/vivant
+the latter solution	cette dernière solution
 which leads to	qui mène à
 whirl	tourbillon/tourbilloner
 whistling	sifflant
+flatten	aplatir
+to monitor	surveiller
+to shrink	rétrécir
+solely	uniquement
+thus	ainsi
+suburb	banlieue
+likelihood	probabilité/vraisemblance
+drawback	inconvénient
 who can't	qui ne peut pas
+pad your	remplir votre
 who can't get	qui ne peut pas obtenir
 who can't get to	qui ne peut pas se rendre
 who can't get to work	qui ne peut pas se rendre au travail
 who can't get to work up	qui ne peut pas se mettre au travail
 who can't get to work up top	qui ne peut pas travailler en haut
+widespread	répandu
 blend	mélange
 who's not as strong as whom ?	qui n'est pas aussi fort que qui ?
 whole	tout/ensemble/totality/entier/complet-
 whuppin	coup de fouet
 why bother putting	pourquoi s'embêter à mettre
 custody	garde/détention
+refresher	remise à niveau
+seamlessly	de façon transparente
 why bother putting them outside	pourquoi s'embêter à les mettre dehors
 why would the likes of a cat	pourquoi les goûts d'un chat
 wicked	malfaisant/mauvais/méchant

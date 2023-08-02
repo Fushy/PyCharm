@@ -77,6 +77,11 @@ def insert(connection: Connection, table_name, values, columns, debug=False):
     connection.execute("INSERT OR IGNORE INTO {} ({}) VALUES ({})"
                        .format(table_name, ", ".join(columns), ",".join(map(quote, values))))
 
+def drop_table(connection: Connection, table_name):
+    cursor = connection.cursor()
+    cursor.execute("DROP TABLE IF EXISTS \"%s\"" % table_name)
+    connection.commit()
+    cursor.close()
 
 def get_column_names_old(connection, table_name: str):
     column_names = []
@@ -198,9 +203,9 @@ def print_model_infos(model: Model):
 
 
 def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[object]] | list[object], debug=True,
-              raise_if_exist=False):  #
+              raise_if_exist=False, update_key=None):  #
     """ columns_order's names have to be the field name and not the column name. |columns_order|=|values|
-    faire bien attention aux types, un cas ou un int/float pk id diffère de la variable et de l'input db, transformation en char pour résoudre le pb"""
+    faire bien attention aux types, un cas ou un (int/float pk id) diffère de la variable et de l'input db, transformation en char de l'id pour résoudre le pb"""
     if type(values[0]) != list:
         values = [values]
     db_columns = get_columns_name_model(model)
@@ -209,9 +214,11 @@ def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[ob
     rows = [dict(zip(columns_order,
                      [value[i] for i in range(len(value)) if i not in indexes_to_ignore])) for value in values]
     try:
-        print("input", rows[0]["order_id"])
-        q = model.insert_many(rows)
-        q.execute()
+        if update_key:
+            for record in rows:
+                model.update(**record).where(getattr(model, update_key) == record[update_key]).execute()
+        else:
+            model.insert_many(rows).execute()
     except Exception as e:  # todo peewee.OperationalError: database is locked
         print("database may be locked", traceback.format_exc(), "sleep(1) & retry function")
         # if "order_id" in rows[0]:
@@ -282,3 +289,16 @@ def get_dict_fields_name_n_value(model) -> dict:
 
 def get_dataframe(model):
     return pd.DataFrame(list(model.select().dicts()))
+
+
+def query_to_df(query):
+    return pd.DataFrame(query.dicts())
+    # result_list = [{k: v for (k, v) in row.__dict__.items()} for row in boss_query]
+    # result_list = [{k: v for (k, v) in {**d['__data__'], **d}.items() if "__" not in k and k != "_dirty"} for d in
+    #                result_list]
+
+# def extend_on_join():
+#     select = Player.select().join(Boss).where(
+#         (Player.faction == 'Asmodian') &
+#         (Boss.start > now() - timedelta(days=1))
+#     ).select_extend(Boss)

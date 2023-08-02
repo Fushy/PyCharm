@@ -1,16 +1,16 @@
+from collections.abc import Iterable
+from datetime import datetime, timedelta
+from hashlib import blake2b
 import os
 import string
 import sys
-from collections.abc import Iterable
-from datetime import timedelta, datetime
-from hashlib import blake2b
 from time import sleep
-from typing import Callable, Container, Any
+from typing import Callable, Container
 
+from pandas import DataFrame
 import pandas as pd
 import pyperclip
 import sympy
-from pandas import DataFrame
 from sympy import Eq
 from sympy.parsing.sympy_parser import parse_expr
 
@@ -58,6 +58,10 @@ COMMON_CHARS = (string.ascii_lowercase
 # utils ascii chars https://emojipedia.org/fr/
 # ⬛⬜
 # ♛♕♘♞♖♜♝♗
+
+def flatten_2d_list(lst):
+    return [item for sublist in lst for item in sublist]
+
 
 def solve(equation):
     """
@@ -114,7 +118,7 @@ def is_running_under_basic_console():
 
 
 def reverse_dict(d: dict):
-    return {tuple(v): k for (k, v) in d.items()}
+    return {tuple(v) if type(v) is Iterable else v: k for (k, v) in d.items()}
 
 
 def init_dataframe(columns) -> DataFrame:
@@ -208,6 +212,7 @@ def datetime_to_timedelta(x):
 
 
 def is_iter(element):
+    # change name
     """ Si le type de l'objet peut être parcouru et n'est pas de type str"""
     if isinstance(element, Iterable) and not isinstance(element, str):
         return True

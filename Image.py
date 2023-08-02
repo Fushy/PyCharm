@@ -9,36 +9,36 @@ Resolve all "Cannot find reference 'xxx' in '__init__.py' under Pycharm":
 import _pickle
 import copy
 import pickle
+from random import randint
 import sys
 import threading
-import traceback
-from random import randint
 from time import sleep
-from typing import Optional, Callable, Union
+import traceback
+from typing import Callable, Optional, Union
 
 import cv2 as cv
 import matplotlib
+from matplotlib import image as mpimg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from numpy import ndarray
 # import mss.tools
 # import pywhatkit
 # from mss import ScreenShotError
 import numpy as np
 import pyqrcode
 import pytesseract
+from pyzbar.pyzbar import decode
+from screeninfo import Monitor
 import win32con
 import win32gui
 import win32ui
-from matplotlib import image as mpimg
-from numpy import ndarray
-from pyzbar.pyzbar import decode
-from screeninfo import Monitor
 
-import Threads
 from Classes import Point, Rectangle
 from Colors import printc
-from Files import delete, is_existing, overwrite, is_ascii, move_to
-from Times import now, elapsed_seconds
+from Files import delete, is_ascii, is_file_exist, move_to, overwrite
+import Threads
+from Times import elapsed_seconds, now
 from Util import COMMON_CHARS, restrict_num, string_encoded_to_bytes
 
 input_path = 'input.png'
@@ -54,7 +54,7 @@ LOCKER = False
 pytesseract.pytesseract.tesseract_cmd = r'B:\Programmes\Tesseract-OCR\tesseract.exe'
 
 
-def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg", save_it=False) -> ndarray:
+def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg", save_it=False, autoconvert=True) -> ndarray:
     global LOCKER
     while LOCKER:
         sleep(0.01)
@@ -73,7 +73,8 @@ def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpe
         signed_ints_array = data_bit_map.GetBitmapBits(True)
         img = np.fromstring(signed_ints_array, dtype='uint8')
         img.shape = (h, w, 4)
-        img = cv.cvtColor(img, cv.COLOR_BGRA2BGR)
+        if autoconvert:
+            img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         if save_it:
             data_bit_map.SaveBitmapFile(c_dc, dest)
         dc_obj.DeleteDC()
@@ -151,13 +152,14 @@ def create_with_color(shape: tuple[int, int, int], rgb: tuple[int, int, int] = (
 """##### Image modifiers #####"""
 
 
+def negative(image: np.array) -> np.array: return cv.bitwise_not(image)
+
+
 # noinspection PyUnresolvedReferences
-def grayscale(image: np.array) -> np.array:
-    return cv.cvtColor(image, cv.COLOR_RGB2GRAY)
+def grayscale(image: np.array) -> np.array: return cv.cvtColor(image, cv.COLOR_RGB2GRAY)
 
 
-def median_blur(image: np.array) -> np.array:
-    return cv.medianBlur(image, 5)
+def median_blur(image: np.array) -> np.array: return cv.medianBlur(image, 5)
 
 
 def dilate(image: np.array) -> np.array:
@@ -175,12 +177,10 @@ def morphology_ex(image: np.array) -> np.array:
     return cv.morphologyEx(image, cv.MORPH_OPEN, kernel)
 
 
-def canny(image: np.array) -> np.array:
-    return cv.Canny(image, 100, 200)
+def canny(image: np.array) -> np.array: return cv.Canny(image, 100, 200)
 
 
-def match_template(image: np.array, template):
-    return cv.matchTemplate(image, template, cv.TM_CCOEFF_NORMED)
+def match_template(image: np.array, template) -> np.array: return cv.matchTemplate(image, template, cv.TM_CCOEFF_NORMED)
 
 
 MODIFIERS_FUNCTION = [lambda x: x, grayscale, median_blur, morphology_ex, erode, dilate, canny]
@@ -197,7 +197,7 @@ def filtering_intensity(image: np.array,
                         rgb_min: tuple[int, int, int],
                         rgb_max: tuple[int, int, int],
                         set_color_in=None,
-                        set_color_out=None):
+                        set_color_out=None) -> np.array:
     a, b, c = rgb_min
     d, e, f = rgb_max
     filter_in = np.where(
@@ -222,7 +222,7 @@ def filtering_color(image: np.array,
                     rgb_min: tuple[int, int, int],
                     rgb_max: tuple[int, int, int],
                     set_color_in: Optional[tuple[int, int, int]] = (255, 255, 255),
-                    set_color_out: Optional[tuple[int, int, int]] = (0, 0, 0)):
+                    set_color_out: Optional[tuple[int, int, int]] = (0, 0, 0)) -> np.array:
     a, b, c = rgb_min
     d, e, f = rgb_max
     filter_in = np.where(
@@ -310,6 +310,7 @@ def ocr_image(img: np.ndarray | str,
               whitelist_filter: str = COMMON_CHARS,
               blacklist_filter: str = "",
               debug: bool = True) -> str:
+    """ config="--oem 3 --psm {}".format(j) """
     # https://ai-facets.org/tesseract-ocr-best-practices/
     if type(img) is str:
         img = read(img)
@@ -383,26 +384,89 @@ def events(event):
     print(EVENT_DICT["i_display_images"], "ocr", EVENT_DICT["ocr"], "original", EVENT_DICT["original_img"], "\n")
 
 
-def init_image_viewer(plt, full_screen: bool = False) -> matplotlib.pyplot:
+def init_image_viewer_white(full_screen: bool = False, title="") -> matplotlib.pyplot:
+    from matplotlib import pyplot as plt
     # plt.rcParams['toolbar'] = 'None'
     plt.rcParams["keymap.zoom"].append("a")
     plt.rcParams["keymap.back"].append("²")
     plt.rcParams["keymap.save"] = ""
-    plt.rcParams['figure.figsize'] = (16, 8)
+    plt.rcParams['figure.figsize'] = (10, 6)
     if threading.current_thread() == threading.main_thread():
         mpl.use('Qt5Agg')  # pip install PyQt5
-    curve_color = "#000000"
-    plt.rcParams['axes.facecolor'] = curve_color
+    # curve_color = "#0F1623"
+    # plt.rcParams['axes.facecolor'] = curve_color
+    # fig.patch.set_facecolor(curve_color)
     fig: plt.figure = plt.figure()
-    fig.patch.set_facecolor(curve_color)
-    ax = fig.add_axes([0, 0, 1, 1])
+    # ax = fig.add_axes([0, 0, 0, 0])
+    ax = fig.axes
     fig.canvas.mpl_connect('key_press_event', events)
     if full_screen:
         fig.canvas.manager.full_screen_toggle()
-    plt.ion()
-    plt.show()
+    # plt.ion()
+    plt.title(title)
     return plt, ax, fig
 
+
+def init_image_viewer_dark(full_screen: bool = False, figsize=(16, 9), curve_color=None, title="") -> tuple[
+    matplotlib.pyplot, matplotlib.figure.Axes, matplotlib.figure.Figure]:
+    from matplotlib import pyplot as plt
+    # plt.rcParams['toolbar'] = 'None'
+    plt.rcParams["keymap.zoom"].append("a")
+    plt.rcParams["keymap.back"].append("²")
+    plt.rcParams["keymap.save"] = ""
+    plt.rcParams['figure.figsize'] = figsize
+    if threading.current_thread() == threading.main_thread():
+        mpl.use('Qt5Agg')  # pip install PyQt5
+    if curve_color is None:
+        curve_color = "#0F1623"
+    plt.rcParams['axes.facecolor'] = curve_color
+    plt.rcParams['axes.edgecolor'] = 'white'
+    plt.rcParams['axes.labelcolor'] = 'white'
+    fig, ax = plt.subplots()
+    # fig: plt.figure = plt.figure()
+    fig.patch.set_facecolor(curve_color)
+    # ax = fig.axes()
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+    # ax = fig.add_axes([0, 0, 1, 1])
+    fig.canvas.mpl_connect('key_press_event', events)
+    if full_screen:
+        fig.canvas.manager.full_screen_toggle()
+    # plt.ion()
+    # plt.show()
+    plt.title(title)
+    return plt, ax, fig
+
+
+def init_plt(full_screen: bool = False, figsize=(16, 9), curve_color="#0F1623", title="") -> tuple[
+    matplotlib.pyplot, matplotlib.figure.Axes, matplotlib.figure.Figure]:
+    from matplotlib import pyplot as plt
+    if threading.current_thread() == threading.main_thread():
+        mpl.use('Qt5Agg')  # pip install PyQt5
+    plt.rcParams["keymap.zoom"].append("a")
+    plt.rcParams["keymap.back"].append("²")
+    plt.rcParams["keymap.save"] = ""
+    # plt.rcParams['toolbar'] = 'None'
+    plt.rcParams["figure.figsize"] = figsize
+    plt.rcParams["axes.facecolor"] = curve_color
+    plt.rcParams["axes.edgecolor"] = "white"
+    plt.rcParams["axes.labelcolor"] = "white"
+    plt.rcParams["axes.titlecolor"] = "white"
+    fig, ax = plt.subplots()
+    fig.patch.set_facecolor(curve_color)
+    fig.canvas.mpl_connect('key_press_event', events)
+    if full_screen:
+        fig.canvas.manager.full_screen_toggle()
+    ax.tick_params(axis='x', colors='white')
+    ax.tick_params(axis='y', colors='white')
+    # fig: plt.figure = plt.figure()
+    # ax = fig.axes()
+    # ax = fig.add_axes([0, 1, 0, 0])
+    # plt.ion()
+    # plt.show()
+    ax.xaxis.set_minor_locator(plt.NullLocator())
+    plt.title(title)
+    return plt, ax, fig
 
 def get_black_or_white_or_isolate(image: np.array,
                                   rgb_min: tuple[int, int, int],
@@ -469,7 +533,8 @@ def retire_black_bar(np_image: ndarray):
 def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
                    full_screen: bool = False,
                    to_rgb: bool = False,
-                   autorun: float = 0):
+                   autorun: float = 0,
+                   mapping=None):
     import matplotlib.pyplot as plt
 
     if type(images) is not list:
@@ -490,6 +555,8 @@ def display_images(images: list[np.ndarray] | np.ndarray | str | list[str],
             display_image = EVENT_DICT["arrays"][images[i]]
         else:
             display_image = EVENT_DICT["arrays"][str(i)]
+        if mapping is not None:
+            display_image = mapping(display_image)
         if autorun > 0 and EVENT_DICT["."]:
             plt.cla()
             # noinspection PyUnboundLocalVariable
@@ -714,7 +781,7 @@ def image_search(image: Union[np.array, Rectangle],
     confidence = 0
     pixels_unfounded = 1
     for i, (folder_image, crop_size) in enumerate(templates):
-        if not is_existing(folder_image):
+        if not is_file_exist(folder_image):
             return None, None
         capture_image = crop(capture_image, crop_size)
         folder_image = read(folder_image)

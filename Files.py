@@ -1,12 +1,23 @@
 from datetime import datetime
 import os
+from pathlib import Path
 import shutil
 from typing import Callable, Optional
 
-import Introspection
+# import chardet
+#
+# with open('filename.txt', 'rb') as f:
+#     result = chardet.detect(f.read())
+#
+# encoding = result['encoding']
+# with open('filename.txt', encoding=encoding) as f:
+#     content = f.read()
 
 
-def is_existing(path: str) -> bool:
+# os.mkdir(directory)
+# list(map(lambda d: os.makedirs(d, exist_ok=True), dirs))
+
+def is_file_exist(path: str) -> bool:
     """ Due to concurrency, after an is_existing call, it may be possible that the file doesn't exist,
     in this case, use a try-catch exception when the file is used """
     return os.path.exists(path)
@@ -20,13 +31,13 @@ def is_file(path: str) -> bool:
     return os.path.isfile(path)
 
 
-def get_files_from_path(*paths: str, _filter: Callable[[str], bool] = None, recursive: bool = False) -> list[str]:
+def get_files_from_path(*paths: str | Path, _filter: Callable[[str], bool] = None, recursive: bool = False) -> list[str]:
     import glob
     files = []
     for path in paths:
-        files += glob.glob(path + r"\*.*")
+        files += glob.glob(str(path) + r"\*.*")
         if recursive:
-            files += glob.glob(path + r"\**\*.*", recursive=recursive)
+            files += glob.glob(str(path) + r"\**\*.*", recursive=recursive)
     if _filter is not None:
         files = list(filter(_filter, files))
     return files
@@ -73,31 +84,6 @@ def get_lines(file_name: str, encoding="utf-8") -> Optional[list[str]]:
 
 def count_lines(file_name: str) -> int:
     return sum([1 for _ in open(file_name)])
-
-
-def abspath(file_name: str) -> Optional[str]:
-    if not is_existing(file_name):
-        return None
-    return os.path.abspath(file_name)
-
-
-def relpath(file_name: str) -> Optional[str]:
-    if not is_existing(file_name):
-        return None
-    return os.path.relpath(file_name)
-
-
-def get_current_abspath():
-    return os.path.abspath(os.getcwd())
-
-
-def get_current_path():
-    return os.getcwd()
-
-
-def get_project_path():
-    """current file dir - 1 """
-    return Introspection.frameinfo(2)["pathname"]
 
 
 def overwrite(file_name: str, value: str, encoding="utf-8", mode="w"):
