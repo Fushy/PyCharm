@@ -270,6 +270,13 @@ def get_element_href(element: WebElement):
         data = None
     return data
 
+def get_element_innerHTML(element: WebElement):
+    try:
+        data = element.get_attribute("innerHTML")
+    except StaleElementReferenceException:
+        data = None
+    return data
+
 
 def get_element_src(element: WebElement):
     try:

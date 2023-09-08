@@ -6,10 +6,8 @@ from sqlite3 import Connection, OperationalError
 from time import sleep
 from typing import Type
 
-import mysql.connector
-from mysql.connector import MySQLConnection
 import pandas as pd
-from peewee import Model, IntegrityError, FloatField, IntegerField, CharField, DateTimeField, PostgresqlDatabase
+from peewee import Model, FloatField, IntegerField, CharField, DateTimeField, PostgresqlDatabase
 from playhouse.migrate import migrate, SchemaMigrator
 from playhouse.sqlite_ext import JSONField
 
@@ -21,18 +19,18 @@ from Times import now
 
 # TODO with peewee
 
-def mysql_connect_remote() -> MySQLConnection:
-    # a temp whatever database
-    HOST = "remotemysql.com"
-    DATABASE = "6fLyxUf3eM"
-    USER = "6fLyxUf3eM"
-    password = 'IhNaLib2PI'
-    try:
-        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password, buffered=True)
-    except mysql.connector.errors.DatabaseError:
-        sleep(30)
-        return mysql_connect_remote()
-    return connection
+# def mysql_connect_remote() -> MySQLConnection:
+#     # a temp whatever database
+#     HOST = "remotemysql.com"
+#     DATABASE = "6fLyxUf3eM"
+#     USER = "6fLyxUf3eM"
+#     password = 'IhNaLib2PI'
+#     try:
+#         connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password, buffered=True)
+#     except mysql.connector.errors.DatabaseError:
+#         sleep(30)
+#         return mysql_connect_remote()
+#     return connection
 
 
 def is_mysql(connection) -> bool:

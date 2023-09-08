@@ -10,7 +10,6 @@ from peewee import CharField, CompositeKey, DateTimeField, Model, MySQLDatabase,
 from pydub import AudioSegment, playback
 
 import Classes
-from Database import get_database
 from Files import delete, is_file_exist, run_file
 from Introspection import frameinfo
 import Telegrams

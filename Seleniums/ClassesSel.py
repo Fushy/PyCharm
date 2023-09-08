@@ -1,38 +1,28 @@
-import inspect
 import os
-import re
+import os
 import sys
 import traceback
-from collections import defaultdict
-from random import shuffle
 from time import sleep
 from typing import Callable, Optional, Iterable
 
-from playhouse.sqlite_ext import JSONField
 from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
-from peewee import Model, CharField, FloatField, SqliteDatabase
-from selenium.common.exceptions import SessionNotCreatedException, InvalidSessionIdException, TimeoutException, \
-    WebDriverException, InvalidArgumentException, NoSuchWindowException, StaleElementReferenceException, \
+from selenium.common.exceptions import InvalidSessionIdException, TimeoutException, \
+    WebDriverException, NoSuchWindowException, StaleElementReferenceException, \
     MoveTargetOutOfBoundsException, ElementNotInteractableException, ElementClickInterceptedException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from urllib3.exceptions import NewConnectionError, MaxRetryError
-
 import Alert
 import Classes
 from Colors import printc
-from Database import fill_rows, add_missing_columns_to_db, get_table_name, get_columns_name_model
 from Enum import FIRST
 from Files import get_first_line
 from Introspection import current_lines, frameinfo
-from Jsons import json_base_to_json_ok
-from Regex import re_float
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text, get_element_class
-from Sysconf import screen_rect, SCREENS
 from Times import now, elapsed_seconds
-from Util import is_iter
+from Util import is_iter_but_not_str
 
 last_browser_set = now()
 
@@ -76,7 +66,7 @@ class Browser:
             print("{}{} {}\t\t\t{} {}".format(
                 "\t" if tab else "",
                 self.name,
-                " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+                " ¤ ".join(map(str, texts)) if is_iter_but_not_str(texts) and type(texts) is not str else texts,
                 self,
                 current_lines(start_depth=4)))
 
@@ -88,7 +78,7 @@ class Browser:
         printc("{}{} {}\t\t\t{} {}".format(
             "\t" if tab else "",
             self.name,
-            " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+            " ¤ ".join(map(str, texts)) if is_iter_but_not_str(texts) and type(texts) is not str else texts,
             self,
             current_lines(start_depth=3)),
             color=color,
@@ -319,6 +309,12 @@ class Browser:
         self.close()
         self.goto_main()
 
+    def close_main(self):
+        index_window = self.get_current_index_window()
+        self.goto_main()
+        self.close()
+        self.goto(index_window)
+
     def refresh(self):
         try:
             self.driver.refresh()
@@ -445,7 +441,7 @@ class Browser:
 
     def get_all_tag_that_contains(self,
                                   web_element,
-                                  predicats_on_text: list[Callable] = (lambda x: True,),
+                                  predicats_on_element: list[Callable] = (lambda x: True,),
                                   tag="div",
                                   doublon=False,
                                   alone=False) -> dict[str, WebElement] | None:
@@ -461,8 +457,8 @@ class Browser:
             if element_text is None:
                 return None
             print("\tget_all_tag_that_contains_element_text<|" + str(element_text) + "|>")
-            for predicat in predicats_on_text:
-                if predicat(element_text):
+            for predicat in predicats_on_element:
+                if predicat(element):
                     if alone:
                         element_dict[element_text] = element
                         return element_dict
@@ -657,7 +653,7 @@ class Browser:
                 else:
                     browser.refresh()
                 start_refresh = now()
-            if is_iter(selectors):
+            if is_iter_but_not_str(selectors):
                 for selector in selectors:
                     text = self.get_text(url, selector, leave=1, debug=debug, find_element_fun=find_element_fun)
                     if text is not None and len(text) >= min_txt_len:
@@ -823,8 +819,8 @@ class Browser:
 
 if __name__ == '__main__':
     # s = screen_rect(1000)
-    browser = Browser(profile=r"B:\_Documents\Profile")
+    # browser = Browser(profile=r"B:\_Documents\Profile")
+    browser = Browser()
     # # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
     # browser.new_page('https://www.expressvpn.com/what-is-my-ip')
     browser.new_page('https://fr.tradingview.com/chart/dOWkigGU/?symbol=BINANCE%3ABTCBUSD')
-

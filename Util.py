@@ -132,8 +132,6 @@ def add_rows_dataframe(df: DataFrame, rows: dict[str, list | tuple], bottom=True
     # return pd.concat(concat_df).drop_duplicates().reset_index(drop=True)
     return pd.concat(concat_df).reset_index(drop=True)
 
-# todo add dataframe
-
 def add_columns_dataframe(df: DataFrame, columns: dict) -> DataFrame:
     """ slow, add all lines at the same time"""
     # np.set_printoptions(suppress=True,
@@ -186,7 +184,7 @@ def get_first_deeply_value(obj: object):
 def str_to_hashcode(text: str or list[str], len_hashcode=8, seed=1337, whitelist="") -> list[str] or str:
     if whitelist == "":
         whitelist = string.ascii_letters + string.digits
-    if is_iter(text):
+    if is_iter_but_not_str(text):
         return [str_to_hashcode(txt, len_hashcode, seed, whitelist) for txt in text]
     encode = blake2b()
     if len_hashcode > encode.digest_size * 2 or len(str(seed)) >= 9:
@@ -206,13 +204,28 @@ def str_to_hashdigits(text, len_hashcode=32, seed=1337) -> int:
     whitelist = string.digits
     return int(str_to_hashcode(text, len_hashcode, seed, whitelist))
 
+from cryptography.fernet import Fernet
+
+def generate_key() -> bytes:
+    with open(r"B:\_Documents\APIs\fernet_key", 'rb') as file:
+        return file.read()
+    # return Fernet.generate_key()
+
+def encrypt_string(s: str, key=None) -> bytes:
+    if key is None:
+        key = generate_key()
+    return Fernet(key).encrypt(s.encode())
+
+def decrypt_string(encrypted: bytes, key=None) -> str:
+    if key is None:
+        key = generate_key()
+    return Fernet(key).decrypt(encrypted).decode()
 
 def datetime_to_timedelta(x):
     return x - datetime.strptime("0:0:0", "%H:%M:%S")
 
 
-def is_iter(element):
-    # change name
+def is_iter_but_not_str(element):
     """ Si le type de l'objet peut être parcouru et n'est pas de type str"""
     if isinstance(element, Iterable) and not isinstance(element, str):
         return True
@@ -371,5 +384,6 @@ if __name__ == '__main__':
     #                     r"B:\_Documents\Pycharm\Util\util_requirements.txt")
     # install_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
     #                      r"B:\_Documents\Pycharm\Util\util_requirements.txt")
-    upgrade_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
-                         r"B:\_Documents\Pycharm\Util\util_requirements.txt")
+    # upgrade_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
+    #                      r"B:\_Documents\Pycharm\Util\util_requirements.txt")
+    print(encrypt_string(""))

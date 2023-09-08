@@ -1,5 +1,4 @@
 import json
-import json as json_api
 import re
 import socket
 from time import sleep
@@ -20,37 +19,39 @@ json_T = dict[T, E]
 
 
 def to_correct_json(string) -> str:
-    json_string = str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("\n", "").replace("\\", "")
-    json_string = re.sub(r"(?<=[{,])(.*?):('?)(.*?)('?)(((?<='),)|},{|})", r""""\1":"\3"\5""", json_string)
+    # json_string = str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("\n", "").replace("\\", "")
+    json_string = re.sub(r"(?<=[{,])(.*?):('?)(.*?)('?)(((?<='),)|},{|})", r""""\1":"\3"\5""", string)
     return json_string
-    # return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"").replace("\\",
-    # "\\\\")
+    # return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"").replace("\\", "\\\\")
 
 
 def text_to_json(json_text: str) -> json_base:
-    return json_api.loads(to_correct_json(json_text))
+    correct_json = to_correct_json(json_text)
+    return json.loads(correct_json)
 
 
-def url_to_json(url: str) -> Optional[json_base]:
+def url_to_json(url: str, timelimit=1) -> Optional[json_base]:
     html_session = HTMLSession()
     try:
         start = now()
+        json_value = None
         while True:
             try:
-                if elapsed_minutes(start) >= 1:
+                if elapsed_minutes(start) >= timelimit:
                     return None
                 html_result_text = html_session.get(url)
                 html_result_text = html_result_text.text
+                if "503 Service Unavailable" in html_result_text or "<Response [403]>" in html_result_text:
+                    print("url_to_json error: err Response in html_result_text")
+                    sleep(5)
+                    continue
+                json_value = text_to_json(html_result_text)
+                break
             except ChunkedEncodingError or ConnectionError or NewConnectionError or socket.gaierror or json.decoder.JSONDecodeError or requests.exceptions.ConnectTimeout:
                 printc("url_to_json ChunkedEncodingError", background_color="red")
                 sleep(2)
                 return url_to_json(url)
-            if "503 Service Unavailable" in html_result_text or "<Response [403]>" in html_result_text:
-                print("url_to_json error: err Response in html_result_text")
-                sleep(5)
-            elif is_json(html_result_text):
-                break
-        return text_to_json(html_result_text)
+        return json_value
     except MaxRetryError or SSLError:
         return None
 
@@ -75,7 +76,7 @@ def call_request_api(base_urls: list[str], *start_with, parameters_n_values=None
 
 def is_json(txt):
     try:
-        json_api.loads(to_correct_json(txt))
+        json.loads(to_correct_json(txt))
         return True
     except ValueError:  # update
         return False
@@ -134,8 +135,10 @@ def text_to_json_ok(json_text: str,
                     doublons=True) -> json_T:
     return json_base_to_json_ok(text_to_json(json_text), keys, keys_start, condition, doublons)
 
+
 def obj_to_json(obj: object) -> json_T:
     return json.dumps(obj)
+
 
 def json_to_obj(js: json_T) -> object:
     return json.loads(js)
@@ -146,4 +149,3 @@ if __name__ == '__main__':
     # asset_amount = json_base_to_json_ok(asset_amount, ["currency"], ["balances"])
     # print(asset_amount)
     print(obj_to_json((dict(zip(("a", "b", "c"), (1, 2, 3))))))
-

@@ -164,9 +164,6 @@ def run_cmd(cmd):
 
 
 if __name__ == '__main__':
-    # pre = "B:\\_Documents\\"
-    # dest1 = pre + "anglais_full.txt"
-    # concat_files(dest1, pre + "anglais Fairy tail.txt", pre + "anglais FFVII Remake.txt", pre + "anglais.txt")
     dest = "anglais.txt"
     sort_file(dest, dest=dest)
     remove_same_lines(dest)
