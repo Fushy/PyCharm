@@ -19,6 +19,7 @@ json_T = dict[T, E]
 
 
 def to_correct_json(string) -> str:
+    """ ex """
     # json_string = str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("\n", "").replace("\\", "")
     json_string = re.sub(r"(?<=[{,])(.*?):('?)(.*?)('?)(((?<='),)|},{|})", r""""\1":"\3"\5""", string)
     return json_string
@@ -30,7 +31,7 @@ def text_to_json(json_text: str) -> json_base:
     return json.loads(correct_json)
 
 
-def url_to_json(url: str, timelimit=1) -> Optional[json_base]:
+def url_to_json(url: str, timelimit=1) -> Optional[json_T]:
     html_session = HTMLSession()
     try:
         start = now()
@@ -47,7 +48,8 @@ def url_to_json(url: str, timelimit=1) -> Optional[json_base]:
                     continue
                 json_value = text_to_json(html_result_text)
                 break
-            except ChunkedEncodingError or ConnectionError or NewConnectionError or socket.gaierror or json.decoder.JSONDecodeError or requests.exceptions.ConnectTimeout:
+            except (ChunkedEncodingError, ConnectionError, NewConnectionError, socket.gaierror, json.decoder.JSONDecodeError,
+                    requests.exceptions.ConnectTimeout):
                 printc("url_to_json ChunkedEncodingError", background_color="red")
                 sleep(2)
                 return url_to_json(url)

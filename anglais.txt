@@ -794,7 +794,6 @@ mutter	marmonner/murmurer
 muttering	marmonner
 my bare hands	mes mains nues
 my fair share	ma juste part
-my guibea pig	mon cochon d'inde
 my guinea pig	mon cochon d'inde
 my own will	ma propre volonté
 my regards	mes salutations
@@ -1196,7 +1195,7 @@ they don't look anything like knights	ils ne ressemblent en rien à des chevalie
 they don't take kindly to questions	ils ne prennent pas gentiment les questions
 they have almost	ils ont presque
 they must have made off	ils ont dû s'enfuir
-they will blow you sky high	ils vont te faire exploser	
+they will blow you sky high	ils vont te faire exploser
 they worship	ils vénèrent
 think thought thought	penser
 thinned	aminci
@@ -1422,7 +1421,7 @@ woven	tissé
 wrap	envelopper
 wrapped	enveloppé
 wrath	colère
-wrinkle ride/a small line or fold that appears on a surface
+wrinkle	ride/a small line or fold that appears on a surface
 x and whatnot	x et d'autre chose similaire
 yarn ball	pelote de laine
 yearn	aspirer

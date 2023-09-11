@@ -1,38 +1,45 @@
+from collections import defaultdict
 import copy
 from datetime import datetime
+import itertools
 import json
 import random
 import re
 import socket
-from collections.abc import Iterable
 from time import sleep
-from typing import Callable, Optional, TypeVar, Sequence
+from typing import Callable, Optional, TypeVar, Iterable
+import json as json_api
+import argparse
 
+from _pytest.capture import CaptureResult
+from bs4 import BeautifulSoup
 from colorama import Back, Fore, Style, init
 import pytest
 import requests
 from requests.exceptions import ChunkedEncodingError, SSLError
 from requests_html import HTMLSession
 from urllib3.exceptions import NewConnectionError, MaxRetryError
-from Jsons import text_to_json
 
-colors = ["RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN"]
+# colors = ["RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN"]
+colors = ["WHITE", "BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN"]
 
 
 class QuestionsAnswers:
     """ A class that able to train question and answer.
-    The constructor takes a dict[str, Sequence[str]] as argument where keys represent questions, and the corresponding values represent their respective answers.
-    Questions & Answers are colored to faster memoize them. Given a same questions_answers sample, they always have the same color. """
+    The constructor takes a dict[str, list[str]] as argument where keys represent questions, and the corresponding values
+    represent their respective answers.
+    Questions & Answers are colored to faster memoize them. Given a same questions_answers sample, they always have the same
+    color. """
 
-    def __init__(self, questions_answers: dict[str, Sequence[str]]):
+    def __init__(self, questions_answers: dict[str, list[str]]):
         assert len(questions_answers) > 0, "questions_answers is empty"
         assert (isinstance(questions_answers, dict) and
-                all(bool(isinstance(k, str) and isinstance(v, Sequence) and all(isinstance(item, str) for item in v))
-                    for k, v in questions_answers.items())), "questions_answers doesn't match a type of dict[str, Sequence[str]]"
-        self.questions_answers_origin: dict[str, Sequence[str]] = copy.deepcopy(questions_answers)
-        self.questions_answers: dict[str, Sequence[str]] = questions_answers
+                all(bool(isinstance(k, str) and isinstance(v, list) and all(isinstance(item, str) for item in v))
+                    for k, v in questions_answers.items())), "questions_answers doesn't match a type of dict[str, list[str]]"
+        self.questions_answers_origin: dict[str, list[str]] = copy.deepcopy(questions_answers)
+        self.questions_answers: dict[str, list[str]] = questions_answers
 
-    def filter(self, items_filter: Callable[[str, Sequence[str]], bool]):
+    def filter(self, items_filter: Callable[[str, list[str]], bool]):
         self.questions_answers = {k: v for (k, v) in self.questions_answers.items() if items_filter(k, v)}
 
     def _question(self) -> str:
@@ -58,13 +65,12 @@ class QuestionsAnswers:
             return False
 
     def reverse_dict(self):
-        reversed_dict = {}
-        for key, values in self.questions_answers.items():
-            for value in values:
-                reversed_dict.setdefault(value, []).append(key)
-        self.questions_answers = reversed_dict
+        """ Reverse the self.questions_answers dictionary. Keys become values, and values become keys. """
+        new_keys = sorted(set(itertools.chain.from_iterable(self.questions_answers.values())))
+        self.questions_answers = {new_key: [key for (key, values) in self.questions_answers.items() if new_key in values]
+                                  for new_key in new_keys}
 
-    def training(self, just_one_to_validate: bool = False, keys_to_pickup: Optional[int] = None, contain_to_validate=False):
+    def training(self, one_to_validate: bool = False, keys_to_pickup: Optional[int] = None, contain_to_validate=False):
         """ Train for the Q/A
             Press "." to show all questions and answers
             Press "+" to swap Q/A to A/Q
@@ -85,7 +91,7 @@ class QuestionsAnswers:
             response = ""
             printc("{} |{}|".format(question, len(answer)), color=answers_color)
             i = 0
-            while i <= len(answer):
+            while i < len(answer_recovery):
                 response = input("\t")
                 i += 1
                 if response == ".":
@@ -103,12 +109,13 @@ class QuestionsAnswers:
                     sorted_questions = sorted(self.questions_answers)
                     questions_answers_training = copy.deepcopy(self.questions_answers)
                     break
-                    # return self.training(just_one_to_validate, keys_to_pickup, contain_to_validate)
+                    # return self.training(one_to_validate, keys_to_pickup, contain_to_validate)
                 correct = self._answer(question, response, contain_to_validate)
                 if correct:
                     print("\tok")
-                    if just_one_to_validate:
+                    if one_to_validate:
                         [printc(a.replace("\n", ""), color=answers_color, end="   ") for a in sorted(answer_recovery)]
+                        print("\n")
                         break
                 else:
                     [printc(a.replace("\n", ""), color=answers_color, end="   ") for a in sorted(answer_recovery)]
@@ -149,8 +156,9 @@ class QuestionsAnswers:
         self.questions_answers = copy.deepcopy(self.questions_answers_origin)
 
 
+# noinspection ProblematicWhitespace
 class TestQuestionsAnswers:
-    def test_question_with_empty_dictionary(self):
+    def test_constructor_with_empty_dictionary(self):
         test_questions_answers = {}
         with pytest.raises(AssertionError):
             # questions_answers is empty
@@ -165,8 +173,8 @@ class TestQuestionsAnswers:
     def test_constructor_with_invalid_input(self):
         test_questions_answers = {"Question 1": [1]}
         with pytest.raises(AssertionError):
-            # questions_answers doesn't match a type of dict[str, Sequence[str]]
-            QuestionsAnswers(test_questions_answers)
+            # noinspection PyTypeChecker
+            QuestionsAnswers(test_questions_answers)  # questions_answers doesn't match a type of dict[str, list[str]]
 
     def test_question_with_non_empty_dictionary(self, mocker):
         test_questions_answers = {"Question 1": ["Answer 1", "Answer 2"], "Question 2": ["Answer 3", "Answer 4"]}
@@ -177,9 +185,9 @@ class TestQuestionsAnswers:
     def test_answer_with_contain_to_validate_false_is_true(self):
         test_questions_answers = {"Question 1": ["Answer 1", "Answer 2"], "Question 2": ["Answer 3", "Answer 4"]}
         qa = QuestionsAnswers(test_questions_answers)
-        assert qa._answer("Question 1", "Answer 1", contain_to_validate=False) is True
+        assert qa._answer("Question 1", "Answer 1") is True
         assert qa.questions_answers == {'Question 1': ['Answer 2'], 'Question 2': ['Answer 3', 'Answer 4']}
-        assert qa._answer("Question 1", "Answer 2", contain_to_validate=False) is True
+        assert qa._answer("Question 1", "Answer 2") is True
         assert qa.questions_answers == {'Question 1': [], 'Question 2': ['Answer 3', 'Answer 4']}
         assert qa.questions_answers_origin == {"Question 1": ["Answer 1", "Answer 2"], "Question 2": ["Answer 3", "Answer 4"]}
 
@@ -218,6 +226,25 @@ class TestQuestionsAnswers:
         assert qa.questions_answers == {"Answer 1": ["Question 1"], "Answer 2": ["Question 1"],
                                         "Answer 3": ["Question 2"], "Answer 4": ["Question 2"]}
         assert qa.questions_answers_origin == {"Question 1": ["Answer 1", "Answer 2"], "Question 2": ["Answer 3", "Answer 4"]}
+
+    def test_training(self, mocker, capsys):
+        test_questions_answers = {"Question 1": ["Answer 1"],
+                                  "Question 2": ["Answer 2", "Answer 3"],
+                                  "Question 3": ["Answer 4", "Answer 5", "Answer 6"],
+                                  "Question 4": ["Answer 7", "Answer 8", "Answer 9", "Answer 10"],
+                                  "Question 5": ["Answer 11", "Answer 12", "Answer 13", "Answer 14", "Answer 15"]}
+        qa = QuestionsAnswers(test_questions_answers)
+        mocker.patch('random.choice', side_effect=[f"Question {i}" for i in range(6) for _ in range(i)])
+        mocker.patch('builtins.input', side_effect=[f"Answer {i}" for i in range(1, 15)] + ["q"])
+        qa.training()
+        assert capsys.readouterr() == CaptureResult(out='Question 1 |1|\n\tok\nQuestion 2 |2|\n\tok\n\tok\nQuestion 2 |2|\nAnswer'
+                                                        ' 2   Answer 3   \n\nQuestion 3 |3|\n\tok\n\tok\nAnswer 4   Answer 5   An'
+                                                        'swer 6   \n\nQuestion 3 |3|\nAnswer 4   Answer 5   Answer 6   \n\nQuesti'
+                                                        'on 3 |3|\nAnswer 4   Answer 5   Answer 6   \n\nQuestion 4 |4|\n\tok\nAns'
+                                                        'wer 10   Answer 7   Answer 8   Answer 9   \n\nQuestion 4 |4|\nAnswer 10 '
+                                                        '  Answer 7   Answer 8   Answer 9   \n\nQuestion 4 |4|\nAnswer 10   Answe'
+                                                        'r 7   Answer 8   Answer 9   \n\nQuestion 4 |4|\nAnswer 10   Answer 7   A'
+                                                        'nswer 8   Answer 9   \n\nQuestion 5 |5|\nEnd training\n', err='')
 
     def test_reverse_dict_on_training(self, mocker, capsys):
         test_questions_answers = {"Question 1": ["Answer 1", "Answer 2"]}
@@ -345,15 +372,46 @@ def is_correct_lines(lines: list[str], debug=True) -> bool:
 def file_to_questions_answers(file_name: str) -> QuestionsAnswers:
     lines = get_lines(file_name)
     assert (is_correct_lines(lines))
-    q_n_a = {question: answers.split("/") for (question, answers) in
-             [(line.split("\t")[0], line.split("\t")[1]) for line in lines]}
-    return QuestionsAnswers(q_n_a)
+    qa = {question: answers.split("/") for (question, answers) in
+          [(line.split("\t")[0], line.split("\t")[1]) for line in lines]}
+    return QuestionsAnswers(qa)
+
+
+def closest_space_index(text: str) -> int:
+    if " " not in text:
+        return -1
+    midpoint = len(text) // 2
+    left_move, right_move = 0, 0
+    while True:
+        if 0 <= midpoint - left_move and text[midpoint - left_move] == ' ':
+            return midpoint - left_move
+        if midpoint + right_move < len(text) and text[midpoint + right_move] == ' ':
+            return midpoint + right_move
+        left_move += 1
+        right_move += 1
+
+
+def lyrics_to_questions_answers(lyrics: str, next_line=False, next_part=False, duplicate_line=True) -> QuestionsAnswers:
+    lyrics = lyrics.strip().split("\n")
+    if not duplicate_line:
+        seen = set()
+        lyrics = [line for line in lyrics if line not in seen and not seen.add(line)]
+    qa = {}
+    full = not next_line and not next_part
+    for i in range(len(lyrics)):
+        line = lyrics[i]
+        if next_part or full:
+            split_index = closest_space_index(line)
+            # split_index = len(line) // 2
+            qa[f"{i} {line[:split_index]} ..."] = [f"{i} {line[split_index:]}"]
+            # qa[f"... {i} {line[:split_index]}"] = [line[:split_index]]
+        if (next_line or full) and i + 1 < len(lyrics):
+            qa[f"{i} {line}"] = [f"{i + 1} {lyrics[i + 1]}"]
+    return QuestionsAnswers(qa)
 
 
 # LIB #
 
-
-import json as json_api
 
 T = TypeVar("T")
 E = TypeVar("E")
@@ -386,19 +444,7 @@ def is_iter_but_not_str(element):
     return False
 
 
-def to_correct_json(string) -> str:
-    # json_string = str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("\n", "").replace("\\", "")
-    json_string = re.sub(r"(?<=[{,])(.*?):('?)(.*?)('?)(((?<='),)|},{|})", r""""\1":"\3"\5""", string)
-    return json_string
-    # return str(string).replace("True", "\"True\"").replace("False", "\"False\"").replace("'", "\"").replace("\\", "\\\\")
-
-
-def text_to_json(json_text: str) -> json_base:
-    correct_json = to_correct_json(json_text)
-    return json_api.loads(correct_json)
-
-
-def url_to_json(url: str, timelimit=1) -> Optional[json_base]:
+def url_to_json(url: str, timelimit=1) -> Optional[json_T]:
     html_session = HTMLSession()
     try:
         start = datetime.now()
@@ -413,9 +459,10 @@ def url_to_json(url: str, timelimit=1) -> Optional[json_base]:
                     print("url_to_json error: err Response in html_result_text")
                     sleep(5)
                     continue
-                json_value = text_to_json(html_result_text)
+                json_value = json_api.loads(html_result_text)
                 break
-            except ChunkedEncodingError or ConnectionError or NewConnectionError or socket.gaierror or json.decoder.JSONDecodeError or requests.exceptions.ConnectTimeout:
+            except (ChunkedEncodingError, ConnectionError, NewConnectionError, socket.gaierror, json.decoder.JSONDecodeError,
+                    requests.exceptions.ConnectTimeout):
                 printc("url_to_json ChunkedEncodingError", background_color="red")
                 sleep(2)
                 return url_to_json(url)
@@ -456,35 +503,150 @@ def json_base_to_json_ok(dictionaries: json_base | dict,
     return result
 
 
-if __name__ == '__main__':
-    # # tft_db = url_to_json("https://raw.communitydragon.org/latest/cdragon/tft/fr_fr.json")
-    # tft_db = url_to_json("https://raw.communitydragon.org/latest/cdragon/tft/en_us.json")
-    # champions = json_base_to_json_ok(tft_db, ["name"], ["sets", "9", "champions"])
-    # tft_champions = defaultdict(list)
-    # for champion, values in champions.items():
-    #     if "traits" in values:
-    #         for trait in values["traits"]:
-    #             tft_champions[champion].append(trait)
+ghost_town_lyrics = """Someday, someday
+Someday I'll, I wanna wear a starry crown
+Someday, someday, someday
+I wanna lay down, like God did, on Sunday
+Hold up, hold up
+Someday, somedays, I remembered this on a Sunday
+Backway, yeah, way, way, burning, mhm-mhm
+Uh, somedays, I'm gonna tell everybody
+Somedays I wanna hit the red dot on everybody
+Somedays, ohh (Heatstroke)
+Everyday I'm livin' high, I'm smokin' marijuana
+Everyday I'm livin' high, I do whatever I wanna, oh, yeah
+I've been tryin' to make you love me
+But everything I try just takes you further from me
+Someday we gon' set it off
+Someday we gon' get this off
+Baby, don't you bet it all
+On a pack of Fentanyl
+You might think they wrote you off
+They gon' have to rope me off
+Someday the drama'll be gone
+And they'll play this song on and on
+Sometimes I take all the shine
+Talk like I drank all the wine
+Years ahead but way behind
+I'm on one, two, three, four, five
+No half-truths, just naked minds
+Caught between space and time
+This not what they had in mind
+But maybe someday
+I've been tryin' to make you love me
+But everything I try just takes you further from me
+Someday we gon' set it off
+Someday we gon' get this off
+Baby, don't you bet it all
+On a pack of Fentanyl
+You might think they wrote you off
+They gon' have to rope me off
+Someday the drama'll be gone
+And they'll play this song on and on
+Sometimes I take all the shine
+Talk like I drank all the wine
+Years ahead but way behind
+I'm on one, two, three, four, five
+No half-truths, just naked minds
+Caught between space and time
+This not what they had in mind
+But maybe someday
+I've been tryin' to make you love me
+But everything I try just takes you further from me
+Woah, once again I am a child
+I let it all go, of everything that I know, yeah
+Of everything that I know, yeah
+And nothing hurts anymore, I feel kinda free
+We're still the kids we used to be, yeah, yeah
+I put my hand on a stove, to see if I still bleed, yeah
+And nothing hurts anymore, I feel kinda free
+We're still the kids we used to be, yeah, yeah
+I put my hand on a stove, to see if I still bleed, yeah
+And nothing hurts anymore, I feel kinda free
+We're still the kids we used to be, yeah, yeah
+I put my hand on a stove, to see if I still bleed, yeah
+And nothing hurts anymore, I feel kinda free
+We're still the kids we used to be, yeah, yeah
+I put my hand on a stove, to see if I still bleed, yeah
+And nothing hurts anymore, I feel kinda free"""
 
-    tft_champions = {
-        'Piltover': ['Ekko', 'Heimerdinger', 'Jayce', 'Orianna', 'Vi'],
-        'Rogue': ['Ekko', 'Katarina', 'Zed', 'Viego'],
-        'Demacia': ['Garen', 'Jarvan IV', 'Lux', 'Poppy', 'Sona', 'Kayle', 'Galio'],
-        'Shadow Isles': ['Gwen', 'Senna', 'Maokai', 'Kalista', 'Viego'],
-        'Technogenius': ['Heimerdinger'],
-        'Invoker': ['Karma', 'Lissandra', 'Shen', 'Soraka', 'Cassiopeia', 'Galio'],
-        'Bastion': ["K'Sante", 'Poppy', 'Shen', 'Taric', 'Maokai', 'Kassadin'],
-        'Redeemer': ['Senna'],
-        'Multicaster': ['Sona', 'Teemo', "Vel'Koz", 'Taliyah'],
-        'Targon': ['Soraka', 'Taric', 'Aphelios']
-    }
-    qa_tft = QuestionsAnswers(tft_champions)
+
+def tft_to_questions_answers(langage="en_us", version=None, pbe=False) -> dict | list:
+    live = "pbe" if pbe else "latest"
+    response = requests.get(f"https://raw.communitydragon.org/{live}/cdragon/tft/")
+    soup = BeautifulSoup(response.text, 'html.parser')
+    available_langages = [tr.text[:tr.text.find(".json")] for tr in soup.body.find_all('tr') if ".json" in tr.text]
+    if langage not in available_langages:
+        return available_langages
+    tft_db = url_to_json(f"https://raw.communitydragon.org/{live}/cdragon/tft/{langage}.json")
+    available_version = list(tft_db["sets"])
+    if version is None:
+        version = max(tft_db["sets"])
+    elif version not in available_version:
+        return available_version
+    champions = json_base_to_json_ok(tft_db, ["name"], ["sets", version, "champions"])
+    tft_champions = defaultdict(list)
+    for champion, values in champions.items():
+        if "traits" in values:
+            for trait in values["traits"]:
+                tft_champions[champion].append(trait)
+    return tft_champions
+
+
+def main():
+    parser = argparse.ArgumentParser(description="""A questions/answers training
+    On training mode:
+        Press "." to show all questions and answers
+        Press "+" to swap Q/A to A/Q
+        Press "q" to quit""")
+    parser.add_argument('--train', required=False, action='store_true', help='Train mode')
+    parser.add_argument('--exam', required=False, action='store_true', help='Exam mode')
+    parser.add_argument('--tft', action='store_true', help='TFT mode')
+    parser.add_argument('--lyrics', action='store_true', help='Kanye ghost town')
+    parser.add_argument('--trad', action='store_true', help='English-French')
+    parser.add_argument('-k', '--keys', required=False, type=int, help='Amount of keys to pick up (default: all keys)')
+    parser.add_argument('--one_to_validate', required=False, action='store_true', help='One answer is enough to validate the'
+                                                                                       'question')
+    parser.add_argument('--contain_to_validate', required=False, action='store_true', help='A containing text into the answer is'
+                                                                                           'enough to validate the answer')
+    tft_group = parser.add_argument_group('TFT Options')
+    tft_group.add_argument('-l', '--language', required=False, type=str, default="en_us",
+                           help='Language setting (default: en_us)')
+    tft_group.add_argument('-v', '--version', required=False, type=str, help='TFT version (default: latest)')
+    tft_group.add_argument('--pbe', required=False, action='store_true', help='PBE setting')
+    args = parser.parse_args()
+    mode = "train" if (args.train or not args.exam) else "exam"
+    if not (args.tft or args.lyrics or args.trad):
+        print("Error: You must provide at least one of the options: --tft, --lyrics, or --trad")
+        parser.print_help()
+        exit(1)
+    qa = None
+    if args.tft:
+        answer = tft_to_questions_answers(args.language, args.version, args.pbe)
+        if type(answer) is list:
+            print("error", answer)
+            exit(1)
+        qa = QuestionsAnswers(answer)
+    elif args.lyrics:
+        qa = lyrics_to_questions_answers(ghost_town_lyrics, next_line=True, duplicate_line=False)
+    elif args.trad:
+        qa = file_to_questions_answers("anglais.txt")
+    (qa.training(keys_to_pickup=args.keys, one_to_validate=args.one_to_validate,
+                 contain_to_validate=args.contain_to_validate) if mode == "train" else qa.exam())
+    qa.exam()
+    exit(1)
+
+
+if __name__ == '__main__':
+    main()
+    # qa = lyrics_to_questions_answers(ghost_town_lyrics, next_line=True, duplicate_line=False)
+    # qa.training(qa)
+    # qa_tft = QuestionsAnswers(tft_to_questions_answers())
     # qa_tft.reverse_dict()
     # # qa_tft.filter(items_filter=lambda keys, values: "R" in keys)
-    # qa_tft.training(just_one_to_validate=False, contain_to_validate=False)
+    # qa_tft.training(one_to_validate=False, contain_to_validate=False)
     # qa_tft.exam(reset_if_wrong=True)
-
     # qa_english = file_to_questions_answers("anglais.txt")
-    while True:
-        qa_english = file_to_questions_answers("anglais.txt")
-        # qa_tft.training(keys_to_pickup=3)
+    # while True:
+    #     qa_english = file_to_questions_answers("anglais.txt")
+    #     qa_english.training(keys_to_pickup=3)
