@@ -992,9 +992,12 @@ sew	coudre
 shabbily	minablement
 shamble	Un désordre/un chaos/un gâchis/marcher en traînant les pieds
 shambles	pagaille
+are being set up	sont en cours de mise en place
 shatter	briser
+framing a picture	encadrer une image
 she disappeared	elle a disparu
 she fainted	elle s'est évanouie
+shovel	pelle
 she sure sounds like it	elle y ressemble bien
 she went missing	elle a disparu
 shed tears	verser des larmes/pleurer
@@ -1005,7 +1008,10 @@ shirt	chemise
 short-tempered	colérique
 shorthanded	à court de main-d'œuvre
 shout	crier
+muddle up	embrouiller
+twist	tordre
 shrimp	crevette
+egregious	odieux
 siblings	freres et soeurs
 sidetrack	distraire/détourner
 sigh	soupirer
@@ -1412,6 +1418,12 @@ worn out	usé
 worship	culte
 worthwhile	digne d'interêt
 worthy	digne
+to screw a nail	visser un clou
+nail	clou/ongle
+fingernail	ongle
+a building frame	une charpente de bâtiment
+wave vague/onde/signe/agiter/saluer/onduler
+we waved at our friends	nous avons salué nos amis
 worthy of notice	digne d'attention
 would	serait/pourrait/ferait/devrait/voudrait
 would have	aurait
@@ -1420,6 +1432,10 @@ wounded	blessés
 woven	tissé
 wrap	envelopper
 wrapped	enveloppé
+by-in-large	en gros/dans l'ensemble
+choose between	choisir entre
+choose from	choisissez parmi
+choose from within	choisissez parmi/making a choice from a group or category that you are already part of or have access to
 wrath	colère
 wrinkle	ride/a small line or fold that appears on a surface
 x and whatnot	x et d'autre chose similaire
@@ -1432,6 +1448,7 @@ yore	autrefois/d'antan/jadis
 you are grounded	tu es puni
 you can do it	vous pouvez le faire
 you could do it	vous pourriez le faire
+if not mistaken	si je ne me trompe pas
 you deem fit	vous jugez bon
 you do end up	tu finis par
 you don't look the type	tu n'as pas l'air du genre

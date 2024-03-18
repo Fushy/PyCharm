@@ -277,6 +277,13 @@ def get_element_innerHTML(element: WebElement):
         data = None
     return data
 
+def get_element_attribute(element: WebElement, attribute: str):
+    try:
+        data = element.get_attribute(attribute)
+    except StaleElementReferenceException:
+        data = None
+    return data
+
 
 def get_element_src(element: WebElement):
     try:

@@ -3,8 +3,8 @@ Resolve all "Cannot find reference 'xxx' in '__init__.py' under Pycharm":
     (ctrl+click on cv2 copy the path into your clipboard)
     PyCharm -> Settings -> Project -> Python Interpreter -> Python Interpreter: or Gear symbol -> Show all ->
     tree folder -> +select the folder where the opencv package is located (ctrl+click on cv2) -> done
-    https://www.delftstack.com/howto/python/python-color-spectrums/
-    https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
+https://www.delftstack.com/howto/python/python-color-spectrums/
+https://pyimagesearch.com/2021/01/19/opencv-bitwise-and-or-xor-and-not/
 """
 import _pickle
 import copy
@@ -54,13 +54,14 @@ LOCKER = False
 pytesseract.pytesseract.tesseract_cmd = r'B:\Programmes\Tesseract-OCR\tesseract.exe'
 
 
-def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg", save_it=False, autoconvert=True) -> ndarray:
+def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.png", save_it=False, autoconvert=True) -> ndarray:
     global LOCKER
     while LOCKER:
         sleep(0.01)
     x0_, y0_, x1_, y1_ = map(int, (x0, y0, x1, y1))
     w = x1_ - x0_
     h = y1_ - y0_
+    assert w > 0 and h > 0
     hwnd = None
     try:
         w_dc = win32gui.GetWindowDC(hwnd)
@@ -92,7 +93,7 @@ def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpe
     # Threads.run(aux)
 
 
-# def screenshot_mss(x0: float, y0: float, x1: float, y1: float, dest="out.jpeg"):
+# def screenshot_mss(x0: float, y0: float, x1: float, y1: float, dest="out.png"):
 #     x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
 #     w = x1 - x0
 #     h = y1 - y0
@@ -106,13 +107,13 @@ def screenshot_fastest(x0: float, y0: float, x1: float, y1: float, dest="out.jpe
 
 
 # def screenshot_boxcutter(x0: float, y0: float, x1: float, y1: float, dest="out.png"):
-#     assert "jpeg" not in dest
+#     assert "png" not in dest
 #     x0, y0, x1, y1 = map(int, (x0, y0, x1, y1))
 #     options = "-c {},{},{},{} {}".format(x0, y0, x1, y1, dest)
 #     os.system(r"A:\Programmes\AutoHotkey\Lib\boxcutter\boxcutter.exe " + options)
 
 
-def screenshot_monitor(monitor: Monitor | Rectangle, display_scaling=100, dest="out.jpeg", delay=0,
+def screenshot_monitor(monitor: Monitor | Rectangle, display_scaling=100, dest="out.png", delay=0,
                        option="fastest", get_it=False) -> ndarray:
     x0, y0, w, h = monitor.x0, monitor.y0, monitor.w, monitor.h
     w, h = map(lambda x: x * display_scaling / 100, (w, h))
@@ -132,12 +133,12 @@ def screenshot_monitor(monitor: Monitor | Rectangle, display_scaling=100, dest="
 
 def screenshot_loop(monitor: Monitor, display_scaling=100):
     def loop():
-        screenshot_monitor(monitor, display_scaling, "live.jpeg")
+        screenshot_monitor(monitor, display_scaling, "live.png")
         overwrite("locked_loop", ".")
-        # image = read("live.jpeg")
+        # image = read("live.png")
         # check_auto = crop(image, 265, 78, 122, 45)
         # check_auto = filtering_color(check_auto, (125,) * 3, (255,) * 3, set_color_in=None)
-        # save(check_auto, "auto.jpeg")
+        # save(check_auto, "auto.png")
         delete("locked_loop")
 
     Threads.loop_run(loop, sleep_after_execution=0.5)
@@ -246,9 +247,10 @@ def filtering_color(image: np.array,
 def filter_pixels_with_intensity(image: np.array,
                                  rgb_min: tuple[int, int, int],
                                  rgb_max: tuple[int, int, int],
-                                 set_color: tuple[int, int, int] = (0, 0, 0)) -> np.array:
+                                 variation = 0,
+                                 set_color: tuple[int, int, int, int] = (0, 0, 0)) -> np.array:
     """ All pixel that are in range are not changed, other are set to black """
-    return filtering_intensity(image, rgb_min, rgb_max, set_color_out=set_color)
+    return filtering_intensity(image, [p - variation for p in rgb_min], [p + variation for p in rgb_max], set_color_out=set_color)
 
 
 def create_mask(image: np.array, rgb_min: tuple[int, int, int], rgb_max: tuple[int, int, int]) -> np.array:
@@ -302,16 +304,17 @@ def sub(*args: np.array) -> np.array:
 """########## OCR ############"""
 
 
-def ocr_image(img: np.ndarray | str,
-              config: str = r"--oem 3 --psm 6",
-              # config: str = r"--oem 3 --psm 12",
-              whitelist_ocr: str = COMMON_CHARS,
-              blacklist_ocr: str = "",
-              whitelist_filter: str = COMMON_CHARS,
-              blacklist_filter: str = "",
-              debug: bool = True) -> str:
+def ocr(img: np.ndarray | str,
+        config: str = r"--oem 3 --psm 6",
+        # config: str = r"--oem 3 --psm 12",
+        whitelist_ocr: str = COMMON_CHARS,
+        blacklist_ocr: str = "",
+        whitelist_filter: str = COMMON_CHARS,
+        blacklist_filter: str = "",
+        debug: bool = False) -> str:
     """ config="--oem 3 --psm {}".format(j) """
     # https://ai-facets.org/tesseract-ocr-best-practices/
+    # --psm: 6, 7, 12
     if type(img) is str:
         img = read(img)
     config += " -c tessedit_char_whitelist={} -c tessedit_char_blacklist={}".format(whitelist_ocr, blacklist_ocr)
@@ -648,7 +651,7 @@ def display_images_n_debug(images: list[np.ndarray] | np.ndarray,
                 elif only_white:
                     display_image = get_only_white(display_image)
             if EVENT_DICT["ocr"]:
-                ocr_image(display_image)
+                ocr(display_image)
             EVENT_DICT["arrays"][i] = display_image
             EVENT_DICT["next_i_event"] += 1
             if EVENT_DICT["original_img"]:
@@ -690,9 +693,10 @@ def image_modifier(image,
     return image
 
 
-def save(img: np.ndarray, dest: str = "out.jpeg", quality: int = 100):
+def save(img: np.ndarray, dest: str = "out.png", quality: int = 100):
     """ flags: https://docs.opencv.org/4.0.1/d4/da8/group__imgcodecs.html#ga292d81be8d76901bff7988d18d2b42ac"""
-    cv.imwrite(dest, img, [cv.IMWRITE_JPEG_QUALITY, quality])
+    # cv.imwrite(dest, img, [cv.IMWRITE_png_QUALITY, quality])
+    cv.imwrite(dest, img)
 
 
 # def image_to_ascii_art(file_name: str, dest: str = "out"):
@@ -755,7 +759,7 @@ def image_search(image: Union[np.array, Rectangle],
                  confidence_min=90,
                  image_origin_on_screen=Point(0, 0),
                  display_scaling=100, delay=0, error_if_not_existing=False,
-                 debug=True, pixel_mode=()) -> tuple[None, None] | tuple[Point, str]:
+                 debug=False, pixel_mode=()) -> tuple[None, None] | tuple[Point, str]:
     """ https://docs.opencv.org/4.x/d4/dc6/tutorial_py_template_matching.html
         https://github.com/ClarityCoders/ComputerVision-OpenCV/blob/master/Lesson3-TemplateMatching/PlayGame.py
      """
@@ -782,9 +786,12 @@ def image_search(image: Union[np.array, Rectangle],
     pixels_unfounded = 1
     for i, (folder_image, crop_size) in enumerate(templates):
         if not is_file_exist(folder_image):
+            if debug:
+                print("folder_image not exists")
             return None, None
         capture_image = crop(capture_image, crop_size)
-        folder_image = read(folder_image)
+        # folder_image = read(folder_image)
+        folder_image = read(folder_image, gray=True)
         # display_images(capture_image)
         if pixel_mode:
             pixels_unfounded = np.count_nonzero(np.all(get_only_color(folder_image[0][0],
@@ -796,8 +803,10 @@ def image_search(image: Union[np.array, Rectangle],
             if pixels_unfounded == 0:
                 break
         else:
-            save(capture_image, dest="capture_image_temp.jpeg")
-            save(folder_image, dest="folder_image_temp.jpeg")
+            if debug:
+                save(capture_image, dest="capture_image_temp.png")
+                save(folder_image, dest="folder_image_temp.png")
+            # if any error try to convert the image : cv.cvtColor(img, cv.COLOR_BGR2RGB)
             match = cv.matchTemplate(capture_image, folder_image, cv.TM_CCOEFF_NORMED)
             _, confidence, _, top_left = cv.minMaxLoc(match)
             confidence = round(confidence * 100, 3)
@@ -811,13 +820,17 @@ def image_search(image: Union[np.array, Rectangle],
     if (not pixel_mode and confidence < confidence_min) or (pixel_mode and pixels_unfounded > 0):
         return None, None
     # display_images(image)
-    h, w, _ = folder_image.shape
-    hh, ww, _ = capture_image.shape
+    if len(folder_image.shape) == 2:
+        h, w = folder_image.shape
+        hh, ww = capture_image.shape
+    else:
+        h, w, _ = folder_image.shape
+        hh, ww, _ = capture_image.shape
     uncrop_top_left = tuple(crop_size.top_left + Point(top_left))
     uncrop_bot_right = tuple(Point(uncrop_top_left[0] + w + 1, uncrop_top_left[1] + h + 1))
     if debug:
         image_debug = draw_rectangle(capture_image, uncrop_top_left, uncrop_bot_right)
-        save(image_debug, "image_search_debug.jpeg")
+        save(image_debug, "image_search_debug.png")
     if base_top_left:
         uncrop_top_left = Point(uncrop_top_left) + base_top_left.top_left
     return image_origin_on_screen + Point(uncrop_top_left) / (display_scaling / 100), templates[i][0]
@@ -827,21 +840,24 @@ def _test_funs():
     # create_qrcode({"ee": 56, (1, 2, 3): "486"})
     # print(decode_qrcode("images/out.png"))
 
-    image_files = ["images/words1.jpeg"]
+    image_files = ["images/words1.png"]
     images = list(map(lambda x: read(x, to_rgb=True), image_files))
 
     image = images[0]
     # by color
     white_filter = get_only_white(image)
     yellow_filter = image_modifier(image, rgb_isolation_min=(0xFE, 0xC2, 0x00), variation=20)
+    # yellow_filter = image_modifier(image, rgb_min=(0xFE, 0xC2, 0x00), variation=20)
     result = add(white_filter, yellow_filter)
     display_images(image)
-    # ocr_image(result)
+    # ocr(result)
 
     # # by intensity
     high_colors = filter_pixels_with_intensity(image, rgb_min=(240, 240, 240), rgb_max=(255, 255, 255))
     display_images(high_colors)
-    ocr_image(high_colors)
+    # image = get_only_white(image, variation=20)
+    # save(image, "txt.png")
+    ocr(high_colors)
 
     colored_filter = get_only_colored(image)
     display_images([image, colored_filter, sub(image, colored_filter)])

@@ -20,7 +20,6 @@ from requests.exceptions import ChunkedEncodingError, SSLError
 from requests_html import HTMLSession
 from urllib3.exceptions import NewConnectionError, MaxRetryError
 
-# colors = ["RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN"]
 colors = ["WHITE", "BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN"]
 
 
@@ -42,8 +41,11 @@ class QuestionsAnswers:
     def filter(self, items_filter: Callable[[str, list[str]], bool]):
         self.questions_answers = {k: v for (k, v) in self.questions_answers.items() if items_filter(k, v)}
 
-    def _question(self) -> str:
+    def question(self) -> str:
         return random.choice(list(self.questions_answers.keys()))
+
+    def question_index(self, index) -> str:
+        return list(self.questions_answers.keys())[index]
 
     def _answer(self, question: str, response: str, contain_to_validate=False) -> bool:
         """ Pop the answer if the response is correct.
@@ -70,10 +72,12 @@ class QuestionsAnswers:
         self.questions_answers = {new_key: [key for (key, values) in self.questions_answers.items() if new_key in values]
                                   for new_key in new_keys}
 
-    def training(self, one_to_validate: bool = False, keys_to_pickup: Optional[int] = None, contain_to_validate=False):
+    def training(self, one_to_validate: bool = False, keys_to_pickup: Optional[int] = None, contain_to_validate=False,
+                 ordered=False):
         """ Train for the Q/A
             Press "." to show all questions and answers
             Press "+" to swap Q/A to A/Q
+            Press "-" to set questions_answers to its origin
             Press "q" to quit
         """
         if keys_to_pickup is not None:
@@ -83,8 +87,10 @@ class QuestionsAnswers:
         # Questions are sorted to obtain the same color for a same given questions_answers dict
         sorted_questions = sorted(self.questions_answers)
         questions_answers_training = copy.deepcopy(self.questions_answers)
+        index = 0
         while True:
-            question = self._question()
+            question = self.question_index(index) if ordered else self.question()
+            index = (index + 1) % len(self.questions_answers)
             answer = self.questions_answers[question]
             answer_recovery = sorted(answer)
             answers_color = colors[sorted_questions.index(question) % len(colors)]
@@ -110,6 +116,8 @@ class QuestionsAnswers:
                     questions_answers_training = copy.deepcopy(self.questions_answers)
                     break
                     # return self.training(one_to_validate, keys_to_pickup, contain_to_validate)
+                elif response == "-":
+                    self.questions_answers = copy.deepcopy(self.questions_answers_origin)
                 correct = self._answer(question, response, contain_to_validate)
                 if correct:
                     print("\tok")
@@ -392,22 +400,28 @@ def closest_space_index(text: str) -> int:
 
 
 def lyrics_to_questions_answers(lyrics: str, next_line=False, next_part=False, duplicate_line=True) -> QuestionsAnswers:
-    lyrics = lyrics.strip().split("\n")
+    """
+    @param lyrics: text lyrics (https://genius.com)
+    @param next_line: Answer will be the following line
+    @param next_part: Answer will be a part of the current line (second half)
+    @param duplicate_line: keep duplicate lines
+    """
+    assert next_line ^ next_part, "Choose just one from next_line and next_part"
+    lyrics = [line for line in lyrics.strip().split("\n") if line != "" and (line[0] != "[" and line[-1] != "]")]
     if not duplicate_line:
         seen = set()
         lyrics = [line for line in lyrics if line not in seen and not seen.add(line)]
-    qa = {}
-    full = not next_line and not next_part
+    qa_dict = {}
     for i in range(len(lyrics)):
         line = lyrics[i]
-        if next_part or full:
+        if next_part:
             split_index = closest_space_index(line)
             # split_index = len(line) // 2
-            qa[f"{i} {line[:split_index]} ..."] = [f"{i} {line[split_index:]}"]
-            # qa[f"... {i} {line[:split_index]}"] = [line[:split_index]]
-        if (next_line or full) and i + 1 < len(lyrics):
-            qa[f"{i} {line}"] = [f"{i + 1} {lyrics[i + 1]}"]
-    return QuestionsAnswers(qa)
+            qa_dict[f"{i} {line[:split_index]} ..."] = [f"{i} {line[split_index:]}"]
+            # qa_dict[f"... {i} {line[:split_index]}"] = [line[:split_index]]
+        if next_line and i + 1 < len(lyrics):
+            qa_dict[f"{i} {line}"] = [f"{i + 1} {lyrics[i + 1]}"]
+    return QuestionsAnswers(qa_dict)
 
 
 # LIB #
@@ -503,72 +517,30 @@ def json_base_to_json_ok(dictionaries: json_base | dict,
     return result
 
 
-ghost_town_lyrics = """Someday, someday
-Someday I'll, I wanna wear a starry crown
-Someday, someday, someday
-I wanna lay down, like God did, on Sunday
-Hold up, hold up
-Someday, somedays, I remembered this on a Sunday
-Backway, yeah, way, way, burning, mhm-mhm
-Uh, somedays, I'm gonna tell everybody
-Somedays I wanna hit the red dot on everybody
-Somedays, ohh (Heatstroke)
-Everyday I'm livin' high, I'm smokin' marijuana
-Everyday I'm livin' high, I do whatever I wanna, oh, yeah
-I've been tryin' to make you love me
-But everything I try just takes you further from me
-Someday we gon' set it off
-Someday we gon' get this off
-Baby, don't you bet it all
-On a pack of Fentanyl
-You might think they wrote you off
-They gon' have to rope me off
-Someday the drama'll be gone
-And they'll play this song on and on
-Sometimes I take all the shine
-Talk like I drank all the wine
-Years ahead but way behind
-I'm on one, two, three, four, five
-No half-truths, just naked minds
-Caught between space and time
-This not what they had in mind
-But maybe someday
-I've been tryin' to make you love me
-But everything I try just takes you further from me
-Someday we gon' set it off
-Someday we gon' get this off
-Baby, don't you bet it all
-On a pack of Fentanyl
-You might think they wrote you off
-They gon' have to rope me off
-Someday the drama'll be gone
-And they'll play this song on and on
-Sometimes I take all the shine
-Talk like I drank all the wine
-Years ahead but way behind
-I'm on one, two, three, four, five
-No half-truths, just naked minds
-Caught between space and time
-This not what they had in mind
-But maybe someday
-I've been tryin' to make you love me
-But everything I try just takes you further from me
-Woah, once again I am a child
-I let it all go, of everything that I know, yeah
-Of everything that I know, yeah
-And nothing hurts anymore, I feel kinda free
-We're still the kids we used to be, yeah, yeah
-I put my hand on a stove, to see if I still bleed, yeah
-And nothing hurts anymore, I feel kinda free
-We're still the kids we used to be, yeah, yeah
-I put my hand on a stove, to see if I still bleed, yeah
-And nothing hurts anymore, I feel kinda free
-We're still the kids we used to be, yeah, yeah
-I put my hand on a stove, to see if I still bleed, yeah
-And nothing hurts anymore, I feel kinda free
-We're still the kids we used to be, yeah, yeah
-I put my hand on a stove, to see if I still bleed, yeah
-And nothing hurts anymore, I feel kinda free"""
+song_lyrics = """
+[Verse 2]
+I get the sense that it's a lost cause
+I get the sense that you might really love her
+This text gon' be evidence, this text is evidence
+I tried to ration with you, no murders or crime of passion, but damn
+You was out of reach
+You was at the farmer's market with your perfect peach
+Now I'm in the basement plannin' home invasion
+Now you layin' face-down, got me singin' over a beat
+
+[Pre-Chorus]
+I'm so mature, I'm so mature
+I'm so mature, I got me a therapist to tell me there's other men
+I don't want none, I just want you
+If I can't have you, no one will
+
+[Chorus]
+I might (I)
+I might kill my ex, not the best idea
+His new girlfriend's next, how'd I get here?
+I might kill my ex, I still love him though
+Rather be in jail than alone
+"""
 
 
 def tft_to_questions_answers(langage="en_us", version=None, pbe=False) -> dict | list:
@@ -624,11 +596,11 @@ def main():
     if args.tft:
         answer = tft_to_questions_answers(args.language, args.version, args.pbe)
         if type(answer) is list:
-            print("error", answer)
+            print("Wrong option argument, choose from ", answer)
             exit(1)
         qa = QuestionsAnswers(answer)
     elif args.lyrics:
-        qa = lyrics_to_questions_answers(ghost_town_lyrics, next_line=True, duplicate_line=False)
+        qa = lyrics_to_questions_answers(song_lyrics, next_line=True, duplicate_line=False)
     elif args.trad:
         qa = file_to_questions_answers("anglais.txt")
     (qa.training(keys_to_pickup=args.keys, one_to_validate=args.one_to_validate,
@@ -638,9 +610,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-    # qa = lyrics_to_questions_answers(ghost_town_lyrics, next_line=True, duplicate_line=False)
-    # qa.training(qa)
+    # main()
+    qa = lyrics_to_questions_answers(song_lyrics, next_line=True, next_part=False, duplicate_line=True)
+    qa.training(ordered=True)
     # qa_tft = QuestionsAnswers(tft_to_questions_answers())
     # qa_tft.reverse_dict()
     # # qa_tft.filter(items_filter=lambda keys, values: "R" in keys)

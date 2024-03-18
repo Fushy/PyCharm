@@ -73,13 +73,23 @@ def get_last_part(file_name):
 def get_ext(file_name):
     return file_name[file_name.rfind(".") + 1:]
 
-
-def get_lines(file_name: str, encoding="utf-8") -> Optional[list[str]]:
+def get_file(file_name: str, encoding="utf-8") -> Optional[str]:
     try:
         with open(file_name, 'r', encoding=encoding) as file:
-            return file.readlines()
+            return file.read()
     except FileNotFoundError:
         return None
+
+def get_lines(file_name: str, encoding="utf-8") -> Optional[list[str]]:
+    lines = get_file(file_name, encoding)
+    if lines:
+        return lines.splitlines()
+    # try:
+    #     with open(file_name, 'r', encoding=encoding) as file:
+    #         return file.readlines()
+    # except FileNotFoundError:
+    #     return None
+
 
 
 def count_lines(file_name: str) -> int:
@@ -107,7 +117,7 @@ def append(file_name: str, value: str, encoding="utf-8", mode="a+"):
 def delete(file_name: str):
     try:
         os.remove(file_name)
-    except (FileNotFoundError, PermissionError):
+    except (FileNotFoundError, PermissionError) as e:
         pass
 
 

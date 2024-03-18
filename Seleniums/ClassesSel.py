@@ -8,7 +8,7 @@ from typing import Callable, Optional, Iterable
 from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
 from selenium.common.exceptions import InvalidSessionIdException, TimeoutException, \
-    WebDriverException, NoSuchWindowException, StaleElementReferenceException, \
+    WebDriverException, NoSuchWindowException, StaleElementReferenceException, NoSuchElementException, \
     MoveTargetOutOfBoundsException, ElementNotInteractableException, ElementClickInterceptedException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -23,6 +23,9 @@ from Introspection import current_lines, frameinfo
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text, get_element_class
 from Times import now, elapsed_seconds
 from Util import is_iter_but_not_str
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 last_browser_set = now()
 
@@ -93,6 +96,7 @@ class Browser:
             # https://developer.microsoft.com/fr-fr/microsoft-edge/tools/webdriver/
             # https://chromedriver.chromium.org/downloads
             # https://github.com/operasoftware/operachromiumdriver/releases
+            # edge://version/ - set a profile path location to create a new profile
         """
         # try:
         self.working_window_num = 0
@@ -100,6 +104,7 @@ class Browser:
         self.driver = None
         self.windows_url: list[str] = [""]
         if profile is not None:
+            assert "user-data-dir=" in profile
             self.profile = profile
         elif profile is None and self.profile is not None:
             pass
@@ -115,6 +120,7 @@ class Browser:
             options.add_argument("headless")
         if self.profile is not None:
             options.add_argument(self.profile)
+        # options.add_argument("disable-gpu")
         # req_proxy = RequestProxy()  # you may get different number of proxy when  you run this at each time
         # proxies = req_proxy.get_proxy_list()  # this will create proxy list
         # PROXY = proxies[0].get_address()
@@ -135,7 +141,7 @@ class Browser:
         # pathname = pathname if num == "" else "C:\\Users\\Alexis\\Documents\\Profiles\\"
         # exe_path = r"{}Drivers{}chromedriver{}.exe".date_format(pathname, os.path.sep, num if num else "")
         exe_path = r"{}Drivers{}msedgedriver.exe".format(pathname, os.path.sep)
-        # exe_path = r"B:\_Documents\Pycharm\PyCharm\Utils\Seleniums\Drivers\msedgedriver.exe"
+        # exe_path = r"B:\_Documents\Pycharm\Util\Seleniums\Drivers\msedgedriver.exe"
         driver = Edge(options=options, executable_path=exe_path)
         driver.set_window_position(self.point.x, self.point.y)
         driver.set_window_size(1920, 1080)
@@ -281,7 +287,7 @@ class Browser:
             Alert.say("error new_page TimeoutException")
             print(traceback.format_exc(), file=sys.stderr)
             return self.new_page(url, window_num, tries + 1)
-        except WebDriverException or MaxRetryError or ConnectionRefusedError or NewConnectionError as err:
+        except (WebDriverException, MaxRetryError, ConnectionRefusedError, NewConnectionError) as err:
             print(
                 "\terror new_page WebDriverException MaxRetryError ConnectionRefusedError NewConnectionError",
                 str(err))
@@ -394,6 +400,7 @@ class Browser:
                     debug=False,
                     all_windows=False) \
             -> None | WebElement | list[WebElement]:
+        # .find_elements(By.TAG_NAME, "tr")[1:]
         if debug is None:
             self.print(("get_element", selectors), False)
         if find_element_fun is None:
@@ -740,6 +747,17 @@ class Browser:
         self.element_click(element)
         return self.wait_new_created_window(old_count_window)
 
+    def click_recaptcha(self):
+        try:
+            self.driver.switch_to.default_content()
+            self.driver.switch_to.frame(self.driver.find_element(By.XPATH, ".//iframe[@title='reCAPTCHA']"))
+            self.driver.find_element(By.ID, "recaptcha-anchor-label").click()
+            self.driver.switch_to.default_content()
+            sleep(1.5)
+            "/html/body/div"
+        except (NoSuchElementException, ElementClickInterceptedException):
+            pass
+
     def element_send(self, element: WebElement, *keys, debug=True):
         if debug:
             self.print(("element_send", keys), False)
@@ -781,6 +799,10 @@ class Browser:
             if elapsed_seconds(start) >= leave:
                 return False
         return True
+
+    def accept_popup(self):
+        confirmation_popup = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        confirmation_popup.accept()
 
 # def scrap_google_search():
 #     countries = [(country.name.split(",")[0] if "," in country.name else country.name) for country in

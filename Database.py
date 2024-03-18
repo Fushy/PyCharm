@@ -10,15 +10,52 @@ import pandas as pd
 from peewee import Model, FloatField, IntegerField, CharField, DateTimeField, PostgresqlDatabase
 from playhouse.migrate import migrate, SchemaMigrator
 from playhouse.sqlite_ext import JSONField
-
 from Colors import printc
 from Files import run_cmd
 from Strings import quote
 from Times import now
 
 
-# TODO with peewee
+def update_instance_model(instance, dict):
+    for k, v in dict.items():
+        setattr(instance, k, v)
+    instance.save()
 
+
+def get_record(model, condition):
+    value = list(model.select().where(condition).limit(1))
+    if len(value) > 0:
+        return value[0]
+
+
+def print_create_model_class_code(fields):
+    peewee_field_types = {
+        str: 'CharField',
+        int: 'IntegerField',
+        float: 'FloatField',
+        list: 'Foreignkeyfield(Class[es]) IntegerField',
+        dict: 'Foreignkeyfield(Class[es]) IntegerField',
+        set: 'Foreignkeyfield(Class[es]) IntegerField',
+        tuple: 'Foreignkeyfield(Class[es]) IntegerField',
+    }
+    class_definition = f'class TABLE_NAME(Model):\n'
+    class_definition += f'    class Meta:\n'
+    class_definition += f'        table_name = "TABLE_NAME"\n\n'
+    for field_name, field_type in fields.items():
+        peewee_field = peewee_field_types.get(type(field_type), 'UnknowField')
+        class_definition += f'    {str(field_name).replace(" ", "_").lower()} = {peewee_field}()\n'
+    print(class_definition)
+
+
+def query_to_df(query) -> "DataFrame":
+    try:
+        return DataFrame(query.dicts())
+    except AttributeError:
+        print("query is None")
+        return DataFrame()
+
+
+# TODO with peewee
 # def mysql_connect_remote() -> MySQLConnection:
 #     # a temp whatever database
 #     HOST = "remotemysql.com"
@@ -75,11 +112,13 @@ def insert(connection: Connection, table_name, values, columns, debug=False):
     connection.execute("INSERT OR IGNORE INTO {} ({}) VALUES ({})"
                        .format(table_name, ", ".join(columns), ",".join(map(quote, values))))
 
+
 def drop_table(connection: Connection, table_name):
     cursor = connection.cursor()
     cursor.execute("DROP TABLE IF EXISTS \"%s\"" % table_name)
     connection.commit()
     cursor.close()
+
 
 def get_column_names_old(connection, table_name: str):
     column_names = []
@@ -294,6 +333,7 @@ def query_to_df(query):
     # result_list = [{k: v for (k, v) in row.__dict__.items()} for row in boss_query]
     # result_list = [{k: v for (k, v) in {**d['__data__'], **d}.items() if "__" not in k and k != "_dirty"} for d in
     #                result_list]
+
 
 # def extend_on_join():
 #     select = Player.select().join(Boss).where(

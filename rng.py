@@ -12,8 +12,8 @@ def rng_float(a: float, b: float) -> float:
     return uniform(a, b)
 
 
-def rng(a: float, b: float) -> float:
-    return rng_float(a, b)
+def rng() -> float:
+    return random()
 
 
 def rng_nearly(n, percent, floor=False) -> float:

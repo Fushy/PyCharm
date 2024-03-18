@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import sys
 from time import sleep
+import traceback
 
 from gtts import gTTS
 from peewee import CharField, CompositeKey, DateTimeField, Model, MySQLDatabase, Proxy, SqliteDatabase
@@ -116,8 +117,14 @@ def change_volume(sound: str | AudioSegment, volume_ratio: float = 0):
 
 
 def play_sound(sound: str | AudioSegment, blocking=False) -> AudioSegment:
+    """ PermissionError: [Errno 13] Permission denied:
+    pip install pyaudio """
     def aux():
-        playback.play(sound)
+        try:
+            playback.play(sound)
+        except AttributeError as e:
+            # if str(e) == "'NoneType' object has no attribute 'sample_width'":
+            print(traceback.format_exc() + "\n" + "file is empty", file=sys.stderr)
 
     try:
         if type(sound) is str:
@@ -188,7 +195,11 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
         sound = read(filename, "mp3")
     else:
         tts = gTTS(text=speech, lang=lang, slow=False)
+        # try:
         tts.save(filename)
+        # except gtts.tts.gTTSError:
+        #     print("Need an internet connection")
+        #     exit(1)
         sound = read(filename)
         sound = speedup(sound, speed_ratio=speed)
         sound = change_volume(sound, volume_ratio=volume_ratio)

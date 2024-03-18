@@ -1,11 +1,9 @@
 from asyncio import sleep
-import ctypes
 import os
 
 import pyautogui
-import win32con
 import win32gui
-
+import pygetwindow as gw
 from Classes import Point
 from Files import is_file_exist
 
@@ -107,15 +105,15 @@ def first_alpha_index(s):
     return 0
 
 
-def send(keys: list | str, press_time=0, ahk=False):
-    # https://pyautogui.readthedocs.io/en/latest/keyboard.html#keyboard-keys
+def send(keys_str: list, press_time=0, ahk=False):
+    """ https://pyautogui.readthedocs.io/en/latest/keyboard.html#keyboard-keys
+    send(["ctrl alt x"]) """
     if not ahk:
-        for key in keys:
-            if not press_time:
-                pyautogui.press(key)
-            else:
+        for keys in keys_str:
+            for key in keys.split():
                 pyautogui.keyDown(key)
-                sleep(press_time)
+            # sleep(press_time)
+            for key in keys.split():
                 pyautogui.keyUp(key)
     elif ahk:
         # for key in keys:
@@ -137,6 +135,28 @@ def mouse_get_pos() -> Point:
 
 def win_get_active_title() -> str:
     return win32gui.GetWindowText(win32gui.GetForegroundWindow())
+
+
+def get_all_windows_opened():
+    return {title for title in gw.getAllTitles() if title}
+
+
+def get_window(title):
+    return next((t for t in get_all_windows_opened() if title in t), None)
+
+
+def is_open_window(title):
+    return any(title == t for t in get_all_windows_opened())
+
+
+def win_get_pos(title):
+    """ todo exe with ahk """
+    instance = get_window(title)
+    window_handle = win32gui.FindWindow(None, instance)
+    if window_handle is None:
+        return
+    left, top, right, bottom = win32gui.GetWindowRect(window_handle)
+    return left, top, right, bottom
 
 
 if __name__ == '__main__':
