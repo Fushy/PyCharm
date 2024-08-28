@@ -5,19 +5,17 @@ from threading import Thread
 from time import sleep
 from typing import Callable
 
-import Alert
-from Files import is_existing, delete, run_file
+# import Alert
+from Files import is_file_exist, delete, run_file
 from Introspection import check_frames, frameinfo
 
 delete("locked")
 
 
-def run(fun: Callable, arguments: dict = {}, wait_a_bit: float = 0.0, alert_if_error=True, print_if_error=True,
-        name=None) \
-        -> threading:
+def run(fun: Callable, arguments: dict = {}, wait_a_bit: float = 0.0, alert_if_error=True, print_if_error=True, name=None,
+        daemon=False) -> threading:
     """
     run(playback.play, arguments={"audio_segment": sound})
-    run(playback.play(sound))
     """
 
     def aux():
@@ -27,12 +25,15 @@ def run(fun: Callable, arguments: dict = {}, wait_a_bit: float = 0.0, alert_if_e
         except Exception:
             if print_if_error:
                 print(traceback.format_exc(), file=sys.stderr)
-                print(fun.__name__, file=sys.stderr)
-            if alert_if_error:
-                Alert.alert(str(fun.__name__) + "\n\n" + traceback.format_exc(), level=3)
+                print(name or fun.__name__, file=sys.stderr)
+            # if alert_if_error:
+            #     Alert.alert(str(name or fun.__name__) + "\n\n" + traceback.format_exc(), level=3)
 
-    thread = Thread(target=aux)
-    thread.name = name if name else fun.__name__
+    thread = Thread(target=aux, daemon=daemon)
+    if name:
+        thread.name = name
+    elif getattr(fun, "__name__", None):
+        thread.name = fun.__name__
     thread.start()
     sleep(wait_a_bit)
     return thread
@@ -42,10 +43,10 @@ def loop_run(fun: Callable, sleep_after_execution: float = 0.1, pre_sleep=0, **k
     def loop():
         sleep(pre_sleep)
         while True:
-            if not is_existing(locker_name):
+            if not is_file_exist(locker_name):
                 # print("execution started")
                 run(fun, 0.1, **kwargs)
-            while is_existing(locker_name):
+            while is_file_exist(locker_name):
                 sleep(0.001)
             # print("execution ended")
             sleep(sleep_after_execution)

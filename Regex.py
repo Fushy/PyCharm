@@ -5,6 +5,7 @@ from typing import Callable, Optional
 re_decimal = re.compile(r"([-+]?[0-9]+)\.([0-9]+)")
 re_int = re.compile(r"([-+]?[0-9](_?[0-9])*)([eE][-+]?[0-9]+)?")
 # re_float = re.compile(r"([-+]?[0-9](_?[0-9])*\.?[0-9](_?[0-9])+([eE][-+]?[0-9]+)?)")
+re_basic_float = re.compile(r"([0-9]).?([0-9])")
 re_float = re.compile(r"([-+]?[0-9]([_, .]?[0-9])*([_, .]?[0-9])+([eE][-+]?[0-9]+)?)")
 re_time_hms = re.compile(r"((([0-9]?[0-9]) *h *)?(([0-9]?[0-9]) *m *)?(([0-9]?[0-9]) *s *)?)")
 re_time_dot = re.compile(r"((([0-9]?[0-9]) *: *)?(([0-9]?[0-9]) *: *)([0-9]?[0-9]))")

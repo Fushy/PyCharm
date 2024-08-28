@@ -94,7 +94,7 @@ def printcr(text: str, color="green"):
 
 
 if __name__ == '__main__':
-    printcr("eee", "white")
+    print_all_colors_colorama()
     # while True:
     #     printc("Hello, World! color={} attributes={}", color="red")
     #     # print_all_colors_colorama()

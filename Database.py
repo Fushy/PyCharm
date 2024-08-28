@@ -6,33 +6,69 @@ from sqlite3 import Connection, OperationalError
 from time import sleep
 from typing import Type
 
-import mysql.connector
-from mysql.connector import MySQLConnection
 import pandas as pd
-from peewee import Model, IntegrityError, FloatField, IntegerField, CharField, DateTimeField, PostgresqlDatabase
+from pandas import DataFrame
+from peewee import Model, FloatField, IntegerField, CharField, DateTimeField, PostgresqlDatabase
 from playhouse.migrate import migrate, SchemaMigrator
 from playhouse.sqlite_ext import JSONField
-
 from Colors import printc
 from Files import run_cmd
 from Strings import quote
 from Times import now
 
 
-# TODO with peewee
+def update_instance_model(instance, dict):
+    for k, v in dict.items():
+        setattr(instance, k, v)
+    instance.save()
 
-def mysql_connect_remote() -> MySQLConnection:
-    # a temp whatever database
-    HOST = "remotemysql.com"
-    DATABASE = "6fLyxUf3eM"
-    USER = "6fLyxUf3eM"
-    password = 'IhNaLib2PI'
+
+def get_record(model, condition):
+    value = list(model.select().where(condition).limit(1))
+    if len(value) > 0:
+        return value[0]
+
+
+def print_create_model_class_code(fields):
+    peewee_field_types = {
+        str: 'CharField',
+        int: 'IntegerField',
+        float: 'FloatField',
+        list: 'Foreignkeyfield(Class[es]) IntegerField',
+        dict: 'Foreignkeyfield(Class[es]) IntegerField',
+        set: 'Foreignkeyfield(Class[es]) IntegerField',
+        tuple: 'Foreignkeyfield(Class[es]) IntegerField',
+    }
+    class_definition = f'class TABLE_NAME(Model):\n'
+    class_definition += f'    class Meta:\n'
+    class_definition += f'        table_name = "TABLE_NAME"\n\n'
+    for field_name, field_type in fields.items():
+        peewee_field = peewee_field_types.get(type(field_type), 'UnknowField')
+        class_definition += f'    {str(field_name).replace(" ", "_").lower()} = {peewee_field}()\n'
+    print(class_definition)
+
+
+def query_to_df(query) -> "DataFrame":
     try:
-        connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password, buffered=True)
-    except mysql.connector.errors.DatabaseError:
-        sleep(30)
-        return mysql_connect_remote()
-    return connection
+        return DataFrame(query.dicts())
+    except AttributeError:
+        print("query is None")
+        return DataFrame()
+
+
+# TODO with peewee
+# def mysql_connect_remote() -> MySQLConnection:
+#     # a temp whatever database
+#     HOST = "remotemysql.com"
+#     DATABASE = "6fLyxUf3eM"
+#     USER = "6fLyxUf3eM"
+#     password = 'IhNaLib2PI'
+#     try:
+#         connection = mysql.connector.connect(host=HOST, database=DATABASE, user=USER, password=password, buffered=True)
+#     except mysql.connector.errors.DatabaseError:
+#         sleep(30)
+#         return mysql_connect_remote()
+#     return connection
 
 
 def is_mysql(connection) -> bool:
@@ -76,6 +112,13 @@ def insert(connection: Connection, table_name, values, columns, debug=False):
               .format(table_name, ", ".join(columns), ",".join(map(quote, values))))
     connection.execute("INSERT OR IGNORE INTO {} ({}) VALUES ({})"
                        .format(table_name, ", ".join(columns), ",".join(map(quote, values))))
+
+
+def drop_table(connection: Connection, table_name):
+    cursor = connection.cursor()
+    cursor.execute("DROP TABLE IF EXISTS \"%s\"" % table_name)
+    connection.commit()
+    cursor.close()
 
 
 def get_column_names_old(connection, table_name: str):
@@ -198,9 +241,9 @@ def print_model_infos(model: Model):
 
 
 def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[object]] | list[object], debug=True,
-              raise_if_exist=False):  #
+              raise_if_exist=False, update_key=None):  #
     """ columns_order's names have to be the field name and not the column name. |columns_order|=|values|
-    faire bien attention aux types, un cas ou un int/float pk id diffère de la variable et de l'input db, transformation en char pour résoudre le pb"""
+    faire bien attention aux types, un cas ou un (int/float pk id) diffère de la variable et de l'input db, transformation en char de l'id pour résoudre le pb"""
     if type(values[0]) != list:
         values = [values]
     db_columns = get_columns_name_model(model)
@@ -209,9 +252,11 @@ def fill_rows(model: Type[Model], columns_order: list[str], values: list[list[ob
     rows = [dict(zip(columns_order,
                      [value[i] for i in range(len(value)) if i not in indexes_to_ignore])) for value in values]
     try:
-        print("input", rows[0]["order_id"])
-        q = model.insert_many(rows)
-        q.execute()
+        if update_key:
+            for record in rows:
+                model.update(**record).where(getattr(model, update_key) == record[update_key]).execute()
+        else:
+            model.insert_many(rows).execute()
     except Exception as e:  # todo peewee.OperationalError: database is locked
         print("database may be locked", traceback.format_exc(), "sleep(1) & retry function")
         # if "order_id" in rows[0]:
@@ -282,3 +327,17 @@ def get_dict_fields_name_n_value(model) -> dict:
 
 def get_dataframe(model):
     return pd.DataFrame(list(model.select().dicts()))
+
+
+def query_to_df(query):
+    return pd.DataFrame(query.dicts())
+    # result_list = [{k: v for (k, v) in row.__dict__.items()} for row in boss_query]
+    # result_list = [{k: v for (k, v) in {**d['__data__'], **d}.items() if "__" not in k and k != "_dirty"} for d in
+    #                result_list]
+
+
+# def extend_on_join():
+#     select = Player.select().join(Boss).where(
+#         (Player.faction == 'Asmodian') &
+#         (Boss.start > now() - timedelta(days=1))
+#     ).select_extend(Boss)

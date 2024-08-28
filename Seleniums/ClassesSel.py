@@ -1,43 +1,39 @@
-import inspect
 import os
-import re
+import os
 import sys
 import traceback
-from collections import defaultdict
-from random import shuffle
 from time import sleep
 from typing import Callable, Optional, Iterable
 
-from playhouse.sqlite_ext import JSONField
+from selenium import webdriver
 from msedge.selenium_tools import Edge, EdgeOptions
 from msedge.selenium_tools.webdriver import WebDriver
-from peewee import Model, CharField, FloatField, SqliteDatabase
-from selenium.common.exceptions import SessionNotCreatedException, InvalidSessionIdException, TimeoutException, \
-    WebDriverException, InvalidArgumentException, NoSuchWindowException, StaleElementReferenceException, \
-    MoveTargetOutOfBoundsException, ElementNotInteractableException, ElementClickInterceptedException
+from selenium.common.exceptions import InvalidSessionIdException, TimeoutException, \
+    WebDriverException, NoSuchWindowException, StaleElementReferenceException, NoSuchElementException, \
+    MoveTargetOutOfBoundsException, ElementNotInteractableException, ElementClickInterceptedException, SessionNotCreatedException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from urllib3.exceptions import NewConnectionError, MaxRetryError
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 import Alert
 import Classes
 from Colors import printc
-from Database import fill_rows, add_missing_columns_to_db, get_table_name, get_columns_name_model
 from Enum import FIRST
 from Files import get_first_line
-from Introspection import current_lines, frameinfo
-from Jsons import json_base_to_json_ok
-from Regex import re_float
+from Introspection import current_lines, frameinfo, get_current_file_path
 from Seleniums.Selenium import profile_name, check_find_fun, get_element_text, get_element_class
-from Sysconf import screen_rect, SCREENS
 from Times import now, elapsed_seconds
-from Util import is_iter
+from Util import is_iter_but_not_str
 
 last_browser_set = now()
 
-
 class Browser:
+    """ If Cloudflare protection, add the Chrome Cloudflare Helper extension
+        https://chromewebstore.google.com/detail/chrome-cloudflare-helper/mlfmmcdkndpcaffjdbbjoodliplkpkmj"""
     # noinspection PyTypeChecker
     def __init__(self, point=None, profile=None, headless=False):
         self.point = point
@@ -76,7 +72,7 @@ class Browser:
             print("{}{} {}\t\t\t{} {}".format(
                 "\t" if tab else "",
                 self.name,
-                " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+                " ¤ ".join(map(str, texts)) if is_iter_but_not_str(texts) and type(texts) is not str else texts,
                 self,
                 current_lines(start_depth=4)))
 
@@ -88,7 +84,7 @@ class Browser:
         printc("{}{} {}\t\t\t{} {}".format(
             "\t" if tab else "",
             self.name,
-            " ¤ ".join(map(str, texts)) if is_iter(texts) and type(texts) is not str else texts,
+            " ¤ ".join(map(str, texts)) if is_iter_but_not_str(texts) and type(texts) is not str else texts,
             self,
             current_lines(start_depth=3)),
             color=color,
@@ -101,8 +97,10 @@ class Browser:
         """ Download drivers
             # https://pypi.org/project/selenium/
             # https://developer.microsoft.com/fr-fr/microsoft-edge/tools/webdriver/
-            # https://chromedriver.chromium.org/downloads
             # https://github.com/operasoftware/operachromiumdriver/releases
+            # https://github.com/mozilla/geckodriver/releases
+            # https://chromedriver.chromium.org/downloads https://googlechromelabs.github.io/chrome-for-testing/
+            # edge://version/ - set a profile path location to create a new profile
         """
         # try:
         self.working_window_num = 0
@@ -110,6 +108,7 @@ class Browser:
         self.driver = None
         self.windows_url: list[str] = [""]
         if profile is not None:
+            assert "user-data-dir=" in profile
             self.profile = profile
         elif profile is None and self.profile is not None:
             pass
@@ -119,51 +118,46 @@ class Browser:
         if num != "" and profile is not None:
             end = profile[profile.find("\\Profiles\\"):]
             self.profile = r"user-data-dir=C:\Users\Alexis\Documents" + end
-        options = EdgeOptions()
-        options.use_chromium = True
+        # options = webdriver.FirefoxOptions()
+        options = webdriver.ChromeOptions()
+        # options = EdgeOptions()
         if self.headless:
             options.add_argument("headless")
         if self.profile is not None:
             options.add_argument(self.profile)
-        # req_proxy = RequestProxy()  # you may get different number of proxy when  you run this at each time
-        # proxies = req_proxy.get_proxy_list()  # this will create proxy list
-        # PROXY = proxies[0].get_address()
-        # print(proxies)
-        # webdriver.DesiredCapabilities.EDGE['proxy'] = {
-        #     "httpProxy": PROXY,
-        #     "ftpProxy": PROXY,
-        #     "sslProxy": PROXY,
-        #     "proxyType": "MANUAL",
-        # }
-        # print(
-        #     r"{}{}..{}Drivers{}msedgedriver.exe"
-        #         .date_format(inspect.currentframe().f_code.co_filename, os.path.sep, os.path.sep, os.path.sep))
+        options.add_argument('--disable-blink-features=AutomationControlled')
+
         while elapsed_seconds(last_browser_set) < 0.1:
             sleep(0.1)
         last_browser_set = now()
         pathname = frameinfo(2)["pathname"]
         # pathname = pathname if num == "" else "C:\\Users\\Alexis\\Documents\\Profiles\\"
         # exe_path = r"{}Drivers{}chromedriver{}.exe".date_format(pathname, os.path.sep, num if num else "")
-        exe_path = r"{}Drivers{}msedgedriver.exe".format(pathname, os.path.sep)
-        # exe_path = r"B:\_Documents\Pycharm\PyCharm\Utils\Seleniums\Drivers\msedgedriver.exe"
-        driver = Edge(options=options, executable_path=exe_path)
-        driver.set_window_position(self.point.x, self.point.y)
-        driver.set_window_size(1920, 1080)
-        self.driver = driver
-        self.print("set_browser", False)
-        # except SessionNotCreatedException:
-        #     printc("SessionNotCreatedException", background_color="red")
-        #     while True:
-        #         Alert.say("Have to download new browser driver version")
-        #         sleep(3)
-        # except InvalidArgumentException:
-        #     raise InvalidSessionIdException("profile is already open")
-        # except WebDriverException as err:
-        #     sleep(5)
-        #     self.printc("WebDriverException" + str(err), color="black", background_color="red")
-        #     # return self.set_browser(profile)
-        #     self.quit()
-        #     return Browser(SCREENS[1], profile=self.profile)
+        # exe_path = r"{}Drivers{}msedgedriver.exe".format(pathname, os.path.sep)
+        # exe_path = r"{}Drivers{}operadriver.exe".format(pathname, os.path.sep).replace("\\", "/")
+        # exe_path = r"{}Drivers{}operadriver.exe".format(pathname, os.path.sep)
+        exe_path = r"{}Drivers{}chromedriver.exe".format(pathname, os.path.sep)
+        # exe_path = r"{}Drivers{}msedgedriver.exe".format(pathname, os.path.sep)
+        try:
+            # driver = Edge(options=options, executable_path=exe_path)
+            driver = webdriver.Chrome(options=options, executable_path=exe_path)
+            driver.set_window_position(self.point.x, self.point.y)
+            driver.set_window_size(1920, 1080)
+            self.driver = driver
+            self.print("set_browser", False)
+        except SessionNotCreatedException:
+            printc("SessionNotCreatedException", background_color="red")
+            while True:
+                Alert.say("Have to download new browser driver version")
+                sleep(3)
+        except InvalidArgumentException:
+            raise InvalidSessionIdException("profile is already open")
+        except WebDriverException as err:
+            sleep(5)
+            self.printc("WebDriverException" + str(err), color="black", background_color="red")
+            # return self.set_browser(profile)
+            self.quit()
+            return Browser(SCREENS[1], profile=self.profile)
 
     def update_windows_url(self) -> Optional[str]:
         try:
@@ -291,7 +285,7 @@ class Browser:
             Alert.say("error new_page TimeoutException")
             print(traceback.format_exc(), file=sys.stderr)
             return self.new_page(url, window_num, tries + 1)
-        except WebDriverException or MaxRetryError or ConnectionRefusedError or NewConnectionError as err:
+        except (WebDriverException, MaxRetryError, ConnectionRefusedError, NewConnectionError) as err:
             print(
                 "\terror new_page WebDriverException MaxRetryError ConnectionRefusedError NewConnectionError",
                 str(err))
@@ -318,6 +312,12 @@ class Browser:
         self.windows_url[self.get_current_window_num()] = ""
         self.close()
         self.goto_main()
+
+    def close_main(self):
+        index_window = self.get_current_index_window()
+        self.goto_main()
+        self.close()
+        self.goto(index_window)
 
     def refresh(self):
         try:
@@ -398,6 +398,7 @@ class Browser:
                     debug=False,
                     all_windows=False) \
             -> None | WebElement | list[WebElement]:
+        # .find_elements(By.TAG_NAME, "tr")[1:]
         if debug is None:
             self.print(("get_element", selectors), False)
         if find_element_fun is None:
@@ -445,7 +446,7 @@ class Browser:
 
     def get_all_tag_that_contains(self,
                                   web_element,
-                                  predicats_on_text: list[Callable] = (lambda x: True,),
+                                  predicats_on_element: list[Callable] = (lambda x: True,),
                                   tag="div",
                                   doublon=False,
                                   alone=False) -> dict[str, WebElement] | None:
@@ -461,8 +462,8 @@ class Browser:
             if element_text is None:
                 return None
             print("\tget_all_tag_that_contains_element_text<|" + str(element_text) + "|>")
-            for predicat in predicats_on_text:
-                if predicat(element_text):
+            for predicat in predicats_on_element:
+                if predicat(element):
                     if alone:
                         element_dict[element_text] = element
                         return element_dict
@@ -657,7 +658,7 @@ class Browser:
                 else:
                     browser.refresh()
                 start_refresh = now()
-            if is_iter(selectors):
+            if is_iter_but_not_str(selectors):
                 for selector in selectors:
                     text = self.get_text(url, selector, leave=1, debug=debug, find_element_fun=find_element_fun)
                     if text is not None and len(text) >= min_txt_len:
@@ -744,6 +745,17 @@ class Browser:
         self.element_click(element)
         return self.wait_new_created_window(old_count_window)
 
+    def click_recaptcha(self):
+        try:
+            self.driver.switch_to.default_content()
+            self.driver.switch_to.frame(self.driver.find_element(By.XPATH, ".//iframe[@title='reCAPTCHA']"))
+            self.driver.find_element(By.ID, "recaptcha-anchor-label").click()
+            self.driver.switch_to.default_content()
+            sleep(1.5)
+            "/html/body/div"
+        except (NoSuchElementException, ElementClickInterceptedException):
+            pass
+
     def element_send(self, element: WebElement, *keys, debug=True):
         if debug:
             self.print(("element_send", keys), False)
@@ -786,6 +798,10 @@ class Browser:
                 return False
         return True
 
+    def accept_popup(self):
+        confirmation_popup = WebDriverWait(self.driver, 10).until(EC.alert_is_present())
+        confirmation_popup.accept()
+
 # def scrap_google_search():
 #     countries = [(country.name.split(",")[0] if "," in country.name else country.name) for country in
 #                  pycountry.countries]
@@ -822,9 +838,22 @@ class Browser:
 #     input("end")
 
 if __name__ == '__main__':
-    # s = screen_rect(1000)
-    browser = Browser(profile=r"B:\_Documents\Profile")
+    ## s = screen_rect(1000)
+    browser = Browser(profile=r"user-data-dir=B:\_Documents\Ragnarok_uaro")
+    # browser = Browser()
     # # r"user-data-dir=C:\Users\alexi_mcstqby\Documents\Bots\AlienWorlds\Profiles\progk")
     # browser.new_page('https://www.expressvpn.com/what-is-my-ip')
-    browser.new_page('https://fr.tradingview.com/chart/dOWkigGU/?symbol=BINANCE%3ABTCBUSD')
+    # browser.new_page('https://fr.tradingview.com/chart/dOWkigGU/?symbol=BINANCE%3ABTCBUSD')
+    browser.new_page('https://uaro.net/')
+    # browser.new_page('https://google.com')
 
+    # from selenium.webdriver.chrome.service import Service
+    # from selenium.webdriver.common.by import By
+    # from selenium.webdriver.support.ui import WebDriverWait
+    # from selenium.webdriver.support import expected_conditions as EC
+    # from webdriver_manager.chrome import ChromeDriverManager
+    # options = webdriver.ChromeOptions()
+    # options.add_argument('--disable-blink-features=AutomationControlled')
+    # driver = webdriver.Chrome(options=options)
+    # driver.get('https://uaro.net/')
+    # input()

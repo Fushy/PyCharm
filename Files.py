@@ -1,12 +1,35 @@
 from datetime import datetime
 import os
+from pathlib import Path
+from pickle import dump, load
 import shutil
 from typing import Callable, Optional
 
-import Introspection
+# import chardet
+#
+# with open('filename.txt', 'rb') as f:
+#     result = chardet.detect(f.read())
+#
+# encoding = result['encoding']
+# with open('filename.txt', encoding=encoding) as f:
+#     content = f.read()
 
 
-def is_existing(path: str) -> bool:
+# os.mkdir(directory)
+# list(map(lambda d: os.makedirs(d, exist_ok=True), dirs))
+
+
+def save_obj_to_file(obj, file_name):
+    with open(file_name + ".plk", 'wb') as file:
+        dump(obj, file)
+
+
+def get_obj_from_file(file_name):
+    with open(file_name + ".plk", 'rb') as file:
+        return load(file)
+
+
+def is_file_exist(path: str) -> bool:
     """ Due to concurrency, after an is_existing call, it may be possible that the file doesn't exist,
     in this case, use a try-catch exception when the file is used """
     return os.path.exists(path)
@@ -20,13 +43,13 @@ def is_file(path: str) -> bool:
     return os.path.isfile(path)
 
 
-def get_files_from_path(*paths: str, _filter: Callable[[str], bool] = None, recursive: bool = False) -> list[str]:
+def get_files_from_path(*paths: str | Path, _filter: Callable[[str], bool] = None, recursive: bool = False) -> list[str]:
     import glob
     files = []
     for path in paths:
-        files += glob.glob(path + r"\*.*")
+        files += glob.glob(str(path) + r"\*.*")
         if recursive:
-            files += glob.glob(path + r"\**\*.*", recursive=recursive)
+            files += glob.glob(str(path) + r"\**\*.*", recursive=recursive)
     if _filter is not None:
         files = list(filter(_filter, files))
     return files
@@ -62,42 +85,27 @@ def get_last_part(file_name):
 def get_ext(file_name):
     return file_name[file_name.rfind(".") + 1:]
 
-
-def get_lines(file_name: str, encoding="utf-8") -> Optional[list[str]]:
+def get_file(file_name: str, encoding="utf-8") -> Optional[str]:
     try:
         with open(file_name, 'r', encoding=encoding) as file:
-            return file.readlines()
+            return file.read()
     except FileNotFoundError:
         return None
+
+def get_lines(file_name: str, encoding="utf-8") -> Optional[list[str]]:
+    lines = get_file(file_name, encoding)
+    if lines:
+        return lines.splitlines()
+    # try:
+    #     with open(file_name, 'r', encoding=encoding) as file:
+    #         return file.readlines()
+    # except FileNotFoundError:
+    #     return None
+
 
 
 def count_lines(file_name: str) -> int:
     return sum([1 for _ in open(file_name)])
-
-
-def abspath(file_name: str) -> Optional[str]:
-    if not is_existing(file_name):
-        return None
-    return os.path.abspath(file_name)
-
-
-def relpath(file_name: str) -> Optional[str]:
-    if not is_existing(file_name):
-        return None
-    return os.path.relpath(file_name)
-
-
-def get_current_abspath():
-    return os.path.abspath(os.getcwd())
-
-
-def get_current_path():
-    return os.getcwd()
-
-
-def get_project_path():
-    """current file dir - 1 """
-    return Introspection.frameinfo(2)["pathname"]
 
 
 def overwrite(file_name: str, value: str, encoding="utf-8", mode="w"):
@@ -121,7 +129,7 @@ def append(file_name: str, value: str, encoding="utf-8", mode="a+"):
 def delete(file_name: str):
     try:
         os.remove(file_name)
-    except (FileNotFoundError, PermissionError):
+    except (FileNotFoundError, PermissionError) as e:
         pass
 
 
@@ -178,9 +186,6 @@ def run_cmd(cmd):
 
 
 if __name__ == '__main__':
-    # pre = "B:\\_Documents\\"
-    # dest1 = pre + "anglais_full.txt"
-    # concat_files(dest1, pre + "anglais Fairy tail.txt", pre + "anglais FFVII Remake.txt", pre + "anglais.txt")
     dest = "anglais.txt"
     sort_file(dest, dest=dest)
     remove_same_lines(dest)

@@ -4,12 +4,14 @@ import os
 from pathlib import Path
 import sys
 from time import sleep
+import traceback
 
 from gtts import gTTS
+from peewee import CharField, CompositeKey, DateTimeField, Model, MySQLDatabase, Proxy, SqliteDatabase
 from pydub import AudioSegment, playback
 
 import Classes
-from Files import delete, is_existing, run_file
+from Files import delete, is_file_exist, run_file
 from Introspection import frameinfo
 import Telegrams
 import Threads
@@ -115,8 +117,14 @@ def change_volume(sound: str | AudioSegment, volume_ratio: float = 0):
 
 
 def play_sound(sound: str | AudioSegment, blocking=False) -> AudioSegment:
+    """ PermissionError: [Errno 13] Permission denied:
+    pip install pyaudio """
     def aux():
-        playback.play(sound)
+        try:
+            playback.play(sound)
+        except AttributeError as e:
+            # if str(e) == "'NoneType' object has no attribute 'sample_width'":
+            print(traceback.format_exc() + "\n" + "file is empty", file=sys.stderr)
 
     try:
         if type(sound) is str:
@@ -137,6 +145,7 @@ def save(sound: AudioSegment, dest: str):
 
 
 def read(filename: str, extension="mp3"):
+    import pydub
     try:
         if extension == "mp3":
             return AudioSegment.from_mp3(filename)
@@ -182,11 +191,15 @@ def say(speech: str, filename=None, lang="en", speed: float = 1, blocking=False,
     if not os.path.exists(pathname):
         Path(pathname).mkdir(parents=True, exist_ok=True)
     filename = pathname + filename + ".mp3"
-    if is_existing(filename):
+    if is_file_exist(filename):
         sound = read(filename, "mp3")
     else:
         tts = gTTS(text=speech, lang=lang, slow=False)
+        # try:
         tts.save(filename)
+        # except gtts.tts.gTTSError:
+        #     print("Need an internet connection")
+        #     exit(1)
         sound = read(filename)
         sound = speedup(sound, speed_ratio=speed)
         sound = change_volume(sound, volume_ratio=volume_ratio)
@@ -210,18 +223,28 @@ def loop_say(msg, condition: Classes.Condition, seconds=30, blocking=True):
         Threads.run(fun)
 
 
-def alert(msg: str, level: int = 0, after_sleep: float = 30):
+def alert(msg: str, level: int = 0, after_sleep: float = 30, debug=True):
+    """ Telegram message & vocal alert
+    level 0: telegram message
+    level 1: telegram message & vocal alert
+    level 2: loop vocal alert
+    level 3: loop telegram message & vocal alert
+    """
     debug_change = True
     if level == 0:
         Threads.run(lambda: Telegrams.message(msg))
     elif level == 1:
         Telegrams.message(msg)
-        say(msg)
+        say(msg, debug=debug)
         sleep(after_sleep)
+    elif level == 2:
+        while debug_change:
+            say(msg, debug=debug)
+            sleep(after_sleep)
     elif level == 3:
         while debug_change:
             Telegrams.message(msg)
-            say(msg)
+            say(msg, debug=debug)
             sleep(after_sleep)
 
 
@@ -242,8 +265,9 @@ def ping(name=None):
 
 def ping_listener():
     while True:
+        ping()
         for function_name, last_ping in _PINGS.items():
-            if elapsed_seconds(last_ping) > 60:
+            if elapsed_seconds(last_ping) > 120:
                 Telegrams.message(function_name + " stopped")
                 sleep(5)
         sleep(1)
@@ -257,11 +281,39 @@ def ping_test():
         ping()
 
 
+db_proxy = Proxy()
+
+
+class AliveProcess(Model):
+    name = CharField()
+    last_ping = DateTimeField()
+
+    class Meta:
+        database = db_proxy
+        table_function = lambda model: "alive_process"
+        primary_key = CompositeKey("name")
+
+    @staticmethod
+    def init_db(db):
+        db_proxy.initialize(db)
+        db.create_tables([AliveProcess])
+
+
+def ping_is_alive(name):
+    assert db_proxy.obj is not None, "PING_IS_ALIVE DATABASE IS NOT INITIALIZED"
+    AliveProcess.insert(name=name, last_ping=now()).on_conflict(
+        conflict_target=[AliveProcess.name], update={AliveProcess.last_ping: now()}).execute()
+
+
 if __name__ == '__main__':
+    if len(sys.argv) <= 1:
+        # print("b", sys.argv)
+        alert("speech")
+        # say("speech")
     # run(ping_test)
     # run(ping_listener)
     # speech None en 1 False 1 False True False True
-    if len(sys.argv) > 1:
+    else:
         args = sys.argv[-9:]
         speech = " ".join(sys.argv[1:-9])
         # print(sys.argv, args, speech)
@@ -273,9 +325,6 @@ if __name__ == '__main__':
         just_create_file = False if args[5] == "False" else args[5]
         save_sound = True if args[6] == "True" else args[6]
         say(speech, filename, lang, speed, blocking, volume_ratio, just_create_file, save_sound, False, False)
-    else:
-        # print("b", sys.argv)
-        say("speech")
     # _say("This is a long message !", blocking=True)
     # _say("This is a long message !", speed_ratio=1.5, blocking=True)
     # alert("telegram message", after_sleep=0)

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from time import sleep
 from typing import Callable
-
+import keyboard
 from pynput.keyboard import KeyCode, Listener, Key
 
 _debug = False
@@ -28,18 +28,19 @@ Ctrl = {"": Key.ctrl_l,
 
 def on_release(key: KeyCode):
     global _debug
+    # print("_________", key)
     key_v = key_value(key)
     PYNPUT_DICT["keys_pressed"][key_v] = False
     if _debug:
         try:
             if key.char is None:
                 raise AttributeError
-            print("Key released:char |{}|".format(repr(key.char)), end=" ")
+            print("Key released: char |{}|".format(repr(key.char)), end=" ")
         except AttributeError:
             try:
                 print("Key released: vk |{}|".format(key.vk), end=" ")
             except AttributeError:
-                print(key, "|no char no vk| released", end=" ")
+                print("Key released: ", key, "|no char no vk|", end=" ")
         print(list(PYNPUT_DICT["keys_pressed"].items()))
         print()
 
@@ -106,10 +107,12 @@ def key_value(key: KeyCode, debug=False) -> str | int | KeyCode:
                 print(key, "|no char no vk| pressed", end=" ")
             return key
 
-
 if __name__ == '__main__':
     print("start")
     # launch_keyboard_listener(debug=True, blocking=True)
     launch_keyboard_listener(debug=True, blocking=False)
     while True:
         sleep(0.1)
+    # while not PYNPUT_DICT["keys_pressed"][Ctrl["v"]]:
+    #     sleep(0.1)
+    #     print("wait")

@@ -1,26 +1,33 @@
 import string
 from datetime import timedelta
-from random import randint, random, choice
+from random import randint, random, choice, uniform
 
 
-def rng_int_between(minimal: int, maximal: int) -> int:
+def rng_int(minimal: int, maximal: int) -> int:
     return randint(minimal, maximal)
 
 
-def rng_float_between(a: float, b: float) -> float:
-    return (b - a) * random() + a
+def rng_float(a: float, b: float) -> float:
+    # return (b - a) * random() + a
+    return uniform(a, b)
+
+
+def rng() -> float:
+    return random()
 
 
 def rng_nearly(n, percent, floor=False) -> float:
-    return rng_float_between(n * (1 - percent) if not floor else 0,
+    return rng_float(n * (1 - percent) if not floor else 0,
                              n * (1 + percent) if not floor else n * percent)
 
 
 def rng_nearly_timedelta(n, percent, floor=False) -> timedelta:
     return timedelta(seconds=rng_nearly(n, percent, floor))
 
+
 def rng_letter():
     return choice(string.ascii_letters)
+
 
 def generate_sleep_time(hit_cooldown=120):
     """ En secondes

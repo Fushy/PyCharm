@@ -1,18 +1,20 @@
+from collections.abc import Iterable
+from datetime import datetime, timedelta
+from hashlib import blake2b
 import os
 import string
 import sys
-from collections.abc import Iterable
-from datetime import timedelta, datetime
-from hashlib import blake2b
 from time import sleep
-from typing import Callable, Container, Any
+from typing import Callable, Container
 
+from pandas import DataFrame
+from pandas import Series
 import pandas as pd
 import pyperclip
 import sympy
-from pandas import DataFrame
 from sympy import Eq
 from sympy.parsing.sympy_parser import parse_expr
+from cryptography.fernet import Fernet
 
 from Files import run_cmd
 from Times import now
@@ -58,6 +60,60 @@ COMMON_CHARS = (string.ascii_lowercase
 # utils ascii chars https://emojipedia.org/fr/
 # ⬛⬜
 # ♛♕♘♞♖♜♝♗
+
+
+def chronometer(seconds, pre="", extra=""):
+    start = now()
+    elapsed = (now() - start).total_seconds()
+    while elapsed < seconds:
+        elapsed = (now() - start).total_seconds()
+        if (seconds - elapsed) > 1:
+            sleep(1)
+            print(pre, "{:.2f}".format(seconds - elapsed), extra)
+        elif (seconds - elapsed) < 0.2:
+            sleep(0.1)
+            print(pre, "{:.2f}".format(seconds - elapsed), extra)
+        else:
+            sleep(1)
+
+def dict_retire_none(dictionnary):
+    return {key: value for key, value in dictionnary.items() if value is not None}
+
+def polish_df(df: DataFrame, normalize_column: str = None):
+    if normalize_column is not None:
+        df[normalize_column] = normalize(df[normalize_column])
+    df.index = list(range(1, len(df) + 1))
+    return df
+
+
+def normalize(obj: list | Series):
+    if type(obj) is Series:
+        min_val = obj.min()
+        max_val = obj.max()
+        return (obj - min_val) / (max_val - min_val)
+    elif type(obj) is list:
+        min_val = min(obj)
+        max_val = max(obj)
+        return [(x - min_val) / (max_val - min_val) for x in obj]
+
+
+def print_numspace(num) -> str:
+    if type(num) is int:
+        integer_part = str(num)
+        fractional_part = ""
+    elif type(num) is float:
+        num = f"{num:.10f}".rstrip('0').rstrip('.')
+        integer_part, fractional_part = num.split('.')
+    numspace = '_'.join(integer_part[::-1][i:i + 3] for i in range(0, len(integer_part), 3))[::-1]
+    # numspace += "." + ' '.join(fractional_part[i:i+3] for i in range(0, len(integer_part), 3))
+    if fractional_part != "":
+        numspace += "." + fractional_part
+    return numspace
+
+
+def flatten_2d_list(lst):
+    return [item for sublist in lst for item in sublist]
+
 
 def solve(equation):
     """
@@ -114,7 +170,7 @@ def is_running_under_basic_console():
 
 
 def reverse_dict(d: dict):
-    return {tuple(v): k for (k, v) in d.items()}
+    return {tuple(v) if type(v) is Iterable else v: k for (k, v) in d.items()}
 
 
 def init_dataframe(columns) -> DataFrame:
@@ -128,7 +184,6 @@ def add_rows_dataframe(df: DataFrame, rows: dict[str, list | tuple], bottom=True
     # return pd.concat(concat_df).drop_duplicates().reset_index(drop=True)
     return pd.concat(concat_df).reset_index(drop=True)
 
-# todo add dataframe
 
 def add_columns_dataframe(df: DataFrame, columns: dict) -> DataFrame:
     """ slow, add all lines at the same time"""
@@ -182,7 +237,7 @@ def get_first_deeply_value(obj: object):
 def str_to_hashcode(text: str or list[str], len_hashcode=8, seed=1337, whitelist="") -> list[str] or str:
     if whitelist == "":
         whitelist = string.ascii_letters + string.digits
-    if is_iter(text):
+    if is_iter_but_not_str(text):
         return [str_to_hashcode(txt, len_hashcode, seed, whitelist) for txt in text]
     encode = blake2b()
     if len_hashcode > encode.digest_size * 2 or len(str(seed)) >= 9:
@@ -203,11 +258,29 @@ def str_to_hashdigits(text, len_hashcode=32, seed=1337) -> int:
     return int(str_to_hashcode(text, len_hashcode, seed, whitelist))
 
 
+def generate_key() -> bytes:
+    with open(r"B:\_Documents\APIs\fernet_key", 'rb') as file:
+        return file.read()
+    # return Fernet.generate_key()
+
+
+def encrypt_string(s: str, key=None) -> bytes:
+    if key is None:
+        key = generate_key()
+    return Fernet(key).encrypt(s.encode())
+
+
+def decrypt_string(encrypted: bytes, key=None) -> str:
+    if key is None:
+        key = generate_key()
+    return Fernet(key).decrypt(encrypted).decode()
+
+
 def datetime_to_timedelta(x):
     return x - datetime.strptime("0:0:0", "%H:%M:%S")
 
 
-def is_iter(element):
+def is_iter_but_not_str(element):
     """ Si le type de l'objet peut être parcouru et n'est pas de type str"""
     if isinstance(element, Iterable) and not isinstance(element, str):
         return True
@@ -366,5 +439,7 @@ if __name__ == '__main__':
     #                     r"B:\_Documents\Pycharm\Util\util_requirements.txt")
     # install_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
     #                      r"B:\_Documents\Pycharm\Util\util_requirements.txt")
-    upgrade_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
-                         r"B:\_Documents\Pycharm\Util\util_requirements.txt")
+    # upgrade_requirements(r"A:\Programmes\Python\Python3.11\python.exe",
+    #                      r"B:\_Documents\Pycharm\Util\util_requirements.txt")
+    # print(encrypt_string(""))
+    print_numspace(1654168546646.4186548)

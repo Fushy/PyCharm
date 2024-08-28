@@ -6,7 +6,7 @@ from msedge.selenium_tools.webdriver import WebDriver
 from selenium.common.exceptions import NoAlertPresentException, \
     StaleElementReferenceException
 from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.opera.webdriver import OperaDriver
+# from selenium.webdriver.opera.webdriver import OperaDriver
 from selenium.webdriver.remote.webelement import WebElement
 
 from Alert import notify_win
@@ -266,6 +266,20 @@ def get_element_class(element: WebElement, debug=False):
 def get_element_href(element: WebElement):
     try:
         data = element.get_attribute("href")
+    except StaleElementReferenceException:
+        data = None
+    return data
+
+def get_element_innerHTML(element: WebElement):
+    try:
+        data = element.get_attribute("innerHTML")
+    except StaleElementReferenceException:
+        data = None
+    return data
+
+def get_element_attribute(element: WebElement, attribute: str):
+    try:
+        data = element.get_attribute(attribute)
     except StaleElementReferenceException:
         data = None
     return data
