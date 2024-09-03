@@ -1,3 +1,4 @@
+import itertools
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 from hashlib import blake2b
@@ -62,19 +63,22 @@ COMMON_CHARS = (string.ascii_lowercase
 # ♛♕♘♞♖♜♝♗
 
 
+def export_conda_env():
+    run_cmd("conda env export > packages.yml")
+
 def chronometer(seconds, pre="", extra=""):
     start = now()
     elapsed = (now() - start).total_seconds()
     while elapsed < seconds:
         elapsed = (now() - start).total_seconds()
-        if (seconds - elapsed) > 1:
-            sleep(1)
+        if (seconds - elapsed) > 5.1:
+            sleep(5)
             print(pre, "{:.2f}".format(seconds - elapsed), extra)
         elif (seconds - elapsed) < 0.2:
             sleep(0.1)
             print(pre, "{:.2f}".format(seconds - elapsed), extra)
         else:
-            sleep(1)
+            sleep(2)
 
 def dict_retire_none(dictionnary):
     return {key: value for key, value in dictionnary.items() if value is not None}
@@ -169,8 +173,11 @@ def is_running_under_basic_console():
     return hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
 
 
-def reverse_dict(d: dict):
-    return {tuple(v) if type(v) is Iterable else v: k for (k, v) in d.items()}
+def reverse_dict(dict_: dict) -> dict:
+    """ Reverse the self.questions_answers dictionary. Keys become values, and values become keys """
+    new_keys = sorted(set(itertools.chain.from_iterable(dict_.values())))
+    return {new_key: [key for (key, values) in dict_.items() if new_key in values] for new_key in new_keys}
+    # return {tuple(v) if type(v) is Iterable else v: k for (k, v) in d.items()}
 
 
 def init_dataframe(columns) -> DataFrame:
@@ -443,3 +450,4 @@ if __name__ == '__main__':
     #                      r"B:\_Documents\Pycharm\Util\util_requirements.txt")
     # print(encrypt_string(""))
     print_numspace(1654168546646.4186548)
+    export_conda_env()

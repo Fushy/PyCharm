@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 import copy
 from datetime import datetime
 import itertools
@@ -16,9 +16,15 @@ from bs4 import BeautifulSoup
 from colorama import Back, Fore, Style, init
 import pytest
 import requests
+from pandas import DataFrame
 from requests.exceptions import ChunkedEncodingError, SSLError
 from requests_html import HTMLSession
+from ruamel_yaml.compat import ordereddict
 from urllib3.exceptions import NewConnectionError, MaxRetryError
+
+from dataframe import from_excel_to_dataframe
+from Util import reverse_dict
+from collections import OrderedDict
 
 # colors = ["WHITE", "BLACK", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN"]
 colors = ["WHITE", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN"]
@@ -75,27 +81,34 @@ class QuestionsAnswers:
         except (ValueError, StopIteration):
             return False
 
+    def delete_line_return(self):
+        self.questions_answers = {k.replace("\n", ""): v for (k, v) in self.questions_answers.items()}
+
     def reverse_dict(self):
         """ Reverse the self.questions_answers dictionary. Keys become values, and values become keys """
-        new_keys = sorted(set(itertools.chain.from_iterable(self.questions_answers.values())))
-        self.questions_answers = {new_key: [key for (key, values) in self.questions_answers.items() if new_key in values]
-                                  for new_key in new_keys}
-        a = 1
+        self.questions_answers = reverse_dict(self.questions_answers)
+        self.delete_line_return()
+
+    def add_reverse_to_the_pool(self):
+        self.questions_answers.update(reverse_dict(self.questions_answers))
+        self.delete_line_return()
 
     def training(self, one_to_validate: bool = False, keys_to_pickup: Optional[int] = None, contain_to_validate=False,
-                 ordered=False):
+                 ordered=False, normal_and_reverse=False):
         """ Train for the Q/A
             Press "." to show all questions and answers with corresponding colors
             Press "+" to swap Q/A to A/Q
             Press "-" to set questions_answers to its origin
             Press "q" to quit
             one_to_validate: One answer from all answer is enough to be considered as correct
-            keys_to_pickup: Choose a given numbers of keys that will be the sample
+            keys_to_pickup: Choose a given numbers of keys that will be the sample, questions will be selected randomly
         """
         if keys_to_pickup is not None:
             pickup_keys = random.sample(list(self.questions_answers.keys()),
                                         min(len(self.questions_answers), keys_to_pickup))
             self.questions_answers = {k: self.questions_answers[k] for k in pickup_keys}
+        if normal_and_reverse:
+            self.add_reverse_to_the_pool()
         # Questions are sorted to obtain the same color for a same given questions_answers dict
         sorted_questions = sorted(self.questions_answers)
         questions_answers_training = copy.deepcopy(self.questions_answers)
@@ -678,21 +691,38 @@ def main():
     exit(1)
 
 
+def dataframe_to_questions_answers(dataframe: DataFrame, column_name_questions, column_name_answers) -> QuestionsAnswers:
+    dataframe = dataframe[[column_name_questions.capitalize(), column_name_answers.capitalize()]]
+    dataframe = dataframe.rename(columns={column_name_questions: 'questions', column_name_answers: 'answers'})
+    qa = OrderedDict(dataframe.groupby('questions', sort=False)['answers'].agg(list))
+    return QuestionsAnswers(qa)
+
+
+def excel_to_questions_answers(file_name: str, column_name_questions, column_name_answers) -> QuestionsAnswers:
+    dataframe = from_excel_to_dataframe(file_name)
+    return dataframe_to_questions_answers(dataframe, column_name_questions, column_name_answers)
+
+
+# def dataframe_to_questions_answers(dataframe: DataFrame, column_name_questions, column_name_answers) -> QuestionsAnswers:
+#     from_excel_to_dataframe("dataframe_to_questions_answers")
+#     return
+
+
 if __name__ == '__main__':
     # main()
     # qa = lyrics_to_questions_answers(song_lyrics, next_line=True, next_part=False, duplicate_line=True)
     # qa.training(ordered=True)
-    qa_tft = QuestionsAnswers(tft_to_questions_answers(pbe=True))
-    qa_tft.reverse_dict()
+    # qa_tft = QuestionsAnswers(tft_to_questions_answers(pbe=True))
+    # qa_tft.reverse_dict()
     # # qa_tft.filter(items_filter=lambda keys, values: "R" in keys)
     # qa_tft.training(one_to_validate=False, contain_to_validate=False)
-    qa_tft.training(one_to_validate=False, contain_to_validate=False, keys_to_pickup=3)
+    # qa_tft.training(one_to_validate=False, contain_to_validate=False, keys_to_pickup=3)
     # qa_tft.exam(reset_if_wrong=True)
     # qa_tft.exam(reset_if_wrong=False, keys_to_pickup=5)
     # qa_english = file_to_questions_answers("anglais.txt")
-    # while True:
-    #     qa_english = file_to_questions_answers("palword.txt")
-    #     qa_english.training()
+    while True:
+        qa = excel_to_questions_answers("english-french-tagalog.xlsx", "English", "French")
+        qa.training(normal_and_reverse=True, keys_to_pickup=5)
         # qa_english = file_to_questions_answers("anglais.txt")
         # qa_english.training(keys_to_pickup=3)
 
